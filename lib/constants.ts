@@ -11,50 +11,41 @@ export type NavGroup = {
 }
 
 export const NAV_ITEMS: NavGroup[] = [
-  {
-    label: "Programs",
-    children: [
-      { label: "Training Plans", href: "/programs/training-plans", description: "Customized programs for your goals" },
-      { label: "Performance Tracking", href: "/programs/performance-tracking", description: "Monitor progress and metrics" },
-      { label: "Video Analysis", href: "/programs/video-analysis", description: "Technique review and feedback" },
-      { label: "Nutrition Coaching", href: "/programs/nutrition", description: "Fuel your performance" },
-      { label: "Strength & Conditioning", href: "/programs/strength-conditioning", description: "Build power and endurance" },
-      { label: "Recovery & Mobility", href: "/programs/recovery", description: "Optimize rest and flexibility" },
-    ],
-  },
-  { label: "Services", href: "/services" },
-  { label: "About", href: "/about" },
-  { label: "Testimonials", href: "/testimonials" },
-  { label: "Contact", href: "/contact" },
+  { label: "In-Person", href: "/in-person" },
+  { label: "Online", href: "/online" },
+  { label: "Assessment", href: "/assessment" },
+  { label: "Education", href: "/education" },
+  { label: "Resources", href: "/resources" },
+  { label: "Blog", href: "/blog" },
+  { label: "Shop", href: "/programs" },
 ]
 
 export const FOOTER_SECTIONS = [
   {
-    title: "Programs",
+    title: "Services",
     links: [
-      { label: "Training Plans", href: "/programs/training-plans" },
-      { label: "Performance Tracking", href: "/programs/performance-tracking" },
-      { label: "Video Analysis", href: "/programs/video-analysis" },
-      { label: "Nutrition Coaching", href: "/programs/nutrition" },
-      { label: "Strength & Conditioning", href: "/programs/strength-conditioning" },
-    ],
-  },
-  {
-    title: "Athletes",
-    links: [
-      { label: "Youth Athletes", href: "/athletes/youth" },
-      { label: "College Athletes", href: "/athletes/college" },
-      { label: "Professional Athletes", href: "/athletes/professional" },
-      { label: "Weekend Warriors", href: "/athletes/recreational" },
+      { label: "In-Person Coaching", href: "/in-person" },
+      { label: "Online Coaching", href: "/online" },
+      { label: "Assessment", href: "/assessment" },
+      { label: "Education", href: "/education" },
+      { label: "Shop", href: "/programs" },
     ],
   },
   {
     title: "Resources",
     links: [
+      { label: "Performance Database", href: "/resources" },
+      { label: "Comeback Code", href: "/resources" },
+      { label: "Blog", href: "/blog" },
+      { label: "Workshop Clinic", href: "/resources" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
       { label: "About", href: "/about" },
-      { label: "Services", href: "/services" },
-      { label: "Testimonials", href: "/testimonials" },
       { label: "Contact", href: "/contact" },
+      { label: "Testimonials", href: "/testimonials" },
     ],
   },
   {

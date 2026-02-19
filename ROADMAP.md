@@ -1,6 +1,6 @@
 # DJP Athlete — Implementation Roadmap
 
-This document combines the client's content requirements and platform vision into a phased plan for remaining implementation work.
+This document combines the client's content requirements, website layout wireframes (from WEBSITE LAYOUT.pdf), and platform vision into a phased plan.
 
 ---
 
@@ -23,127 +23,136 @@ This document combines the client's content requirements and platform vision int
 
 ---
 
-## Service Pages to Build
+## Site Structure (from WEBSITE LAYOUT.pdf)
 
-The client has defined 4 distinct service offerings, each needing its own dedicated page with the content below.
+The client wants **8 top-level pages** as the primary navigation:
 
-### Page 1: In-Person Coaching (`/services/in-person`)
+### Navigation: `Home | In-Person | Online | Assessment | Education | Resources | Blog | Shop`
 
-**Hero:** "High Performance Development. Delivered Precisely."
+### Page 1: HOMEPAGE (`/`)
+**Layout (top to bottom):**
+1. Hero — Photo of Darren with fade gradient + "Elite Performance is Not Trained. It Is Engineered."
+2. Services section — three pillars: TRAINING - TESTING - COACHING (links to In-Person, Assessment, Online)
+3. About Me section — Darren's bio copy
+4. Testimonials — athlete quotes with names/sports
+5. Newsletter signup — email capture at bottom
 
-**Who This Is For:**
-- Competitive athletes (HS, collegiate, semi-pro, professional)
-- Elite youth athletes needing long-term development
-- Return-to-performance athletes (post-injury, medically cleared)
-- High-performing professionals who train with intent
+### Page 2: IN-PERSON (`/in-person`)
+**Layout:**
+1. Hero with **faded background video** + headline "High Performance Development. Delivered Precisely."
+2. Who This Is For (2.B) — Athlete types defined + 4-step process
+3. Benefits **carousel with dot navigation** — slide-across images
+4. The Difference (2.C) — "Most Training Chases Fatigue. We Build Capacity."
+5. Apply CTA — application/intake form
 
-**Process:**
-1. Comprehensive Performance Assessment — movement, capacity, history, sport demands
-2. Strategic Performance Blueprint — plan aligned with sport, timeline, goals
-3. Structured Development — progressive, targeted training
-4. Continuous Evaluation and Optimization — ongoing assessment
+**Content:**
+- Who: Competitive athletes, elite youth, return-to-performance, high-performing professionals
+- Process: Assessment → Blueprint → Development → Optimization
+- Differentiator: Precision > volume, capacity > fatigue, systems > workouts, 20yr experience, PhD
 
-**The Difference:** "Most Training Chases Fatigue. We Build Capacity."
-- Precision beats volume
-- Capacity beats fatigue
-- Systems beat workouts
+### Page 3: ONLINE (`/online`)
+**Layout:**
+1. Hero — "More Than Remote. Complete Performance System."
+2. Why Most Online Programs Fail (3.B) — content section
+3. This Is Not Self Service (3.C) — positioning
+4. **Video embed** of performance support
+5. Core Components — **carousel slides** (individualized programming, video feedback, testing, wellness monitoring, direct access)
+6. Typeform-style flow: "You Are Ready To Go" → Program Builder → Book a Call
+7. FAQ section
 
-**CTA:** Application form (selective intake)
+### Page 4: ASSESSMENT (`/assessment`)
+**Layout:**
+1. Hero — "The Missing Middle" / "The Gap Between Clearance and True Readiness"
+2. Authority (4.B) — "Clearance Is Not Readiness" + credential backing
+3. What This Assessment Is (4.C) — and is not (not rehab/diagnosis)
+4. How The System Integrates (4.D) — connects to in-person/online coaching
+5. **Equipment images** gallery/grid
+6. The Outcome (4.E) — clear performance profile, risk gaps, progression strategy
+7. "Book an Appointment" CTA
 
-### Page 2: Online Coaching (`/services/online`)
+### Page 5: EDUCATION (`/education`)
+**Layout:**
+1. Hero — "A New Standard for Performance"
+2. Body — "Built for the moments that destabilize careers, teams, and identities. Not another course. A structured system for operating when certainty disappears."
+3. Audience — "Designed for high-performance sport environments, teams, and competitive leaders navigating instability."
+4. "Get Early Notification" CTA — email waitlist signup (coming soon product)
 
-**Hero:** "More than Training. Complete Performance System."
+### Page 6: RESOURCES (`/resources`)
+**Layout:**
+- Grid of resource cards (3-col top row, 2-col bottom):
+  - Performance Database
+  - Comeback Code
+  - Workshop Clinic
+  - Rotational Reboot
+  - Youth Athlete Transition
+- Each card links to its resource detail (placeholder for now)
 
-The Online Performance System is a fully personalized, data-informed, coach-led environment for serious athletes who want elite-level structure without being physically onsite.
+### Page 7: BLOG (`/blog`)
+**Layout:**
+- Grid of small box cards (article previews)
+- No "time ago" relative dates — use actual dates
+- DJP brand color theme
+- (Content managed via admin or markdown — TBD)
 
-**Core Components:**
-- Individualized Programming (no templates)
-- Video Feedback and Technical Coaching
-- Advanced Performance Testing (remote diagnostics)
-- Wellness and Load Monitoring (real-time)
-- Direct Access to Expertise
-
-**Why Most Online Programs Fail:**
-- Generic programming ignores context
-- No detailed movement assessment
-- No objective monitoring
-- No adjustment for fatigue, travel, competition, injury history
-- No meaningful coaching feedback
-
-**Positioning:** "This Is Not Self-Serve Training." — Standards high, capacity limited, entry selective.
-
-**CTA:** "Book a Meeting"
-
-### Page 3: Return to Performance (`/services/return-to-perform`)
-
-**Hero:** "The Gap Between Clearance and True Readiness"
-
-Medical clearance ≠ performance readiness. This service bridges the gap from rehab discharge to full competitive performance.
-
-**Authority Section:** "Clearance Is Not Readiness."
-- Traditional assessments focus on isolated metrics (strength without context, movement screens without load, speed without braking, power without control)
-- This assessment uses a detailed Performance Framework
-
-**What This Is (and Is Not):**
-- Not rehabilitation, diagnosis, or injury management
-- Performance-based assessment: movement strategy, force characteristics, load tolerance, decision-making under stress
-- Collaborates with: physiotherapists, surgeons, S&C coaches, team staff
-
-**Integration:**
-- Informs structured return-to-performance programs
-- Guides in-person or online coaching
-- Identifies readiness gaps before competition
-- Reduces reinjury risk
-
-**Outcome:** Clear performance profile, asymmetry identification, defined risk gaps, targeted progression strategy, competitive reintegration confidence.
-
-### Page 4: Coaching Philosophy (`/services/coaching` or `/philosophy`)
-
-**Topic:** "The Grey Zone" — Five Pillar Framework
-
-**Status:** Content still being developed by client. Sections defined:
-- The Problem
-- The Core Idea
-- Five Pillar Framework
-- (Details TBD)
-
-### Page 5: Resources (`/resources`)
-
-**Status:** Content TBD. Placeholder page needed.
+### Page 8: SHOP (`/shop` or `/programs`)
+- Already built as `/programs` — the program store
+- Needs brand color theme alignment (already using DJP theme)
 
 ---
 
-## Phase 3: Content Pages & Service Expansion
+## Phase 3: Site Restructure & Content Pages (CURRENT)
 
-### Step 3.1 — Dedicated Service Pages
-- [ ] `/services/in-person` — full content page with application form
-- [ ] `/services/online` — full content page with booking CTA
-- [ ] `/services/return-to-perform` — full content page with assessment inquiry
-- [ ] Update `/services` index to link to sub-pages instead of generic cards
-- [ ] Application/inquiry form component (shared across service pages)
+### Step 3.1 — Navigation Restructure
+- [x] Update `lib/constants.ts` — new NAV_ITEMS matching 8-page structure
+- [x] Update `SiteNavbar.tsx` — flat nav links (no mega-menu dropdowns needed)
+- [x] Update `Footer.tsx` constants — updated footer sections
+- [x] Update sitemap to include new routes
 
-### Step 3.2 — Homepage Content Refresh
-- [ ] Update hero: "Elite Performance is Not Trained. It is Engineered."
-- [ ] Update services section with the 3 core offerings (in-person, online, RTP)
-- [ ] Update about section with client's actual copy
-- [ ] Update testimonials with real athlete quotes and titles
-- [ ] Add athlete logos/badges if available
+### Step 3.2 — Homepage Rebuild
+- [x] Hero: photo placeholder + fade + "Elite Performance is Not Trained. It Is Engineered."
+- [x] Services: 3 pillars (Training / Testing / Coaching) linking to /in-person, /assessment, /online
+- [x] About Me: Darren's actual bio copy
+- [x] Testimonials: real athlete quotes
+- [x] Newsletter signup section
 
-### Step 3.3 — Testimonials Enhancement
-- [ ] Populate testimonials DB with real athlete data
-- [ ] Add athlete sport/title badges (WTA, Pro Pickleball, etc.)
-- [ ] Add featured testimonial carousel on homepage
-- [ ] Individual testimonial display with full quotes
+### Step 3.3 — In-Person Page (`/in-person`)
+- [x] Video hero section with fade overlay (placeholder video bg)
+- [x] Who This Is For + Process steps
+- [x] Benefits carousel with dots
+- [x] The Difference section
+- [x] Apply CTA
 
-### Step 3.4 — Coaching Philosophy / Five Pillar Framework
-- [ ] `/philosophy` or `/coaching` page (pending client content)
-- [ ] Visual framework diagram
-- [ ] Integration with service pages
+### Step 3.4 — Online Page (`/online`)
+- [x] Hero "More Than Remote"
+- [x] Why Most Online Programs Fail
+- [x] Not Self Service positioning
+- [x] Video embed placeholder
+- [x] Core Components carousel
+- [x] Intake flow CTA (Book a Call)
+- [x] FAQ section
 
-### Step 3.5 — Resources Section
-- [ ] `/resources` page structure
-- [ ] Blog/article support (if desired)
-- [ ] Content TBD from client
+### Step 3.5 — Assessment Page (`/assessment`)
+- [x] Hero "The Missing Middle"
+- [x] Authority section
+- [x] What This Assessment Is / Is Not
+- [x] System Integration
+- [x] Equipment images placeholder grid
+- [x] Outcome section
+- [x] Book Appointment CTA
+
+### Step 3.6 — Education Page (`/education`)
+- [x] Coming soon / waitlist page
+- [x] "A New Standard for Performance" hero
+- [x] Email notification signup
+
+### Step 3.7 — Resources Page (`/resources`)
+- [x] Card grid for 5 resources
+- [x] Placeholder content per resource
+
+### Step 3.8 — Blog Page (`/blog`)
+- [x] Blog listing with small box cards
+- [x] Placeholder posts or empty state
+- [x] No relative time, brand colors
 
 ---
 
@@ -161,16 +170,17 @@ Medical clearance ≠ performance readiness. This service bridges the gap from r
 - [ ] Drag-and-drop or form-based exercise ordering
 - [ ] Client workouts page shows real scheduled exercises
 
-### Step 4.3 — Video Analysis Integration
+### Step 4.3 — Video Integration
 - [ ] File upload infrastructure (Vercel Blob or S3)
 - [ ] Exercise instruction videos (admin uploads)
-- [ ] Client video submission for form checks
+- [ ] Background video for in-person page (real video)
 - [ ] Video playback in workout views
 
 ### Step 4.4 — Application/Intake Forms
-- [ ] Selective application form for in-person coaching
-- [ ] Online coaching inquiry form
-- [ ] RTP assessment inquiry form
+- [ ] In-person coaching application form
+- [ ] Online coaching inquiry / Book a Call form
+- [ ] Assessment booking form
+- [ ] Education waitlist email capture
 - [ ] Admin view of applications/inquiries
 
 ### Step 4.5 — Notifications System UI
@@ -184,6 +194,12 @@ Medical clearance ≠ performance readiness. This service bridges the gap from r
 - [ ] Streak tracking
 - [ ] Calendar view of scheduled workouts
 
+### Step 4.7 — Blog CMS
+- [ ] Admin blog post editor (markdown or rich text)
+- [ ] Blog post detail pages
+- [ ] Categories/tags
+- [ ] SEO per post
+
 ---
 
 ## Phase 5: Launch Preparation
@@ -195,7 +211,7 @@ Medical clearance ≠ performance readiness. This service bridges the gap from r
 - [ ] Error monitoring (Sentry or similar)
 
 ### Step 5.2 — SEO & Performance
-- [ ] All service pages have proper metadata and JSON-LD
+- [ ] All pages have proper metadata and JSON-LD
 - [ ] Image optimization (athlete photos, branding)
 - [ ] Sitemap includes all new pages
 - [ ] Core Web Vitals optimization
@@ -204,7 +220,8 @@ Medical clearance ≠ performance readiness. This service bridges the gap from r
 - [ ] All testimonials entered in DB
 - [ ] Programs created with pricing
 - [ ] Exercise library populated
-- [ ] About page uses final client copy
+- [ ] Real photos/videos from client
+- [ ] Blog posts if ready
 
 ### Step 5.4 — Testing
 - [ ] End-to-end: register → purchase → client dashboard flow
@@ -214,27 +231,26 @@ Medical clearance ≠ performance readiness. This service bridges the gap from r
 
 ---
 
-## Current Status (Post Phase 2)
+## Current Status
 
 | Feature | Status |
 |---------|--------|
-| Marketing site (landing, services, about, contact) | Done |
-| Public program store + Stripe checkout | Done |
-| Registration + login | Done |
-| Client dashboard (5 pages) | Done |
-| Admin dashboard + analytics | Done |
-| Admin exercises CRUD | Done |
-| Admin programs CRUD | Done |
-| Admin payments table | Done |
-| Admin reviews management | Done |
-| Admin client detail view | Done |
-| Admin settings | Done |
-| All DAL files (service role client) | Done |
 | Database schema + migrations | Done |
-| Dedicated service pages | Phase 3 |
-| Homepage content refresh | Phase 3 |
+| Auth (login + registration) | Done |
+| Admin panel (all pages) | Done |
+| Client dashboard (5 pages) | Done |
+| Program store + Stripe checkout | Done |
+| All DAL files (service role) | Done |
+| **Navigation restructure** | **Phase 3** |
+| **Homepage rebuild** | **Phase 3** |
+| **In-Person page** | **Phase 3** |
+| **Online page** | **Phase 3** |
+| **Assessment page** | **Phase 3** |
+| **Education page** | **Phase 3** |
+| **Resources page** | **Phase 3** |
+| **Blog page** | **Phase 3** |
 | Email integration | Phase 4 |
-| Program exercise scheduling UI | Phase 4 |
-| Video analysis | Phase 4 |
 | Application/intake forms | Phase 4 |
+| Video infrastructure | Phase 4 |
+| Blog CMS | Phase 4 |
 | Production deployment | Phase 5 |
