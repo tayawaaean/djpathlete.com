@@ -10,7 +10,13 @@ export default async function ClientProfilePage() {
   if (!session?.user) redirect("/login")
 
   const userId = session.user.id
-  const profile = await getProfileByUserId(userId)
+
+  let profile = null
+  try {
+    profile = await getProfileByUserId(userId)
+  } catch {
+    // DB tables may not exist yet — render gracefully with null profile
+  }
 
   return (
     <div>

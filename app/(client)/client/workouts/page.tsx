@@ -42,19 +42,25 @@ export default async function ClientWorkoutsPage() {
 
   const userId = session.user.id
 
-  const assignments = (await getAssignments(userId)) as AssignmentWithProgram[]
-  const activeAssignments = assignments.filter((a) => a.status === "active")
+  let activeAssignments: AssignmentWithProgram[] = []
+  let programExercises: { assignment: AssignmentWithProgram; exercises: ProgramExerciseWithExercise[] }[] = []
 
-  // Fetch exercises for each active program in parallel
-  const programExercises = await Promise.all(
-    activeAssignments.map(async (assignment) => {
-      if (!assignment.programs) return { assignment, exercises: [] }
-      const exercises = (await getProgramExercises(
-        assignment.program_id
-      )) as ProgramExerciseWithExercise[]
-      return { assignment, exercises }
-    })
-  )
+  try {
+    const assignments = (await getAssignments(userId)) as AssignmentWithProgram[]
+    activeAssignments = assignments.filter((a) => a.status === "active")
+
+    programExercises = await Promise.all(
+      activeAssignments.map(async (assignment) => {
+        if (!assignment.programs) return { assignment, exercises: [] }
+        const exercises = (await getProgramExercises(
+          assignment.program_id
+        )) as ProgramExerciseWithExercise[]
+        return { assignment, exercises }
+      })
+    )
+  } catch {
+    // DB tables may not exist yet — render gracefully with empty data
+  }
 
   return (
     <div>

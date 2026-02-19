@@ -16,16 +16,24 @@ export default async function ClientProgressPage() {
   if (!session?.user) redirect("/login")
 
   const userId = session.user.id
-  const progress = (await getProgress(userId)) as ProgressWithExercise[]
 
-  // Calculate stats
-  const totalWorkouts = progress.length
-  const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const thisMonthWorkouts = progress.filter(
-    (p) => new Date(p.completed_at) >= startOfMonth
-  ).length
-  const uniqueExercises = new Set(progress.map((p) => p.exercise_id)).size
+  let progress: ProgressWithExercise[] = []
+  let totalWorkouts = 0
+  let thisMonthWorkouts = 0
+  let uniqueExercises = 0
+
+  try {
+    progress = (await getProgress(userId)) as ProgressWithExercise[]
+    totalWorkouts = progress.length
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    thisMonthWorkouts = progress.filter(
+      (p) => new Date(p.completed_at) >= startOfMonth
+    ).length
+    uniqueExercises = new Set(progress.map((p) => p.exercise_id)).size
+  } catch {
+    // DB tables may not exist yet — render gracefully with empty data
+  }
 
   return (
     <div>

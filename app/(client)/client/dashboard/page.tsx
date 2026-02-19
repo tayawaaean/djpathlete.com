@@ -18,18 +18,23 @@ export default async function ClientDashboardPage() {
   if (!session?.user) redirect("/login")
 
   const userId = session.user.id
-
-  const [assignments, progress] = await Promise.all([
-    getAssignments(userId),
-    getProgress(userId),
-  ])
-
-  const typedAssignments = assignments as AssignmentWithProgram[]
-  const activeAssignments = typedAssignments.filter(
-    (a) => a.status === "active"
-  )
-  const totalWorkouts = progress.length
   const firstName = session.user.name?.split(" ")[0] ?? "Athlete"
+
+  let activeAssignments: AssignmentWithProgram[] = []
+  let totalWorkouts = 0
+
+  try {
+    const [assignments, progress] = await Promise.all([
+      getAssignments(userId),
+      getProgress(userId),
+    ])
+
+    const typedAssignments = assignments as AssignmentWithProgram[]
+    activeAssignments = typedAssignments.filter((a) => a.status === "active")
+    totalWorkouts = progress.length
+  } catch {
+    // DB tables may not exist yet — render gracefully with empty data
+  }
 
   return (
     <div>
