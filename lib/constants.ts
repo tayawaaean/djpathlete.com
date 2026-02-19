@@ -17,7 +17,7 @@ export const NAV_ITEMS: NavGroup[] = [
   { label: "Education", href: "/education" },
   { label: "Resources", href: "/resources" },
   { label: "Blog", href: "/blog" },
-  { label: "Shop", href: "/programs" },
+  { label: "Shop", href: "/shop" },
 ]
 
 export const FOOTER_SECTIONS = [
@@ -28,7 +28,7 @@ export const FOOTER_SECTIONS = [
       { label: "Online Coaching", href: "/online" },
       { label: "Assessment", href: "/assessment" },
       { label: "Education", href: "/education" },
-      { label: "Shop", href: "/programs" },
+      { label: "Shop", href: "/shop" },
     ],
   },
   {
