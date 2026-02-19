@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { validateEmailVerificationToken, markVerificationTokenUsed } from "@/lib/db/email-verification-tokens"
 import { updateUser } from "@/lib/db/users"
+import { sendWelcomeEmail } from "@/lib/email"
 
 const verifySchema = z.object({
   token: z.string().min(1, "Token is required"),
@@ -36,6 +37,13 @@ export async function POST(request: Request) {
 
     // Mark token as used
     await markVerificationTokenUsed(token)
+
+    // Send welcome email (non-blocking)
+    try {
+      await sendWelcomeEmail(user.email, user.first_name)
+    } catch {
+      console.error("Failed to send welcome email, but verification succeeded")
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
