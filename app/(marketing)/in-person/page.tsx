@@ -11,8 +11,10 @@ import {
   RefreshCcw,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { JsonLd } from "@/components/shared/JsonLd"
-import { VideoBackground } from "@/components/public/VideoBackground"
+import { FadeIn } from "@/components/shared/FadeIn"
+import { LocalVideoBackground } from "@/components/public/LocalVideoBackground"
 
 export const metadata: Metadata = {
   title: "In-Person Coaching",
@@ -115,8 +117,8 @@ export default function InPersonPage() {
 
       {/* Hero — Video Background */}
       <section className="relative min-h-[70vh] flex items-center justify-center bg-primary overflow-hidden">
-        {/* YouTube video background — deferred load + fade-in */}
-        <VideoBackground videoId="h5YxEsY2vDI" />
+        {/* Local MP4 video background — deferred load + fade-in */}
+        <LocalVideoBackground src="/videos/inperson-hero.mp4" />
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-primary/70" />
 
@@ -150,25 +152,27 @@ export default function InPersonPage() {
       {/* Who This Is For */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                Who This Is For
-              </p>
-              <div className="h-px w-8 bg-accent" />
+          <FadeIn>
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-8 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  Who This Is For
+                </p>
+                <div className="h-px w-8 bg-accent" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                Built for Athletes Who Take Performance Seriously
+              </h2>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              Built for Athletes Who Take Performance Seriously
-            </h2>
-          </div>
+          </FadeIn>
 
           <div className="grid sm:grid-cols-2 gap-6">
-            {athleteTypes.map((type) => {
+            {athleteTypes.map((type, i) => {
               const Icon = type.icon
               return (
+                <FadeIn key={type.title} delay={i * 0.1} direction="up">
                 <div
-                  key={type.title}
                   className="group relative overflow-hidden bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
@@ -182,6 +186,7 @@ export default function InPersonPage() {
                     {type.description}
                   </p>
                 </div>
+                </FadeIn>
               )
             })}
           </div>
@@ -198,28 +203,31 @@ export default function InPersonPage() {
       {/* Process Steps */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                The Process
+          <FadeIn>
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-8 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  The Process
+                </p>
+                <div className="h-px w-8 bg-accent" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                A Clear, Structured Path to Performance
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Every engagement follows a proven process designed to eliminate
+                guesswork and maximise outcomes.
               </p>
-              <div className="h-px w-8 bg-accent" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              A Clear, Structured Path to Performance
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Every engagement follows a proven process designed to eliminate
-              guesswork and maximise outcomes.
-            </p>
-          </div>
+          </FadeIn>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {processSteps.map((step) => {
+            {processSteps.map((step, i) => {
               const Icon = step.icon
               return (
-                <div key={step.step} className="relative">
+                <FadeIn key={step.step} delay={i * 0.12} direction="up">
+                <div className="relative">
                   <div className="text-4xl font-heading font-bold text-accent/30 mb-3">
                     {step.step}
                   </div>
@@ -233,29 +241,88 @@ export default function InPersonPage() {
                     {step.description}
                   </p>
                 </div>
+                </FadeIn>
               )
             })}
           </div>
         </div>
       </section>
 
+      {/* Training Environment */}
+      <section className="py-16 lg:py-24 px-4 sm:px-8">
+        <div className="max-w-6xl mx-auto">
+          <FadeIn>
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-8 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  The Environment
+                </p>
+                <div className="h-px w-8 bg-accent" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight">
+                Where Performance Is Built
+              </h2>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.1}>
+          <div className="grid md:grid-cols-5 md:grid-rows-[400px_400px] gap-4">
+            {/* Landscape — top left */}
+            <div className="relative md:col-span-3 md:row-span-1 aspect-[4/3] md:aspect-auto rounded-2xl overflow-hidden group">
+              <Image
+                src="/images/gym-training-01.jpg"
+                alt="Yortago Athletic performance training facility"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 60vw"
+              />
+            </div>
+            {/* Portrait — right, spans both rows */}
+            <div className="relative md:col-span-2 md:row-span-2 aspect-[3/4] md:aspect-auto rounded-2xl overflow-hidden group">
+              <Image
+                src="/images/gym-training-02.jpg"
+                alt="Athletic coaching session at Yortago Athletic"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 40vw"
+              />
+            </div>
+            {/* Landscape — bottom left */}
+            <div className="relative md:col-span-3 md:row-span-1 aspect-[4/3] md:aspect-auto rounded-2xl overflow-hidden group">
+              <Image
+                src="/images/gym-training-03.jpg"
+                alt="High-performance training environment"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 60vw"
+              />
+            </div>
+          </div>
+          </FadeIn>
+        </div>
+      </section>
+
       {/* The Difference */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                The Difference
-              </p>
-              <div className="h-px w-8 bg-accent" />
+          <FadeIn>
+            <div className="text-center mb-10">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-8 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  The Difference
+                </p>
+                <div className="h-px w-8 bg-accent" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                Most Training Chases Fatigue.
+                <br className="hidden sm:block" /> We Build Capacity.
+              </h2>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              Most Training Chases Fatigue.
-              <br className="hidden sm:block" /> We Build Capacity.
-            </h2>
-          </div>
+          </FadeIn>
 
+          <FadeIn delay={0.1}>
           <div className="space-y-6">
             <div className="grid sm:grid-cols-3 gap-4">
               {[
@@ -285,11 +352,13 @@ export default function InPersonPage() {
               </p>
             </div>
           </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* Apply CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-3xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -313,6 +382,7 @@ export default function InPersonPage() {
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
+        </FadeIn>
       </section>
     </>
   )

@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { FadeIn } from "@/components/shared/FadeIn"
 
 export const metadata: Metadata = {
   title: "About",
@@ -85,15 +86,18 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Coach Photo */}
+            <FadeIn direction="left">
             <div className="relative">
               <div className="aspect-[4/5] rounded-2xl overflow-hidden relative">
-                <Image src="/images/darrenpaul.png" alt="Darren J Paul" fill className="object-cover object-top" sizes="(max-width: 1024px) 100vw, 40vw" />
+                <Image src="/images/professionalheadshot.jpg" alt="Darren J Paul" fill className="object-cover object-top" sizes="(max-width: 1024px) 100vw, 40vw" />
               </div>
               {/* Decorative accent */}
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-accent/20 rounded-2xl -z-10" />
             </div>
+            </FadeIn>
 
             {/* Bio */}
+            <FadeIn delay={0.15}>
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px w-12 bg-accent" />
@@ -115,6 +119,7 @@ export default function AboutPage() {
                 I am here to help you get there.
               </p>
             </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -122,6 +127,7 @@ export default function AboutPage() {
       {/* Credentials Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-5xl mx-auto">
+          <FadeIn>
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="h-px w-8 bg-accent" />
@@ -136,13 +142,14 @@ export default function AboutPage() {
               deliver world-class coaching.
             </p>
           </div>
+          </FadeIn>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {credentials.map((cred) => {
+            {credentials.map((cred, i) => {
               const Icon = cred.icon
               return (
+                <FadeIn key={cred.title} delay={i * 0.06}>
                 <div
-                  key={cred.title}
                   className="group relative overflow-hidden flex items-center gap-4 p-4 rounded-xl bg-white border border-border"
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
@@ -153,6 +160,7 @@ export default function AboutPage() {
                     {cred.title}
                   </p>
                 </div>
+                </FadeIn>
               )
             })}
           </div>
@@ -162,6 +170,7 @@ export default function AboutPage() {
       {/* Philosophy Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
+          <FadeIn>
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="h-px w-8 bg-accent" />
@@ -178,12 +187,14 @@ export default function AboutPage() {
               creating sustainable habits that carry through an entire career.
             </p>
           </div>
+          </FadeIn>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {values.map((value) => {
+            {values.map((value, i) => {
               const Icon = value.icon
               return (
-                <div key={value.title} className="text-center">
+                <FadeIn key={value.title} delay={i * 0.1}>
+                <div className="text-center">
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-accent/15 mx-auto mb-4">
                     <Icon className="size-7 text-accent" />
                   </div>
@@ -194,6 +205,7 @@ export default function AboutPage() {
                     {value.description}
                   </p>
                 </div>
+                </FadeIn>
               )
             })}
           </div>
@@ -203,6 +215,7 @@ export default function AboutPage() {
       {/* Story Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
+          <FadeIn>
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
             <p className="text-sm font-medium text-accent uppercase tracking-widest">The Journey</p>
@@ -234,11 +247,13 @@ export default function AboutPage() {
               coaching and tools they need to reach their full potential.
             </p>
           </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-3xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -268,6 +283,7 @@ export default function AboutPage() {
             </Link>
           </div>
         </div>
+        </FadeIn>
       </section>
     </>
   )

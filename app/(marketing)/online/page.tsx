@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { FadeIn } from "@/components/shared/FadeIn"
 import { FAQSection } from "@/components/FAQSection"
 
 export const metadata: Metadata = {
@@ -121,48 +122,53 @@ export default function OnlinePage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-8 bg-accent" />
-            <p className="text-sm font-medium text-accent uppercase tracking-widest">
-              Online Performance System
+        <FadeIn>
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                Online Performance System
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
+              More than Training.
+              <br className="hidden sm:block" /> Complete Performance System.
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              The Online Performance System is a fully personalised,
+              data-informed, coach-led performance environment designed for
+              serious athletes who want elite-level structure — without being
+              physically onsite. This is not remote workouts. This is not generic
+              programming.
             </p>
-            <div className="h-px w-8 bg-accent" />
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
-            More than Training.
-            <br className="hidden sm:block" /> Complete Performance System.
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            The Online Performance System is a fully personalised,
-            data-informed, coach-led performance environment designed for
-            serious athletes who want elite-level structure — without being
-            physically onsite. This is not remote workouts. This is not generic
-            programming.
-          </p>
-        </div>
+        </FadeIn>
       </section>
 
       {/* Why Most Online Programs Fail */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-px w-12 bg-accent" />
-                <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                  The Problem
+            <FadeIn direction="left">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-12 bg-accent" />
+                  <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                    The Problem
+                  </p>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                  Why Most Online Programs Fail
+                </h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  Performance is not built on exercises alone. It is built on
+                  informed progression.
                 </p>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-                Why Most Online Programs Fail
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Performance is not built on exercises alone. It is built on
-                informed progression.
-              </p>
-            </div>
+            </FadeIn>
 
+            <FadeIn direction="right" delay={0.15}>
             <div className="space-y-3">
               {failurePoints.map((point) => (
                 <div
@@ -176,95 +182,103 @@ export default function OnlinePage() {
                 </div>
               ))}
             </div>
+            </FadeIn>
           </div>
         </div>
       </section>
 
       {/* This Is Not Self Service */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 mx-auto mb-4">
-              <ShieldCheck className="size-7 text-primary" />
+        <FadeIn>
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-10">
+              <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 mx-auto mb-4">
+                <ShieldCheck className="size-7 text-primary" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                This Is Not Self Service
+              </h2>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              This Is Not Self Service
-            </h2>
-          </div>
 
-          <div className="space-y-6">
-            <div className="bg-surface rounded-2xl border border-border p-6 sm:p-8">
-              <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-                This system is built for athletes who value structure, oversight,
-                and long-term performance. Standards are high. Capacity is
-                limited. Entry is selective.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                If you want automated workouts, this is not for you. If you want
-                expert-guided performance development, you may qualify.
-              </p>
+            <div className="space-y-6">
+              <div className="bg-surface rounded-2xl border border-border p-6 sm:p-8">
+                <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+                  This system is built for athletes who value structure, oversight,
+                  and long-term performance. Standards are high. Capacity is
+                  limited. Entry is selective.
+                </p>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  If you want automated workouts, this is not for you. If you want
+                  expert-guided performance development, you may qualify.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* Video Placeholder */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                See How It Works
-              </p>
-              <div className="h-px w-8 bg-accent" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              See How It Works
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              A look inside the system that drives athlete development remotely.
-            </p>
-          </div>
-
-          <div className="relative aspect-video bg-primary rounded-2xl overflow-hidden flex items-center justify-center group cursor-pointer">
-            {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/80 via-primary to-primary" />
-
-            {/* Play button */}
-            <div className="relative z-10 flex flex-col items-center gap-4">
-              <div className="flex size-20 items-center justify-center rounded-full bg-accent/20 group-hover:bg-accent/30 transition-colors">
-                <Play className="size-8 text-accent ml-1" />
+        <FadeIn>
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-8 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  See How It Works
+                </p>
+                <div className="h-px w-8 bg-accent" />
               </div>
-              <p className="text-sm text-white/60">
-                Video coming soon
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                See How It Works
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                A look inside the system that drives athlete development remotely.
               </p>
             </div>
+
+            <div className="relative aspect-video bg-primary rounded-2xl overflow-hidden flex items-center justify-center group cursor-pointer">
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/80 via-primary to-primary" />
+
+              {/* Play button */}
+              <div className="relative z-10 flex flex-col items-center gap-4">
+                <div className="flex size-20 items-center justify-center rounded-full bg-accent/20 group-hover:bg-accent/30 transition-colors">
+                  <Play className="size-8 text-accent ml-1" />
+                </div>
+                <p className="text-sm text-white/60">
+                  Video coming soon
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* Core Components — Horizontal Scroll */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                What You Get
+          <FadeIn>
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-8 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  What You Get
+                </p>
+                <div className="h-px w-8 bg-accent" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                Core Components of the System
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Five integrated pillars that separate this from every other online
+                program.
               </p>
-              <div className="h-px w-8 bg-accent" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              Core Components of the System
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Five integrated pillars that separate this from every other online
-              program.
-            </p>
-          </div>
+          </FadeIn>
 
           {/* Scrollable container with snap */}
+          <FadeIn delay={0.1}>
           <div className="overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-4 scrollbar-hide">
             <div className="flex gap-4 w-max lg:w-full lg:grid lg:grid-cols-5">
               {coreComponents.map((component) => {
@@ -289,34 +303,37 @@ export default function OnlinePage() {
               })}
             </div>
           </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-8 bg-accent" />
-            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+        <FadeIn>
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                Book a Call
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Book a Call
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              The Online Performance System is not open enrollment. Begin with a
+              conversation to determine if this is the right fit.
             </p>
-            <div className="h-px w-8 bg-accent" />
+            <Link
+              href="/contact"
+              className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
+            >
+              Book a Call
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-            Book a Call
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            The Online Performance System is not open enrollment. Begin with a
-            conversation to determine if this is the right fit.
-          </p>
-          <Link
-            href="/contact"
-            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
-          >
-            Book a Call
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
+        </FadeIn>
       </section>
 
       {/* FAQ */}

@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { FadeIn } from "@/components/shared/FadeIn"
 
 export const metadata: Metadata = {
   title: "Resources",
@@ -87,6 +88,7 @@ export default function ResourcesPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-5xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -106,6 +108,7 @@ export default function ResourcesPage() {
             way.
           </p>
         </div>
+        </FadeIn>
       </section>
 
       {/* Resources Grid */}
@@ -113,15 +116,19 @@ export default function ResourcesPage() {
         <div className="max-w-6xl mx-auto">
           {/* Row 1: 3 columns */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {resources.slice(0, 3).map((resource) => (
-              <ResourceCard key={resource.title} resource={resource} />
+            {resources.slice(0, 3).map((resource, i) => (
+              <FadeIn key={resource.title} delay={i * 0.1}>
+              <ResourceCard resource={resource} />
+              </FadeIn>
             ))}
           </div>
 
           {/* Row 2: 2 columns, centered */}
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {resources.slice(3).map((resource) => (
-              <ResourceCard key={resource.title} resource={resource} />
+            {resources.slice(3).map((resource, i) => (
+              <FadeIn key={resource.title} delay={i * 0.1}>
+              <ResourceCard resource={resource} />
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -129,6 +136,7 @@ export default function ResourcesPage() {
 
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-3xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -152,6 +160,7 @@ export default function ResourcesPage() {
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
+        </FadeIn>
       </section>
     </>
   )

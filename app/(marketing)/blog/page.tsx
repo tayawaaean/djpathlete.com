@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { FadeIn } from "@/components/shared/FadeIn"
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -126,6 +127,7 @@ export default function BlogPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-5xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -143,15 +145,16 @@ export default function BlogPage() {
             every level. No fluff, no fads — just what works.
           </p>
         </div>
+        </FadeIn>
       </section>
 
       {/* Blog Grid */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
+            {posts.map((post, i) => (
+              <FadeIn key={post.id} delay={i * 0.08}>
               <Link
-                key={post.id}
                 href={`/blog/${post.slug}`}
                 className="group"
               >
@@ -182,6 +185,7 @@ export default function BlogPage() {
                   </div>
                 </article>
               </Link>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -189,6 +193,7 @@ export default function BlogPage() {
 
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-3xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -212,6 +217,7 @@ export default function BlogPage() {
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
+        </FadeIn>
       </section>
     </>
   )

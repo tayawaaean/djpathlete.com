@@ -6,11 +6,14 @@ import {
   Dumbbell,
   Activity,
   Monitor,
-  Quote,
   Mail,
   ChevronRight,
 } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { FadeIn } from "@/components/shared/FadeIn"
+import { HeroContent } from "@/components/public/HeroContent"
+import { AnimatedStats } from "@/components/public/AnimatedStats"
+import { TestimonialCarousel } from "@/components/public/TestimonialCarousel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -124,7 +127,7 @@ export default function HomePage() {
         {/* Coach photo (left half on desktop) */}
         <div className="absolute inset-y-0 left-0 w-full lg:w-[45%]">
           <Image
-            src="/images/darrenpaul.png"
+            src="/images/professionalheadshot.jpg"
             alt="Darren J Paul — Performance Coach"
             fill
             className="object-cover object-top"
@@ -139,54 +142,8 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-primary/60 lg:hidden" />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 w-full px-4 sm:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="lg:ml-auto lg:w-[55%] lg:pl-16">
-              {/* Overline */}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="h-px w-12 bg-accent" />
-                <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                  DJP Athlete
-                </p>
-              </div>
-
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-heading font-bold text-primary-foreground tracking-tight leading-[1.08] mb-8">
-                Elite Performance
-                <br />
-                is Not Trained.
-                <br />
-                <span className="text-accent">It Is Engineered.</span>
-              </h1>
-
-              {/* Sub copy */}
-              <p className="text-lg sm:text-xl text-primary-foreground/70 leading-relaxed max-w-xl mb-12">
-                Performance strategist. Coach. Researcher.
-                <br className="hidden sm:block" />
-                Two decades of elite-level experience.
-              </p>
-
-              {/* CTA row */}
-              <div className="flex flex-col sm:flex-row items-start gap-4">
-                <Link
-                  href="/in-person"
-                  className="inline-flex items-center gap-3 bg-accent text-primary px-8 py-4 rounded-full text-sm font-semibold hover:bg-accent/90 transition-all hover:shadow-lg group"
-                >
-                  Explore Services
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-3 border border-white/20 text-primary-foreground px-8 py-4 rounded-full text-sm font-medium hover:bg-white/10 transition-all group"
-                >
-                  Book a Consultation
-                  <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Animated hero content + scroll indicator */}
+        <HeroContent />
 
         {/* Bottom accent line */}
         <div className="absolute bottom-0 left-0 right-0">
@@ -194,28 +151,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Stats Bar ─── */}
-      <section className="py-12 lg:py-16 px-4 sm:px-8 bg-surface border-b border-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-3xl lg:text-4xl font-heading font-bold text-primary mb-1">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ─── Stats Bar (Animated Counter) ─── */}
+      <AnimatedStats stats={stats} />
 
       {/* ─── Services Section ─── */}
       <section className="py-20 lg:py-32 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <FadeIn className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="h-px w-8 bg-accent" />
               <p className="text-sm font-medium text-accent uppercase tracking-widest">
@@ -226,37 +168,38 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight">
               Training &mdash; Testing &mdash; Coaching
             </h2>
-          </div>
+          </FadeIn>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {services.map((service) => {
+            {services.map((service, i) => {
               const Icon = service.icon
               return (
-                <Link
-                  key={service.title}
-                  href={service.href}
-                  className="group relative bg-white rounded-2xl border border-border p-8 hover:shadow-lg transition-all duration-300 overflow-hidden"
-                >
-                  {/* Hover accent line */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                <FadeIn key={service.title} delay={i * 0.12}>
+                  <Link
+                    href={service.href}
+                    className="group relative block bg-white rounded-2xl border border-border p-8 hover:shadow-lg transition-all duration-300 overflow-hidden h-full"
+                  >
+                    {/* Hover accent line */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
-                  <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 mb-6 group-hover:bg-accent/15 transition-colors">
-                    <Icon className="size-7 text-primary group-hover:text-accent transition-colors" />
-                  </div>
-                  <p className="text-xs font-semibold text-accent uppercase tracking-widest mb-2">
-                    {service.title}
-                  </p>
-                  <h3 className="text-xl font-heading font-semibold text-primary mb-3">
-                    {service.subtitle}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                    {service.description}
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-medium text-primary group-hover:text-accent transition-colors">
-                    Learn more
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </Link>
+                    <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 mb-6 group-hover:bg-accent/15 transition-colors">
+                      <Icon className="size-7 text-primary group-hover:text-accent transition-colors" />
+                    </div>
+                    <p className="text-xs font-semibold text-accent uppercase tracking-widest mb-2">
+                      {service.title}
+                    </p>
+                    <h3 className="text-xl font-heading font-semibold text-primary mb-3">
+                      {service.subtitle}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                      {service.description}
+                    </p>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-primary group-hover:text-accent transition-colors">
+                      Learn more
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </Link>
+                </FadeIn>
               )
             })}
           </div>
@@ -268,11 +211,11 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-start">
             {/* Coach photo */}
-            <div className="lg:col-span-2">
+            <FadeIn direction="left" className="lg:col-span-2">
               <div className="relative">
                 <div className="aspect-[3/4] rounded-2xl overflow-hidden">
                   <Image
-                    src="/images/darrenpaul.png"
+                    src="/images/professionalheadshot.jpg"
                     alt="Darren J Paul"
                     fill
                     className="object-cover object-top"
@@ -282,10 +225,10 @@ export default function HomePage() {
                 {/* Decorative accent block */}
                 <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-accent/20 rounded-2xl -z-10" />
               </div>
-            </div>
+            </FadeIn>
 
             {/* Bio copy */}
-            <div className="lg:col-span-3">
+            <FadeIn delay={0.15} className="lg:col-span-3">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px w-12 bg-accent" />
                 <p className="text-sm font-medium text-accent uppercase tracking-widest">
@@ -331,15 +274,15 @@ export default function HomePage() {
                 Work with me
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </Link>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
 
-      {/* ─── Testimonials Section ─── */}
+      {/* ─── Testimonials Section (Carousel) ─── */}
       <section className="py-20 lg:py-32 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <FadeIn className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="h-px w-8 bg-accent" />
               <p className="text-sm font-medium text-accent uppercase tracking-widest">
@@ -350,44 +293,17 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl font-heading font-semibold text-primary tracking-tight">
               Trusted by elite athletes.
             </h2>
-          </div>
+          </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial.name}
-                className="bg-white rounded-2xl border border-border p-8 flex flex-col"
-              >
-                <Quote className="size-8 text-accent/30 mb-4" />
-                <blockquote className="flex-1 mb-6">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    &ldquo;{testimonial.quote}&rdquo;
-                  </p>
-                </blockquote>
-                <div className="flex items-center gap-3 pt-4 border-t border-border">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <span className="text-sm font-semibold">
-                      {testimonial.name.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {testimonial.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {testimonial.title}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <FadeIn delay={0.1}>
+            <TestimonialCarousel testimonials={testimonials} />
+          </FadeIn>
         </div>
       </section>
 
       {/* ─── CTA Section ─── */}
       <section className="py-20 lg:py-32 px-4 sm:px-8 bg-surface">
-        <div className="max-w-3xl mx-auto text-center">
+        <FadeIn className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-heading font-semibold text-primary tracking-tight mb-4">
             Ready to elevate your performance?
           </h2>
@@ -412,12 +328,12 @@ export default function HomePage() {
               <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ─── Newsletter Section ─── */}
       <section className="py-20 lg:py-32 px-4 sm:px-8 bg-primary">
-        <div className="max-w-2xl mx-auto text-center">
+        <FadeIn className="max-w-2xl mx-auto text-center">
           <Mail className="size-10 text-accent mx-auto mb-6" />
           <h2 className="text-3xl sm:text-4xl font-heading font-semibold text-primary-foreground tracking-tight mb-4">
             Stay in the loop.
@@ -446,7 +362,7 @@ export default function HomePage() {
           <p className="text-xs text-primary-foreground/40 mt-4">
             We respect your privacy. Unsubscribe at any time.
           </p>
-        </div>
+        </FadeIn>
       </section>
     </>
   )

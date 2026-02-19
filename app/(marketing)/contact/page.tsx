@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Mail, Phone, MapPin } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { FadeIn } from "@/components/shared/FadeIn"
 import { ContactForm } from "./ContactForm"
 
 export const metadata: Metadata = {
@@ -64,6 +65,7 @@ export default function ContactPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-20 px-4 sm:px-8">
+        <FadeIn>
         <div className="max-w-5xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -79,6 +81,7 @@ export default function ContactPage() {
             back to you within 24 hours.
           </p>
         </div>
+        </FadeIn>
       </section>
 
       {/* Contact Grid */}
@@ -86,13 +89,14 @@ export default function ContactPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Form */}
-            <div className="lg:col-span-2">
+            <FadeIn direction="left" className="lg:col-span-2">
               <div className="bg-white rounded-2xl border border-border p-6 sm:p-8">
                 <ContactForm />
               </div>
-            </div>
+            </FadeIn>
 
             {/* Sidebar */}
+            <FadeIn delay={0.15}>
             <div className="space-y-6">
               <div className="bg-surface rounded-2xl border border-border p-6">
                 <h2 className="text-lg font-semibold text-primary mb-4">
@@ -139,6 +143,7 @@ export default function ContactPage() {
                 </p>
               </div>
             </div>
+            </FadeIn>
           </div>
         </div>
       </section>
