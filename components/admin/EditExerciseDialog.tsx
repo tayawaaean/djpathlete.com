@@ -1,0 +1,164 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type { Exercise, ProgramExercise } from "@/types/database"
+
+interface EditExerciseDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  programId: string
+  programExercise: (ProgramExercise & { exercises: Exercise }) | null
+}
+
+export function EditExerciseDialog({
+  open,
+  onOpenChange,
+  programId,
+  programExercise,
+}: EditExerciseDialogProps) {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  if (!programExercise) return null
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!programExercise) return
+    setIsSubmitting(true)
+
+    const formData = new FormData(e.currentTarget)
+    const body = {
+      sets: formData.get("sets") || null,
+      reps: formData.get("reps") || null,
+      rest_seconds: formData.get("rest_seconds") || null,
+      duration_seconds: formData.get("duration_seconds") || null,
+      notes: formData.get("notes") || null,
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/programs/${programId}/exercises/${programExercise.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      )
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update")
+      }
+
+      toast.success("Exercise updated")
+      onOpenChange(false)
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update exercise")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Exercise Parameters</DialogTitle>
+          <DialogDescription>
+            Update parameters for {programExercise.exercises.name}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-sets">Sets</Label>
+              <Input
+                id="edit-sets"
+                name="sets"
+                type="number"
+                min={1}
+                defaultValue={programExercise.sets ?? ""}
+                placeholder="e.g. 3"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-reps">Reps</Label>
+              <Input
+                id="edit-reps"
+                name="reps"
+                defaultValue={programExercise.reps ?? ""}
+                placeholder="e.g. 8-12"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-rest">Rest (seconds)</Label>
+              <Input
+                id="edit-rest"
+                name="rest_seconds"
+                type="number"
+                min={0}
+                defaultValue={programExercise.rest_seconds ?? ""}
+                placeholder="e.g. 60"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-duration">Duration (seconds)</Label>
+              <Input
+                id="edit-duration"
+                name="duration_seconds"
+                type="number"
+                min={0}
+                defaultValue={programExercise.duration_seconds ?? ""}
+                placeholder="e.g. 30"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-notes">Notes</Label>
+            <textarea
+              id="edit-notes"
+              name="notes"
+              rows={2}
+              defaultValue={programExercise.notes ?? ""}
+              placeholder="Any specific instructions..."
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

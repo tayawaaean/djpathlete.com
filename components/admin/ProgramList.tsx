@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ClipboardList } from "lucide-react"
+import Link from "next/link"
+import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ClipboardList, LayoutGrid } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -203,7 +204,11 @@ export function ProgramList({ programs }: ProgramListProps) {
             <tbody>
               {paginated.map((program) => (
                 <tr key={program.id} className="border-b border-border last:border-b-0 hover:bg-surface/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{program.name}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">
+                    <Link href={`/admin/programs/${program.id}`} className="hover:underline">
+                      {program.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary capitalize">
                       {CATEGORY_LABELS[program.category] ?? program.category}
@@ -225,6 +230,15 @@ export function ProgramList({ programs }: ProgramListProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/programs/${program.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          title="Build program"
+                        >
+                          <LayoutGrid className="size-3.5" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon-xs"

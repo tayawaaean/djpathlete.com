@@ -16,6 +16,7 @@ import { AnimatedStats } from "@/components/public/AnimatedStats"
 import { TestimonialCarousel } from "@/components/public/TestimonialCarousel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { getFeaturedTestimonials } from "@/lib/db/testimonials"
 
 export const metadata: Metadata = {
   title: "DJP Athlete | Elite Performance Coaching",
@@ -84,7 +85,7 @@ const services = [
   },
 ]
 
-const testimonials = [
+const fallbackTestimonials = [
   {
     name: "Abigail Rencheli",
     title: "WTA Professional Tennis Player",
@@ -112,7 +113,21 @@ const stats = [
   { value: "3", label: "Continents" },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  let testimonials = fallbackTestimonials
+  try {
+    const dbTestimonials = await getFeaturedTestimonials()
+    if (dbTestimonials.length > 0) {
+      testimonials = dbTestimonials.map((t) => ({
+        name: t.name,
+        title: t.role ?? "",
+        quote: t.quote,
+      }))
+    }
+  } catch {
+    // Fall back to hardcoded testimonials if DB fetch fails
+  }
+
   return (
     <>
       <JsonLd data={organizationSchema} />

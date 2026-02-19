@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
+import { posts, type Category } from "@/lib/blog-data"
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -35,74 +36,6 @@ const blogSchema = {
     url: "https://djpathlete.com",
   },
 }
-
-type Category = "Performance" | "Recovery" | "Coaching" | "Youth Development"
-
-interface Post {
-  id: string
-  title: string
-  excerpt: string
-  category: Category
-  date: string
-  slug: string
-}
-
-const posts: Post[] = [
-  {
-    id: "1",
-    title: "Why Most Training Programs Fail Serious Athletes",
-    excerpt:
-      "Generic programming ignores the most critical variable in performance development: context. Here's what actually drives adaptation.",
-    category: "Performance",
-    date: "2026-02-10",
-    slug: "why-most-training-programs-fail",
-  },
-  {
-    id: "2",
-    title: "The Return-to-Performance Gap Nobody Talks About",
-    excerpt:
-      "Medical clearance and performance readiness are not the same thing. Understanding this distinction could save an athlete's career.",
-    category: "Recovery",
-    date: "2026-01-28",
-    slug: "return-to-performance-gap",
-  },
-  {
-    id: "3",
-    title: "Systems Thinking in Athletic Development",
-    excerpt:
-      "Why the best coaches think in systems, not exercises. A framework for understanding how adaptation actually works.",
-    category: "Coaching",
-    date: "2026-01-15",
-    slug: "systems-thinking-athletic-development",
-  },
-  {
-    id: "4",
-    title: "Load Management: Beyond the Numbers",
-    excerpt:
-      "Monitoring load is necessary but insufficient. What matters is how load interacts with readiness, capacity, and context.",
-    category: "Performance",
-    date: "2025-12-20",
-    slug: "load-management-beyond-numbers",
-  },
-  {
-    id: "5",
-    title: "Building Resilient Youth Athletes",
-    excerpt:
-      "Long-term athletic development isn't about early specialization. It's about building robust, adaptable movement capacity.",
-    category: "Youth Development",
-    date: "2025-12-05",
-    slug: "building-resilient-youth-athletes",
-  },
-  {
-    id: "6",
-    title: "The Role of Video Analysis in Modern Coaching",
-    excerpt:
-      "Frame-by-frame breakdown of movement isn't just for biomechanists. How video feedback transforms coaching outcomes.",
-    category: "Coaching",
-    date: "2025-11-18",
-    slug: "video-analysis-modern-coaching",
-  },
-]
 
 const categoryStyles: Record<Category, string> = {
   Performance: "bg-primary/10 text-primary",
