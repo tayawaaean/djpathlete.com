@@ -15,6 +15,76 @@ export const EXERCISE_DIFFICULTIES = [
   "advanced",
 ] as const
 
+export const MOVEMENT_PATTERNS = [
+  "push",
+  "pull",
+  "squat",
+  "hinge",
+  "lunge",
+  "carry",
+  "rotation",
+  "isometric",
+  "locomotion",
+] as const
+
+export const FORCE_TYPES = [
+  "push",
+  "pull",
+  "static",
+  "dynamic",
+] as const
+
+export const LATERALITY_OPTIONS = [
+  "bilateral",
+  "unilateral",
+  "alternating",
+] as const
+
+export const MUSCLE_OPTIONS = [
+  "chest",
+  "upper_back",
+  "lats",
+  "shoulders",
+  "biceps",
+  "triceps",
+  "forearms",
+  "core",
+  "obliques",
+  "lower_back",
+  "glutes",
+  "quadriceps",
+  "hamstrings",
+  "calves",
+  "hip_flexors",
+  "adductors",
+  "abductors",
+  "traps",
+  "neck",
+] as const
+
+export const EQUIPMENT_OPTIONS = [
+  "barbell",
+  "dumbbell",
+  "kettlebell",
+  "cable_machine",
+  "smith_machine",
+  "resistance_band",
+  "pull_up_bar",
+  "bench",
+  "squat_rack",
+  "leg_press",
+  "rowing_machine",
+  "treadmill",
+  "bike",
+  "box",
+  "medicine_ball",
+  "stability_ball",
+  "foam_roller",
+  "trx",
+  "landmine",
+  "sled",
+] as const
+
 export const exerciseFormSchema = z.object({
   name: z
     .string()
@@ -52,6 +122,15 @@ export const exerciseFormSchema = z.object({
     .max(5000, "Instructions must be under 5000 characters")
     .nullable()
     .transform((v) => v || null),
+  // AI metadata fields (all optional)
+  movement_pattern: z.enum(MOVEMENT_PATTERNS).nullable().optional().transform((v) => v ?? null),
+  primary_muscles: z.array(z.string()).optional().default([]),
+  secondary_muscles: z.array(z.string()).optional().default([]),
+  force_type: z.enum(FORCE_TYPES).nullable().optional().transform((v) => v ?? null),
+  laterality: z.enum(LATERALITY_OPTIONS).nullable().optional().transform((v) => v ?? null),
+  equipment_required: z.array(z.string()).optional().default([]),
+  is_bodyweight: z.boolean().optional().default(false),
+  is_compound: z.boolean().optional().default(true),
 })
 
 export type ExerciseFormData = z.infer<typeof exerciseFormSchema>

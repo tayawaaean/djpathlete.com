@@ -31,7 +31,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden lg:flex lg:flex-col w-64 bg-primary text-primary-foreground sticky top-0 h-screen">
+    <aside className="hidden lg:flex lg:flex-col w-64 bg-primary text-primary-foreground fixed top-0 left-0 h-screen z-30">
       {/* Logo */}
       <div className="p-6">
         <Link href="/admin/dashboard" className="flex items-center">

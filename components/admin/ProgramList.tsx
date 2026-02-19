@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
-import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ClipboardList, LayoutGrid } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ClipboardList, LayoutGrid, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -205,9 +205,17 @@ export function ProgramList({ programs }: ProgramListProps) {
               {paginated.map((program) => (
                 <tr key={program.id} className="border-b border-border last:border-b-0 hover:bg-surface/30 transition-colors">
                   <td className="px-4 py-3 font-medium text-foreground">
-                    <Link href={`/admin/programs/${program.id}`} className="hover:underline">
-                      {program.name}
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link href={`/admin/programs/${program.id}`} className="hover:underline">
+                        {program.name}
+                      </Link>
+                      {program.is_ai_generated && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-accent/15 text-accent-foreground" title="AI Generated">
+                          <Sparkles className="size-2.5" />
+                          AI
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary capitalize">

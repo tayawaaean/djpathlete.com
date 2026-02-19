@@ -91,6 +91,10 @@ export function AddExerciseDialog({
       rest_seconds: formData.get("rest_seconds") || null,
       duration_seconds: formData.get("duration_seconds") || null,
       notes: formData.get("notes") || null,
+      rpe_target: formData.get("rpe_target") || null,
+      intensity_pct: formData.get("intensity_pct") || null,
+      tempo: formData.get("tempo") || null,
+      group_tag: formData.get("group_tag") || null,
     }
 
     try {
@@ -226,6 +230,29 @@ export function AddExerciseDialog({
               <div className="space-y-2">
                 <Label htmlFor="duration_seconds">Duration (seconds)</Label>
                 <Input id="duration_seconds" name="duration_seconds" type="number" min={0} placeholder="e.g. 30" />
+              </div>
+            </div>
+
+            {/* Intensity fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rpe_target">RPE Target</Label>
+                <Input id="rpe_target" name="rpe_target" type="number" min={1} max={10} step={0.5} placeholder="e.g. 7" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="intensity_pct">Intensity (%1RM)</Label>
+                <Input id="intensity_pct" name="intensity_pct" type="number" min={0} max={100} placeholder="e.g. 75" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tempo">Tempo</Label>
+                <Input id="tempo" name="tempo" placeholder="e.g. 3-1-2-0" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="group_tag">Group Tag</Label>
+                <Input id="group_tag" name="group_tag" placeholder="e.g. A1" />
               </div>
             </div>
 

@@ -60,6 +60,11 @@ export async function PATCH(request: Request) {
         weight_kg: updates.weight_kg ?? null,
         emergency_contact_name: updates.emergency_contact_name ?? null,
         emergency_contact_phone: updates.emergency_contact_phone ?? null,
+        available_equipment: [],
+        preferred_session_minutes: null,
+        preferred_training_days: null,
+        injury_details: [],
+        training_years: null,
       })
       return NextResponse.json(newProfile)
     }

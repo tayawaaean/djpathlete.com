@@ -46,6 +46,10 @@ export function EditExerciseDialog({
       rest_seconds: formData.get("rest_seconds") || null,
       duration_seconds: formData.get("duration_seconds") || null,
       notes: formData.get("notes") || null,
+      rpe_target: formData.get("rpe_target") || null,
+      intensity_pct: formData.get("intensity_pct") || null,
+      tempo: formData.get("tempo") || null,
+      group_tag: formData.get("group_tag") || null,
     }
 
     try {
@@ -128,6 +132,56 @@ export function EditExerciseDialog({
                 min={0}
                 defaultValue={programExercise.duration_seconds ?? ""}
                 placeholder="e.g. 30"
+              />
+            </div>
+          </div>
+
+          {/* Intensity fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-rpe">RPE Target</Label>
+              <Input
+                id="edit-rpe"
+                name="rpe_target"
+                type="number"
+                min={1}
+                max={10}
+                step={0.5}
+                defaultValue={programExercise.rpe_target ?? ""}
+                placeholder="e.g. 7"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-intensity">Intensity (%1RM)</Label>
+              <Input
+                id="edit-intensity"
+                name="intensity_pct"
+                type="number"
+                min={0}
+                max={100}
+                defaultValue={programExercise.intensity_pct ?? ""}
+                placeholder="e.g. 75"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-tempo">Tempo</Label>
+              <Input
+                id="edit-tempo"
+                name="tempo"
+                defaultValue={programExercise.tempo ?? ""}
+                placeholder="e.g. 3-1-2-0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-group-tag">Group Tag</Label>
+              <Input
+                id="edit-group-tag"
+                name="group_tag"
+                defaultValue={programExercise.group_tag ?? ""}
+                placeholder="e.g. A1"
               />
             </div>
           </div>

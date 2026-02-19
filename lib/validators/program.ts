@@ -16,6 +16,24 @@ export const PROGRAM_DIFFICULTIES = [
   "elite",
 ] as const
 
+export const SPLIT_TYPES = [
+  "full_body",
+  "upper_lower",
+  "push_pull_legs",
+  "push_pull",
+  "body_part",
+  "movement_pattern",
+  "custom",
+] as const
+
+export const PERIODIZATION_TYPES = [
+  "linear",
+  "undulating",
+  "block",
+  "reverse_linear",
+  "none",
+] as const
+
 export const programFormSchema = z.object({
   name: z
     .string()
@@ -47,6 +65,8 @@ export const programFormSchema = z.object({
     .nullable()
     .optional()
     .transform((v) => v ?? null),
+  split_type: z.enum(SPLIT_TYPES).nullable().optional().transform((v) => v ?? null),
+  periodization: z.enum(PERIODIZATION_TYPES).nullable().optional().transform((v) => v ?? null),
 })
 
 export type ProgramFormData = z.infer<typeof programFormSchema>

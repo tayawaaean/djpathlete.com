@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Dumbbell, Upload } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Dumbbell, Upload, Download } from "lucide-react"
+import { EXERCISE_TEMPLATE_CSV, EXERCISE_RELATIONSHIPS_TEMPLATE_CSV } from "@/lib/csv-templates"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -61,6 +62,33 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [templateMenuOpen, setTemplateMenuOpen] = useState(false)
+  const templateMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (templateMenuRef.current && !templateMenuRef.current.contains(e.target as Node)) {
+        setTemplateMenuOpen(false)
+      }
+    }
+    if (templateMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [templateMenuOpen])
+
+  function downloadTemplate(type: "exercises" | "relationships") {
+    const csv = type === "exercises" ? EXERCISE_TEMPLATE_CSV : EXERCISE_RELATIONSHIPS_TEMPLATE_CSV
+    const filename = type === "exercises" ? "exercises_import_template.csv" : "exercise_relationships_template.csv"
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+    setTemplateMenuOpen(false)
+  }
 
   // Selection states
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -190,13 +218,35 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           description="Create your exercise library to build training programs. Add exercises with descriptions, videos, and difficulty levels."
         />
         <div className="flex justify-center gap-2">
-          <Button onClick={handleCreate}>
-            <Plus className="size-4" />
-            Add Exercise
-          </Button>
+          <div className="relative" ref={templateMenuRef}>
+            <Button variant="outline" onClick={() => setTemplateMenuOpen(!templateMenuOpen)}>
+              <Download className="size-4" />
+              Download Template
+            </Button>
+            {templateMenuOpen && (
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg border border-border shadow-lg z-50 py-1">
+                <button
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-surface/50 transition-colors"
+                  onClick={() => downloadTemplate("exercises")}
+                >
+                  Exercise Library Template
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-surface/50 transition-colors"
+                  onClick={() => downloadTemplate("relationships")}
+                >
+                  Exercise Relationships Template
+                </button>
+              </div>
+            )}
+          </div>
           <Button variant="outline" onClick={() => setImportOpen(true)}>
             <Upload className="size-4" />
             Import CSV
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="size-4" />
+            Add Exercise
           </Button>
         </div>
         <ExerciseFormDialog
@@ -220,6 +270,28 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} in library
         </p>
         <div className="flex items-center gap-2">
+          <div className="relative" ref={templateMenuRef}>
+            <Button variant="outline" onClick={() => setTemplateMenuOpen(!templateMenuOpen)}>
+              <Download className="size-4" />
+              Download Template
+            </Button>
+            {templateMenuOpen && (
+              <div className="absolute top-full right-0 mt-1 w-64 bg-white rounded-lg border border-border shadow-lg z-50 py-1">
+                <button
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-surface/50 transition-colors"
+                  onClick={() => downloadTemplate("exercises")}
+                >
+                  Exercise Library Template
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-surface/50 transition-colors"
+                  onClick={() => downloadTemplate("relationships")}
+                >
+                  Exercise Relationships Template
+                </button>
+              </div>
+            )}
+          </div>
           <Button variant="outline" onClick={() => setImportOpen(true)}>
             <Upload className="size-4" />
             Import CSV

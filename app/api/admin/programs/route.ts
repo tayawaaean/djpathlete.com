@@ -18,6 +18,8 @@ export async function POST(request: Request) {
       ...result.data,
       is_active: true,
       created_by: null,
+      is_ai_generated: false,
+      ai_generation_params: null,
     })
 
     return NextResponse.json(program, { status: 201 })

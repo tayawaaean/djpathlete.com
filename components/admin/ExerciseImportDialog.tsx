@@ -27,6 +27,32 @@ interface PreviewRow {
   errors: string[]
 }
 
+/** Convert pipe-delimited strings to arrays and string booleans to actual booleans. */
+function transformCsvRow(row: Record<string, string>): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...row }
+
+  // Pipe-delimited array fields
+  const arrayFields = ["primary_muscles", "secondary_muscles", "equipment_required"]
+  for (const field of arrayFields) {
+    const val = row[field]
+    if (val && val.trim()) {
+      result[field] = val.split("|").map((s) => s.trim()).filter(Boolean)
+    } else {
+      result[field] = []
+    }
+  }
+
+  // Boolean fields
+  if ("is_bodyweight" in row) {
+    result.is_bodyweight = row.is_bodyweight?.toLowerCase() === "true"
+  }
+  if ("is_compound" in row) {
+    result.is_compound = row.is_compound?.toLowerCase() !== "false"
+  }
+
+  return result
+}
+
 export function ExerciseImportDialog({
   open,
   onOpenChange,
@@ -50,7 +76,8 @@ export function ExerciseImportDialog({
       const { rows } = parseCsv(text)
 
       const preview: PreviewRow[] = rows.map((row) => {
-        const result = exerciseFormSchema.safeParse(row)
+        const transformed = transformCsvRow(row)
+        const result = exerciseFormSchema.safeParse(transformed)
         if (result.success) {
           return { data: row, valid: true, errors: [] }
         }
@@ -66,7 +93,7 @@ export function ExerciseImportDialog({
   }
 
   async function handleImport() {
-    const validRows = previewRows.filter((r) => r.valid).map((r) => r.data)
+    const validRows = previewRows.filter((r) => r.valid).map((r) => transformCsvRow(r.data))
     if (validRows.length === 0) return
 
     setIsImporting(true)
@@ -106,7 +133,7 @@ export function ExerciseImportDialog({
         <DialogHeader>
           <DialogTitle>Import Exercises from CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV file with columns: name, category, difficulty, muscle_group, equipment, description, instructions, video_url
+            Upload a CSV file with required columns: name, category, difficulty. Optional: muscle_group, equipment, description, instructions, video_url, movement_pattern, primary_muscles, secondary_muscles, force_type, laterality, equipment_required, is_bodyweight, is_compound. Use pipe (|) to separate multiple values in muscle and equipment columns.
           </DialogDescription>
         </DialogHeader>
 

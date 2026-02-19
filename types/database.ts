@@ -10,6 +10,22 @@ export type NotificationType = "info" | "success" | "warning" | "error"
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say"
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced" | "elite"
 
+// AI program generation types
+export type MovementPattern = "push" | "pull" | "squat" | "hinge" | "lunge" | "carry" | "rotation" | "isometric" | "locomotion"
+export type ForceType = "push" | "pull" | "static" | "dynamic"
+export type Laterality = "bilateral" | "unilateral" | "alternating"
+export type SplitType = "full_body" | "upper_lower" | "push_pull_legs" | "push_pull" | "body_part" | "movement_pattern" | "custom"
+export type Periodization = "linear" | "undulating" | "block" | "reverse_linear" | "none"
+export type ExerciseRelationshipType = "progression" | "regression" | "alternative" | "variation"
+export type AiGenerationStatus = "pending" | "generating" | "completed" | "failed"
+
+export interface InjuryDetail {
+  area: string
+  side?: string
+  severity?: string
+  notes?: string
+}
+
 export interface User {
   id: string
   email: string
@@ -39,6 +55,11 @@ export interface ClientProfile {
   weight_kg: number | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
+  available_equipment: string[]
+  preferred_session_minutes: number | null
+  preferred_training_days: number | null
+  injury_details: InjuryDetail[]
+  training_years: number | null
   created_at: string
   updated_at: string
 }
@@ -56,6 +77,14 @@ export interface Exercise {
   instructions: string | null
   created_by: string | null
   is_active: boolean
+  movement_pattern: MovementPattern | null
+  primary_muscles: string[]
+  secondary_muscles: string[]
+  force_type: ForceType | null
+  laterality: Laterality | null
+  equipment_required: string[]
+  is_bodyweight: boolean
+  is_compound: boolean
   created_at: string
   updated_at: string
 }
@@ -71,6 +100,10 @@ export interface Program {
   price_cents: number | null
   is_active: boolean
   created_by: string | null
+  split_type: SplitType | null
+  periodization: Periodization | null
+  is_ai_generated: boolean
+  ai_generation_params: Record<string, unknown> | null
   created_at: string
   updated_at: string
 }
@@ -87,6 +120,10 @@ export interface ProgramExercise {
   duration_seconds: number | null
   rest_seconds: number | null
   notes: string | null
+  rpe_target: number | null
+  intensity_pct: number | null
+  tempo: string | null
+  group_tag: string | null
   created_at: string
 }
 
@@ -169,6 +206,31 @@ export interface Notification {
   created_at: string
 }
 
+export interface ExerciseRelationship {
+  id: string
+  exercise_id: string
+  related_exercise_id: string
+  relationship_type: ExerciseRelationshipType
+  notes: string | null
+  created_at: string
+}
+
+export interface AiGenerationLog {
+  id: string
+  program_id: string | null
+  client_id: string | null
+  requested_by: string
+  status: AiGenerationStatus
+  input_params: Record<string, unknown>
+  output_summary: Record<string, unknown> | null
+  error_message: string | null
+  model_used: string | null
+  tokens_used: number | null
+  duration_ms: number | null
+  created_at: string
+  completed_at: string | null
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -226,6 +288,16 @@ export interface Database {
         Row: Notification
         Insert: Omit<Notification, "id" | "created_at">
         Update: Partial<Omit<Notification, "id" | "created_at">>
+      }
+      exercise_relationships: {
+        Row: ExerciseRelationship
+        Insert: Omit<ExerciseRelationship, "id" | "created_at">
+        Update: Partial<Omit<ExerciseRelationship, "id" | "created_at">>
+      }
+      ai_generation_log: {
+        Row: AiGenerationLog
+        Insert: Omit<AiGenerationLog, "id" | "created_at">
+        Update: Partial<Omit<AiGenerationLog, "id" | "created_at">>
       }
     }
   }

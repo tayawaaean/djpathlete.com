@@ -10,6 +10,10 @@ export const programExerciseSchema = z.object({
   rest_seconds: z.coerce.number().int().min(0).nullable().optional().transform((v) => v ?? null),
   duration_seconds: z.coerce.number().int().min(0).nullable().optional().transform((v) => v ?? null),
   notes: z.string().max(500).nullable().optional().transform((v) => v || null),
+  rpe_target: z.coerce.number().min(1).max(10).nullable().optional().transform((v) => v ?? null),
+  intensity_pct: z.coerce.number().min(0).max(100).nullable().optional().transform((v) => v ?? null),
+  tempo: z.string().max(20).nullable().optional().transform((v) => v || null),
+  group_tag: z.string().max(10).nullable().optional().transform((v) => v || null),
 })
 
 export const programExerciseUpdateSchema = programExerciseSchema.partial().omit({ exercise_id: true })

@@ -18,6 +18,8 @@ import {
   programFormSchema,
   PROGRAM_CATEGORIES,
   PROGRAM_DIFFICULTIES,
+  SPLIT_TYPES,
+  PERIODIZATION_TYPES,
   type ProgramFormData,
 } from "@/lib/validators/program"
 import type { Program } from "@/types/database"
@@ -43,6 +45,27 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   advanced: "Advanced",
   elite: "Elite",
 }
+
+const SPLIT_TYPE_LABELS: Record<string, string> = {
+  full_body: "Full Body",
+  upper_lower: "Upper/Lower",
+  push_pull_legs: "Push/Pull/Legs",
+  push_pull: "Push/Pull",
+  body_part: "Body Part",
+  movement_pattern: "Movement Pattern",
+  custom: "Custom",
+}
+
+const PERIODIZATION_LABELS: Record<string, string> = {
+  linear: "Linear",
+  undulating: "Undulating",
+  block: "Block",
+  reverse_linear: "Reverse Linear",
+  none: "None",
+}
+
+const selectClass =
+  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 
 export function ProgramFormDialog({
   open,
@@ -72,6 +95,8 @@ export function ProgramFormDialog({
       duration_weeks: formData.get("duration_weeks") as string,
       sessions_per_week: formData.get("sessions_per_week") as string,
       price_cents: priceCents,
+      split_type: (formData.get("split_type") as string) || null,
+      periodization: (formData.get("periodization") as string) || null,
     }
 
     const result = programFormSchema.safeParse(data)
@@ -149,7 +174,7 @@ export function ProgramFormDialog({
                 defaultValue={program?.category ?? ""}
                 required
                 disabled={isSubmitting}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                className={selectClass}
               >
                 <option value="" disabled>Select category</option>
                 {PROGRAM_CATEGORIES.map((cat) => (
@@ -168,7 +193,7 @@ export function ProgramFormDialog({
                 defaultValue={program?.difficulty ?? ""}
                 required
                 disabled={isSubmitting}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                className={selectClass}
               >
                 <option value="" disabled>Select difficulty</option>
                 {PROGRAM_DIFFICULTIES.map((diff) => (
@@ -178,6 +203,40 @@ export function ProgramFormDialog({
               {errors.difficulty && (
                 <p className="text-xs text-destructive">{errors.difficulty[0]}</p>
               )}
+            </div>
+          </div>
+
+          {/* Split Type & Periodization */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="split_type">Split Type</Label>
+              <select
+                id="split_type"
+                name="split_type"
+                defaultValue={program?.split_type ?? ""}
+                disabled={isSubmitting}
+                className={selectClass}
+              >
+                <option value="">None</option>
+                {SPLIT_TYPES.map((st) => (
+                  <option key={st} value={st}>{SPLIT_TYPE_LABELS[st]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="periodization">Periodization</Label>
+              <select
+                id="periodization"
+                name="periodization"
+                defaultValue={program?.periodization ?? ""}
+                disabled={isSubmitting}
+                className={selectClass}
+              >
+                <option value="">None</option>
+                {PERIODIZATION_TYPES.map((p) => (
+                  <option key={p} value={p}>{PERIODIZATION_LABELS[p]}</option>
+                ))}
+              </select>
             </div>
           </div>
 

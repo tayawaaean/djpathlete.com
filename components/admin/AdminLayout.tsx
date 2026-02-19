@@ -12,7 +12,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-surface">
       <AdminSidebar />
       <AdminMobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
         <AdminTopBar onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 p-6">{children}</main>
       </div>

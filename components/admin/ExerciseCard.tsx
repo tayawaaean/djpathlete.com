@@ -45,6 +45,9 @@ export function ExerciseCard({
   if (programExercise.reps) details.push(`${programExercise.reps} reps`)
   if (programExercise.rest_seconds) details.push(`${programExercise.rest_seconds}s rest`)
   if (programExercise.duration_seconds) details.push(`${programExercise.duration_seconds}s`)
+  if (programExercise.rpe_target) details.push(`RPE ${programExercise.rpe_target}`)
+  if (programExercise.intensity_pct) details.push(`${programExercise.intensity_pct}% 1RM`)
+  if (programExercise.tempo) details.push(`Tempo ${programExercise.tempo}`)
 
   return (
     <div className={`group relative rounded-lg border border-border bg-white ${borderColor} border-l-4 p-3 transition-shadow hover:shadow-sm`}>
@@ -62,7 +65,14 @@ export function ExerciseCard({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground truncate">{exercise.name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-medium text-foreground truncate">{exercise.name}</p>
+            {programExercise.group_tag && (
+              <span className="shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary">
+                {programExercise.group_tag}
+              </span>
+            )}
+          </div>
           {details.length > 0 && (
             <p className="text-xs text-muted-foreground mt-0.5">{details.join(" / ")}</p>
           )}

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { ChevronDown } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,11 @@ import {
   exerciseFormSchema,
   EXERCISE_CATEGORIES,
   EXERCISE_DIFFICULTIES,
+  MOVEMENT_PATTERNS,
+  FORCE_TYPES,
+  LATERALITY_OPTIONS,
+  MUSCLE_OPTIONS,
+  EQUIPMENT_OPTIONS,
   type ExerciseFormData,
 } from "@/lib/validators/exercise"
 import { extractYouTubeId, getYouTubeEmbedUrl } from "@/lib/youtube"
@@ -44,6 +50,79 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   advanced: "Advanced",
 }
 
+const MOVEMENT_PATTERN_LABELS: Record<string, string> = {
+  push: "Push",
+  pull: "Pull",
+  squat: "Squat",
+  hinge: "Hinge",
+  lunge: "Lunge",
+  carry: "Carry",
+  rotation: "Rotation",
+  isometric: "Isometric",
+  locomotion: "Locomotion",
+}
+
+const FORCE_TYPE_LABELS: Record<string, string> = {
+  push: "Push",
+  pull: "Pull",
+  static: "Static",
+  dynamic: "Dynamic",
+}
+
+const LATERALITY_LABELS: Record<string, string> = {
+  bilateral: "Bilateral",
+  unilateral: "Unilateral",
+  alternating: "Alternating",
+}
+
+const MUSCLE_LABELS: Record<string, string> = {
+  chest: "Chest",
+  upper_back: "Upper Back",
+  lats: "Lats",
+  shoulders: "Shoulders",
+  biceps: "Biceps",
+  triceps: "Triceps",
+  forearms: "Forearms",
+  core: "Core",
+  obliques: "Obliques",
+  lower_back: "Lower Back",
+  glutes: "Glutes",
+  quadriceps: "Quadriceps",
+  hamstrings: "Hamstrings",
+  calves: "Calves",
+  hip_flexors: "Hip Flexors",
+  adductors: "Adductors",
+  abductors: "Abductors",
+  traps: "Traps",
+  neck: "Neck",
+}
+
+const EQUIPMENT_LABELS: Record<string, string> = {
+  barbell: "Barbell",
+  dumbbell: "Dumbbell",
+  kettlebell: "Kettlebell",
+  cable_machine: "Cable Machine",
+  smith_machine: "Smith Machine",
+  resistance_band: "Resistance Band",
+  pull_up_bar: "Pull-up Bar",
+  bench: "Bench",
+  squat_rack: "Squat Rack",
+  leg_press: "Leg Press",
+  rowing_machine: "Rowing Machine",
+  treadmill: "Treadmill",
+  bike: "Bike",
+  box: "Box",
+  medicine_ball: "Medicine Ball",
+  stability_ball: "Stability Ball",
+  foam_roller: "Foam Roller",
+  trx: "TRX",
+  landmine: "Landmine",
+  sled: "Sled",
+}
+
+const selectClass =
+  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+
 export function ExerciseFormDialog({
   open,
   onOpenChange,
@@ -54,8 +133,18 @@ export function ExerciseFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof ExerciseFormData, string[]>>>({})
   const [videoUrl, setVideoUrl] = useState(exercise?.video_url ?? "")
+  const [aiOpen, setAiOpen] = useState(false)
+
+  // Multi-select state
+  const [primaryMuscles, setPrimaryMuscles] = useState<string[]>(exercise?.primary_muscles ?? [])
+  const [secondaryMuscles, setSecondaryMuscles] = useState<string[]>(exercise?.secondary_muscles ?? [])
+  const [equipmentRequired, setEquipmentRequired] = useState<string[]>(exercise?.equipment_required ?? [])
 
   const youtubeId = videoUrl ? extractYouTubeId(videoUrl) : null
+
+  function toggleItem(arr: string[], item: string, setter: (v: string[]) => void) {
+    setter(arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item])
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -71,6 +160,15 @@ export function ExerciseFormDialog({
       equipment: formData.get("equipment") as string,
       video_url: formData.get("video_url") as string,
       instructions: formData.get("instructions") as string,
+      // AI metadata
+      movement_pattern: (formData.get("movement_pattern") as string) || null,
+      force_type: (formData.get("force_type") as string) || null,
+      laterality: (formData.get("laterality") as string) || null,
+      primary_muscles: primaryMuscles,
+      secondary_muscles: secondaryMuscles,
+      equipment_required: equipmentRequired,
+      is_bodyweight: formData.get("is_bodyweight") === "on",
+      is_compound: formData.get("is_compound") !== "off",
     }
 
     const result = exerciseFormSchema.safeParse(data)
@@ -147,7 +245,7 @@ export function ExerciseFormDialog({
                 defaultValue={exercise?.category ?? ""}
                 required
                 disabled={isSubmitting}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                className={selectClass}
               >
                 <option value="" disabled>Select category</option>
                 {EXERCISE_CATEGORIES.map((cat) => (
@@ -166,7 +264,7 @@ export function ExerciseFormDialog({
                 defaultValue={exercise?.difficulty ?? ""}
                 required
                 disabled={isSubmitting}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                className={selectClass}
               >
                 <option value="" disabled>Select difficulty</option>
                 {EXERCISE_DIFFICULTIES.map((diff) => (
@@ -267,6 +365,165 @@ export function ExerciseFormDialog({
                   allowFullScreen
                   title="Video preview"
                 />
+              </div>
+            )}
+          </div>
+
+          {/* AI Metadata (collapsible) */}
+          <div className="border border-border rounded-lg">
+            <button
+              type="button"
+              onClick={() => setAiOpen(!aiOpen)}
+              className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-foreground hover:bg-surface/50 transition-colors rounded-lg"
+            >
+              AI Metadata
+              <ChevronDown className={`size-4 transition-transform ${aiOpen ? "rotate-180" : ""}`} />
+            </button>
+            {aiOpen && (
+              <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
+                {/* Movement Pattern & Force Type */}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="movement_pattern">Movement Pattern</Label>
+                    <select
+                      id="movement_pattern"
+                      name="movement_pattern"
+                      defaultValue={exercise?.movement_pattern ?? ""}
+                      disabled={isSubmitting}
+                      className={selectClass}
+                    >
+                      <option value="">None</option>
+                      {MOVEMENT_PATTERNS.map((mp) => (
+                        <option key={mp} value={mp}>{MOVEMENT_PATTERN_LABELS[mp]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="force_type">Force Type</Label>
+                    <select
+                      id="force_type"
+                      name="force_type"
+                      defaultValue={exercise?.force_type ?? ""}
+                      disabled={isSubmitting}
+                      className={selectClass}
+                    >
+                      <option value="">None</option>
+                      {FORCE_TYPES.map((ft) => (
+                        <option key={ft} value={ft}>{FORCE_TYPE_LABELS[ft]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Laterality */}
+                <div className="space-y-2">
+                  <Label htmlFor="laterality">Laterality</Label>
+                  <select
+                    id="laterality"
+                    name="laterality"
+                    defaultValue={exercise?.laterality ?? ""}
+                    disabled={isSubmitting}
+                    className={selectClass}
+                  >
+                    <option value="">None</option>
+                    {LATERALITY_OPTIONS.map((lat) => (
+                      <option key={lat} value={lat}>{LATERALITY_LABELS[lat]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Primary Muscles (multi-select via checkboxes) */}
+                <div className="space-y-2">
+                  <Label>Primary Muscles</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MUSCLE_OPTIONS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => toggleItem(primaryMuscles, m, setPrimaryMuscles)}
+                        disabled={isSubmitting}
+                        className={`px-2 py-1 text-xs rounded-full border transition-colors ${
+                          primaryMuscles.includes(m)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {MUSCLE_LABELS[m]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Secondary Muscles */}
+                <div className="space-y-2">
+                  <Label>Secondary Muscles</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MUSCLE_OPTIONS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => toggleItem(secondaryMuscles, m, setSecondaryMuscles)}
+                        disabled={isSubmitting}
+                        className={`px-2 py-1 text-xs rounded-full border transition-colors ${
+                          secondaryMuscles.includes(m)
+                            ? "bg-accent text-accent-foreground border-accent"
+                            : "bg-background border-border text-muted-foreground hover:border-accent/50"
+                        }`}
+                      >
+                        {MUSCLE_LABELS[m]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Equipment Required */}
+                <div className="space-y-2">
+                  <Label>Equipment Required</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {EQUIPMENT_OPTIONS.map((eq) => (
+                      <button
+                        key={eq}
+                        type="button"
+                        onClick={() => toggleItem(equipmentRequired, eq, setEquipmentRequired)}
+                        disabled={isSubmitting}
+                        className={`px-2 py-1 text-xs rounded-full border transition-colors ${
+                          equipmentRequired.includes(eq)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {EQUIPMENT_LABELS[eq]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bodyweight & Compound checkboxes */}
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="is_bodyweight"
+                      defaultChecked={exercise?.is_bodyweight ?? false}
+                      disabled={isSubmitting}
+                      className="rounded border-border"
+                    />
+                    Bodyweight
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="is_compound"
+                      defaultChecked={exercise?.is_compound ?? true}
+                      disabled={isSubmitting}
+                      value="on"
+                      className="rounded border-border"
+                    />
+                    Compound
+                  </label>
+                  {/* Hidden field to send "off" when unchecked */}
+                  <input type="hidden" name="is_compound_default" value="true" />
+                </div>
               </div>
             )}
           </div>

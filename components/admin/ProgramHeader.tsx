@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Pencil, UserPlus } from "lucide-react"
+import { Pencil, UserPlus, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ProgramFormDialog } from "@/components/admin/ProgramFormDialog"
@@ -36,6 +36,24 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   elite: "bg-primary/10 text-primary border-primary/20",
 }
 
+const SPLIT_TYPE_LABELS: Record<string, string> = {
+  full_body: "Full Body",
+  upper_lower: "Upper/Lower",
+  push_pull_legs: "Push/Pull/Legs",
+  push_pull: "Push/Pull",
+  body_part: "Body Part",
+  movement_pattern: "Movement Pattern",
+  custom: "Custom",
+}
+
+const PERIODIZATION_LABELS: Record<string, string> = {
+  linear: "Linear",
+  undulating: "Undulating",
+  block: "Block",
+  reverse_linear: "Reverse Linear",
+  none: "None",
+}
+
 function formatPrice(cents: number | null): string {
   if (cents == null) return "Free"
   return `$${(cents / 100).toFixed(2)}`
@@ -62,6 +80,22 @@ export function ProgramHeader({ program, clients }: ProgramHeaderProps) {
               >
                 {DIFFICULTY_LABELS[program.difficulty] ?? program.difficulty}
               </span>
+              {program.split_type && (
+                <Badge variant="outline" className="capitalize">
+                  {SPLIT_TYPE_LABELS[program.split_type] ?? program.split_type}
+                </Badge>
+              )}
+              {program.periodization && program.periodization !== "none" && (
+                <Badge variant="outline" className="capitalize">
+                  {PERIODIZATION_LABELS[program.periodization] ?? program.periodization}
+                </Badge>
+              )}
+              {program.is_ai_generated && (
+                <Badge variant="secondary" className="gap-1">
+                  <Sparkles className="size-3" />
+                  AI Generated
+                </Badge>
+              )}
             </div>
             {program.description && (
               <p className="text-sm text-muted-foreground max-w-xl">

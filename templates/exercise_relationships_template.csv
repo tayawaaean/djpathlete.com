@@ -1,0 +1,13 @@
+exercise_name,related_exercise_name,relationship_type,notes
+Barbell Back Squat,Goblet Squat,regression,Simpler squat pattern for beginners learning mechanics
+Barbell Back Squat,Front Squat,variation,Shifts emphasis to quads and upper back
+Barbell Back Squat,Bulgarian Split Squat,alternative,Unilateral option when barbell squatting is contraindicated
+Goblet Squat,Barbell Back Squat,progression,Progress to barbell once goblet form is solid
+Romanian Deadlift,Single-Leg Romanian Deadlift,progression,Unilateral progression for balance and stability
+Romanian Deadlift,Good Morning,variation,Similar hinge pattern with bar on back
+Dumbbell Bench Press,Push-Up,regression,Bodyweight alternative for beginners
+Dumbbell Bench Press,Barbell Bench Press,progression,Higher loading potential with barbell
+Pull-Up,Lat Pulldown,regression,Machine alternative when pull-ups are too difficult
+Pull-Up,Chin-Up,variation,Supinated grip shifts emphasis to biceps
+Plank,Dead Bug,regression,Supine anti-extension for beginners
+Plank,Ab Wheel Rollout,progression,Dynamic anti-extension with greater demand
