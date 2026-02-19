@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Dumbbell } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Dumbbell, Upload } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/ui/empty-state"
 import { ExerciseFormDialog } from "@/components/admin/ExerciseFormDialog"
+import { ExerciseImportDialog } from "@/components/admin/ExerciseImportDialog"
 import { EXERCISE_CATEGORIES, EXERCISE_DIFFICULTIES } from "@/lib/validators/exercise"
 import type { Exercise } from "@/types/database"
 
@@ -59,6 +60,12 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+
+  // Selection states
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [isBulkActing, setIsBulkActing] = useState(false)
 
   const filtered = exercises.filter((ex) => {
     const matchesSearch =
@@ -72,6 +79,28 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
 
   const totalPages = Math.ceil(filtered.length / perPage)
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
+
+  const allPageSelected = paginated.length > 0 && paginated.every((ex) => selectedIds.has(ex.id))
+
+  function toggleSelectAll() {
+    const next = new Set(selectedIds)
+    if (allPageSelected) {
+      paginated.forEach((ex) => next.delete(ex.id))
+    } else {
+      paginated.forEach((ex) => next.add(ex.id))
+    }
+    setSelectedIds(next)
+  }
+
+  function toggleSelect(id: string) {
+    const next = new Set(selectedIds)
+    if (next.has(id)) {
+      next.delete(id)
+    } else {
+      next.add(id)
+    }
+    setSelectedIds(next)
+  }
 
   function handleCreate() {
     setEditingExercise(null)
@@ -106,6 +135,51 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
     }
   }
 
+  async function handleBulkAction(action: "delete" | "activate" | "deactivate") {
+    if (selectedIds.size === 0) return
+    if (action === "delete") {
+      setBulkDeleteOpen(true)
+      return
+    }
+
+    setIsBulkActing(true)
+    try {
+      const response = await fetch("/api/admin/exercises/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids: Array.from(selectedIds) }),
+      })
+      if (!response.ok) throw new Error("Bulk action failed")
+      toast.success(`${selectedIds.size} exercise${selectedIds.size !== 1 ? "s" : ""} updated`)
+      setSelectedIds(new Set())
+      router.refresh()
+    } catch {
+      toast.error("Failed to perform bulk action")
+    } finally {
+      setIsBulkActing(false)
+    }
+  }
+
+  async function confirmBulkDelete() {
+    setIsBulkActing(true)
+    try {
+      const response = await fetch("/api/admin/exercises/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", ids: Array.from(selectedIds) }),
+      })
+      if (!response.ok) throw new Error("Bulk delete failed")
+      toast.success(`${selectedIds.size} exercise${selectedIds.size !== 1 ? "s" : ""} deleted`)
+      setSelectedIds(new Set())
+      setBulkDeleteOpen(false)
+      router.refresh()
+    } catch {
+      toast.error("Failed to delete exercises")
+    } finally {
+      setIsBulkActing(false)
+    }
+  }
+
   // Show empty state when no exercises at all (not just filtered)
   if (exercises.length === 0) {
     return (
@@ -115,10 +189,14 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           heading="No exercises yet"
           description="Create your exercise library to build training programs. Add exercises with descriptions, videos, and difficulty levels."
         />
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-2">
           <Button onClick={handleCreate}>
             <Plus className="size-4" />
             Add Exercise
+          </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="size-4" />
+            Import CSV
           </Button>
         </div>
         <ExerciseFormDialog
@@ -126,22 +204,67 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           onOpenChange={setFormOpen}
           exercise={editingExercise}
         />
+        <ExerciseImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+        />
       </div>
     )
   }
 
   return (
     <div>
-      {/* Header with Add button */}
+      {/* Header with Add + Import buttons */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
           {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} in library
         </p>
-        <Button onClick={handleCreate}>
-          <Plus className="size-4" />
-          Add Exercise
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="size-4" />
+            Import CSV
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="size-4" />
+            Add Exercise
+          </Button>
+        </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="mb-3 flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2.5">
+          <span className="text-sm font-medium text-primary">
+            {selectedIds.size} selected
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleBulkAction("deactivate")}
+              disabled={isBulkActing}
+            >
+              Deactivate
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => handleBulkAction("delete")}
+              disabled={isBulkActing}
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-border shadow-sm">
         {/* Toolbar */}
@@ -184,6 +307,14 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-surface/50">
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    onChange={toggleSelectAll}
+                    className="size-4 rounded border-border accent-primary"
+                  />
+                </th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Difficulty</th>
@@ -195,6 +326,14 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
             <tbody>
               {paginated.map((exercise) => (
                 <tr key={exercise.id} className="border-b border-border last:border-b-0 hover:bg-surface/30 transition-colors">
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(exercise.id)}
+                      onChange={() => toggleSelect(exercise.id)}
+                      className="size-4 rounded border-border accent-primary"
+                    />
+                  </td>
                   <td className="px-4 py-3 font-medium text-foreground">{exercise.name}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary capitalize">
@@ -237,7 +376,7 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                     No exercises found matching your filters.
                   </td>
                 </tr>
@@ -292,6 +431,12 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
         exercise={editingExercise}
       />
 
+      {/* Import Dialog */}
+      <ExerciseImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+      />
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
@@ -315,6 +460,34 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {selectedIds.size} Exercises</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedIds.size} exercise{selectedIds.size !== 1 ? "s" : ""}? This action can be undone by an administrator.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBulkDeleteOpen(false)}
+              disabled={isBulkActing}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmBulkDelete}
+              disabled={isBulkActing}
+            >
+              {isBulkActing ? "Deleting..." : "Delete All"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -20,6 +20,7 @@ import {
   EXERCISE_DIFFICULTIES,
   type ExerciseFormData,
 } from "@/lib/validators/exercise"
+import { extractYouTubeId, getYouTubeEmbedUrl } from "@/lib/youtube"
 import type { Exercise } from "@/types/database"
 
 interface ExerciseFormDialogProps {
@@ -52,6 +53,9 @@ export function ExerciseFormDialog({
   const isEditing = !!exercise
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof ExerciseFormData, string[]>>>({})
+  const [videoUrl, setVideoUrl] = useState(exercise?.video_url ?? "")
+
+  const youtubeId = videoUrl ? extractYouTubeId(videoUrl) : null
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -246,12 +250,24 @@ export function ExerciseFormDialog({
               id="video_url"
               name="video_url"
               type="url"
-              defaultValue={exercise?.video_url ?? ""}
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="https://youtube.com/watch?v=..."
               disabled={isSubmitting}
             />
             {errors.video_url && (
               <p className="text-xs text-destructive">{errors.video_url[0]}</p>
+            )}
+            {youtubeId && (
+              <div className="rounded-lg overflow-hidden border border-border aspect-video">
+                <iframe
+                  src={getYouTubeEmbedUrl(youtubeId)}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Video preview"
+                />
+              </div>
             )}
           </div>
 

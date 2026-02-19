@@ -67,6 +67,17 @@ export async function updateUser(id: string, updates: Partial<User>) {
   return data as User
 }
 
+export async function getClients() {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("role", "client")
+    .order("first_name", { ascending: true })
+  if (error) throw error
+  return data as User[]
+}
+
 export async function getUsersCount() {
   const supabase = getClient()
   const { count, error } = await supabase

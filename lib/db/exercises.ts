@@ -64,3 +64,36 @@ export async function deleteExercise(id: string) {
     .eq("id", id)
   if (error) throw error
 }
+
+export async function createExercisesBulk(
+  exercises: Omit<Exercise, "id" | "created_at" | "updated_at">[]
+) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("exercises")
+    .insert(exercises)
+    .select()
+  if (error) throw error
+  return data as Exercise[]
+}
+
+export async function bulkUpdateExercises(
+  ids: string[],
+  updates: Partial<Omit<Exercise, "id" | "created_at">>
+) {
+  const supabase = getClient()
+  const { error } = await supabase
+    .from("exercises")
+    .update(updates)
+    .in("id", ids)
+  if (error) throw error
+}
+
+export async function bulkDeleteExercises(ids: string[]) {
+  const supabase = getClient()
+  const { error } = await supabase
+    .from("exercises")
+    .update({ is_active: false })
+    .in("id", ids)
+  if (error) throw error
+}
