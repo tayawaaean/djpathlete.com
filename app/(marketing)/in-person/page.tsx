@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { JsonLd } from "@/components/shared/JsonLd"
+import { VideoBackground } from "@/components/public/VideoBackground"
 
 export const metadata: Metadata = {
   title: "In-Person Coaching",
@@ -114,16 +115,8 @@ export default function InPersonPage() {
 
       {/* Hero — Video Background */}
       <section className="relative min-h-[70vh] flex items-center justify-center bg-primary overflow-hidden">
-        {/* YouTube video background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <iframe
-            src="https://www.youtube.com/embed/h5YxEsY2vDI?autoplay=1&mute=1&loop=1&playlist=h5YxEsY2vDI&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&disablekb=1"
-            title="DJP Athlete Training"
-            allow="autoplay; encrypted-media"
-            className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] h-[300%] min-w-full min-h-full object-cover"
-            style={{ border: 0 }}
-          />
-        </div>
+        {/* YouTube video background — deferred load + fade-in */}
+        <VideoBackground videoId="h5YxEsY2vDI" />
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-primary/70" />
 
