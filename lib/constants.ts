@@ -11,12 +11,24 @@ export type NavGroup = {
 }
 
 export const NAV_ITEMS: NavGroup[] = [
-  { label: "In-Person", href: "/in-person" },
-  { label: "Online", href: "/online" },
-  { label: "Assessment", href: "/assessment" },
+  {
+    label: "Services",
+    children: [
+      { label: "In-Person Coaching", href: "/in-person", description: "Assessment-led, hands-on training" },
+      { label: "Online Coaching", href: "/online", description: "Complete performance system, anywhere" },
+      { label: "Assessment", href: "/assessment", description: "Return-to-performance testing" },
+    ],
+  },
+  { label: "Programs", href: "/programs" },
   { label: "Education", href: "/education" },
-  { label: "Resources", href: "/resources" },
-  { label: "Blog", href: "/blog" },
+  {
+    label: "Resources",
+    children: [
+      { label: "Blog", href: "/blog", description: "Articles & insights" },
+      { label: "Performance Database", href: "/resources", description: "Data-driven benchmarks" },
+      { label: "Comeback Code", href: "/resources", description: "Injury recovery protocols" },
+    ],
+  },
   { label: "Shop", href: "/shop" },
 ]
 
