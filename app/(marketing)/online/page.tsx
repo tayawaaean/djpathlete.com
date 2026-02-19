@@ -122,9 +122,13 @@ export default function OnlinePage() {
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-            Online Performance System
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Online Performance System
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
             More than Training.
             <br className="hidden sm:block" /> Complete Performance System.
@@ -144,9 +148,12 @@ export default function OnlinePage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
-              <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-                The Problem
-              </p>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px w-12 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                  The Problem
+                </p>
+              </div>
               <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
                 Why Most Online Programs Fail
               </h2>
@@ -205,6 +212,13 @@ export default function OnlinePage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                See How It Works
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               See How It Works
             </h2>
@@ -234,9 +248,13 @@ export default function OnlinePage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-              What You Get
-            </p>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                What You Get
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Core Components of the System
             </h2>
@@ -254,8 +272,9 @@ export default function OnlinePage() {
                 return (
                   <div
                     key={component.title}
-                    className="snap-start shrink-0 w-[280px] lg:w-auto bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow"
+                    className="group relative overflow-hidden snap-start shrink-0 w-[280px] lg:w-auto bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow"
                   >
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                     <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 mb-4">
                       <Icon className="size-6 text-primary" />
                     </div>
@@ -276,6 +295,13 @@ export default function OnlinePage() {
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Book a Call
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Book a Call
           </h2>
@@ -285,10 +311,10 @@ export default function OnlinePage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-md"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
           >
             Book a Call
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>

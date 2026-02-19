@@ -119,9 +119,13 @@ export default function InPersonPage() {
         <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_25%,rgba(196,155,122,0.06)_50%,transparent_75%)] animate-pulse" />
 
         <div className="relative z-10 max-w-5xl mx-auto text-center px-4 sm:px-8 pt-32 pb-16 lg:pt-40 lg:pb-24">
-          <p className="text-sm font-medium text-accent uppercase tracking-wide mb-4">
-            In-Person Coaching
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              In-Person Coaching
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-white tracking-tight mb-6">
             High Performance Development.
             <br className="hidden sm:block" /> Delivered Precisely.
@@ -133,10 +137,10 @@ export default function InPersonPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-accent text-primary px-6 py-3 rounded-full text-sm font-medium hover:bg-accent/90 transition-all hover:shadow-md"
+            className="group inline-flex items-center gap-2 bg-accent text-primary px-8 py-4 rounded-full text-sm font-semibold hover:bg-accent/90 transition-all hover:shadow-md"
           >
             Apply Now
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>
@@ -145,9 +149,13 @@ export default function InPersonPage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-              Who This Is For
-            </p>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                Who This Is For
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Built for Athletes Who Take Performance Seriously
             </h2>
@@ -159,8 +167,9 @@ export default function InPersonPage() {
               return (
                 <div
                   key={type.title}
-                  className="bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow"
+                  className="group relative overflow-hidden bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow"
                 >
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                   <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 mb-4">
                     <Icon className="size-6 text-primary" />
                   </div>
@@ -188,6 +197,13 @@ export default function InPersonPage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                The Process
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               A Clear, Structured Path to Performance
             </h2>
@@ -225,6 +241,13 @@ export default function InPersonPage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                The Difference
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Most Training Chases Fatigue.
               <br className="hidden sm:block" /> We Build Capacity.
@@ -266,6 +289,13 @@ export default function InPersonPage() {
       {/* Apply CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Get Started
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Ready to Start?
           </h2>
@@ -275,10 +305,10 @@ export default function InPersonPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-md"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
           >
             Apply Now
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>

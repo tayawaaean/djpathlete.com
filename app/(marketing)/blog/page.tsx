@@ -127,9 +127,13 @@ export default function BlogPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-            Blog
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Blog
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
             Insights on performance, coaching,
             <br className="hidden sm:block" /> and athletic development.
@@ -151,7 +155,8 @@ export default function BlogPage() {
                 href={`/blog/${post.slug}`}
                 className="group"
               >
-                <article className="bg-white rounded-xl border border-border p-5 hover:shadow-md transition-shadow h-full flex flex-col">
+                <article className="relative overflow-hidden bg-white rounded-xl border border-border p-5 hover:shadow-md transition-shadow h-full flex flex-col">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                   <span
                     className={`inline-block self-start rounded-full px-3 py-1 text-xs font-medium ${categoryStyles[post.category]}`}
                   >
@@ -185,6 +190,13 @@ export default function BlogPage() {
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Get Started
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Want to work with us?
           </h2>
@@ -194,10 +206,10 @@ export default function BlogPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-md"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
           >
             Book Free Consultation
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>

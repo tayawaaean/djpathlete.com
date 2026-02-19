@@ -14,7 +14,8 @@ export function SiteNavbar() {
   const pathname = usePathname()
 
   // Pages with dark hero backgrounds where nav text should be white
-  const isDarkHero = pathname === "/"
+  const darkHeroPages = ["/", "/in-person", "/education"]
+  const isDarkHero = darkHeroPages.includes(pathname)
 
   useEffect(() => {
     setMobileMenuOpen(false)

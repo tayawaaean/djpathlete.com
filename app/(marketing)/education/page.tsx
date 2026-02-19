@@ -43,9 +43,13 @@ export default function EducationPage() {
       <section className="min-h-screen flex items-center justify-center bg-primary px-4 sm:px-8">
         <div className="max-w-3xl mx-auto text-center py-32 lg:py-40">
           {/* Overline */}
-          <p className="text-sm font-medium text-accent uppercase tracking-widest mb-6">
-            Coming Soon
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Coming Soon
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
 
           {/* Headline */}
           <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-heading font-semibold text-primary-foreground tracking-tight mb-10">

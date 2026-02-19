@@ -88,9 +88,13 @@ export default function ResourcesPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-            Resources
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Resources
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
             Tools, frameworks, and programs
             <br className="hidden sm:block" /> built from two decades of
@@ -126,6 +130,13 @@ export default function ResourcesPage() {
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Get Started
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Want early access?
           </h2>
@@ -135,10 +146,10 @@ export default function ResourcesPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-md"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
           >
             Get in Touch
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>
@@ -154,7 +165,8 @@ function ResourceCard({
   const Icon = resource.icon
 
   return (
-    <div className="bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow flex flex-col">
+    <div className="group relative overflow-hidden bg-white rounded-2xl border border-border p-6 hover:shadow-md transition-shadow flex flex-col">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
       <div className="flex items-start justify-between mb-4">
         <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
           <Icon className="size-6 text-primary" />

@@ -107,9 +107,12 @@ export default function AssessmentPage() {
       {/* Hero — The Missing Middle */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
-          <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-            Assessment & Return to Performance
-          </p>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-12 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Assessment & Return to Performance
+            </p>
+          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
             The Missing Middle
           </h1>
@@ -136,6 +139,12 @@ export default function AssessmentPage() {
       {/* Authority — Clearance Is Not Readiness */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-12 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              The Problem
+            </p>
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Clearance Is Not Readiness.
           </h2>
@@ -181,6 +190,12 @@ export default function AssessmentPage() {
       {/* What This Assessment Is — and Is Not */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-12 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              The Assessment
+            </p>
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-6">
             What This Assessment Is — and Is Not
           </h2>
@@ -233,6 +248,12 @@ export default function AssessmentPage() {
       {/* How The System Integrates */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-12 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Integration
+            </p>
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Assessment Is the Starting Point, Not the End.
           </h2>
@@ -263,6 +284,13 @@ export default function AssessmentPage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                Our Tools
+              </p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Assessment Tools & Equipment
             </h2>
@@ -296,6 +324,12 @@ export default function AssessmentPage() {
       {/* The Outcome */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-12 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              The Outcome
+            </p>
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             The Outcome
           </h2>
@@ -335,6 +369,13 @@ export default function AssessmentPage() {
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Get Started
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Ready for a real assessment?
           </h2>
@@ -344,10 +385,10 @@ export default function AssessmentPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-md"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
           >
             Book an Appointment
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </section>

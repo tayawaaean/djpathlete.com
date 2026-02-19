@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import {
   Award,
   GraduationCap,
@@ -83,17 +84,10 @@ export default function AboutPage() {
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Photo placeholder */}
+            {/* Coach Photo */}
             <div className="relative">
-              <div className="aspect-[4/5] rounded-2xl bg-surface border border-border overflow-hidden flex items-center justify-center">
-                <div className="text-center">
-                  <div className="size-32 rounded-full bg-primary/10 mx-auto flex items-center justify-center mb-4">
-                    <span className="text-5xl font-heading font-semibold text-primary">
-                      DP
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Coach Photo</p>
-                </div>
+              <div className="aspect-[4/5] rounded-2xl overflow-hidden relative">
+                <Image src="/images/darrenpaul.png" alt="Darren J Paul" fill className="object-cover object-top" sizes="(max-width: 1024px) 100vw, 40vw" />
               </div>
               {/* Decorative accent */}
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-accent/20 rounded-2xl -z-10" />
@@ -101,9 +95,10 @@ export default function AboutPage() {
 
             {/* Bio */}
             <div>
-              <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-                Meet Your Coach
-              </p>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px w-12 bg-accent" />
+                <p className="text-sm font-medium text-accent uppercase tracking-widest">Meet Your Coach</p>
+              </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
                 Darren Paul
               </h1>
@@ -128,6 +123,11 @@ export default function AboutPage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">Credentials & Certifications</p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Credentials & Certifications
             </h2>
@@ -143,8 +143,9 @@ export default function AboutPage() {
               return (
                 <div
                   key={cred.title}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-white border border-border"
+                  className="group relative overflow-hidden flex items-center gap-4 p-4 rounded-xl bg-white border border-border"
                 >
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                     <Icon className="size-5 text-primary" />
                   </div>
@@ -162,6 +163,11 @@ export default function AboutPage() {
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-accent" />
+              <p className="text-sm font-medium text-accent uppercase tracking-widest">Training Philosophy</p>
+              <div className="h-px w-8 bg-accent" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
               Training Philosophy
             </h2>
@@ -197,6 +203,11 @@ export default function AboutPage() {
       {/* Story Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">The Journey</p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-8 text-center">
             The Journey
           </h2>
@@ -229,6 +240,11 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">Ready to start training?</p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
             Ready to start training?
           </h2>
@@ -239,14 +255,14 @@ export default function AboutPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-md"
+              className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
             >
               Get in Touch
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href="/#pricing"
-              className="inline-flex items-center gap-2 border border-border text-primary px-6 py-3 rounded-full text-sm font-medium hover:bg-surface transition-colors"
+              className="inline-flex items-center gap-2 border border-border text-primary px-8 py-4 rounded-full text-sm font-semibold hover:bg-surface transition-colors"
             >
               View Pricing
             </Link>

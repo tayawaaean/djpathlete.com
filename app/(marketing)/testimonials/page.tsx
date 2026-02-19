@@ -81,9 +81,13 @@ export default async function TestimonialsPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-20 px-4 sm:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm font-medium text-accent uppercase tracking-wide mb-3">
-            Testimonials
-          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-accent" />
+            <p className="text-sm font-medium text-accent uppercase tracking-widest">
+              Testimonials
+            </p>
+            <div className="h-px w-8 bg-accent" />
+          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
             What our athletes are saying.
           </h1>
