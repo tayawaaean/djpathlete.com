@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signIn, useSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 
 export function LoginForm() {
   const router = useRouter()
-  const { update } = useSession()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -37,9 +36,10 @@ export function LoginForm() {
       return
     }
 
-    // Refresh session to get user role for redirect
-    const session = await update()
-    const role = session?.user?.role
+    // Fetch fresh session to get user role for redirect
+    const sessionRes = await fetch("/api/auth/session")
+    const sessionData = await sessionRes.json()
+    const role = sessionData?.user?.role
 
     router.push(role === "admin" ? "/admin/dashboard" : "/client/dashboard")
     router.refresh()

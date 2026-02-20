@@ -73,16 +73,23 @@ export const EQUIPMENT_OPTIONS = [
   "bench",
   "squat_rack",
   "leg_press",
+  "leg_curl_machine",
+  "lat_pulldown_machine",
   "rowing_machine",
   "treadmill",
   "bike",
   "box",
+  "plyo_box",
   "medicine_ball",
   "stability_ball",
   "foam_roller",
   "trx",
   "landmine",
   "sled",
+  "battle_ropes",
+  "agility_ladder",
+  "cones",
+  "yoga_mat",
 ] as const
 
 export const exerciseFormSchema = z.object({

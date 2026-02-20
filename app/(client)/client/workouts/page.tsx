@@ -2,8 +2,11 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getAssignments } from "@/lib/db/assignments"
 import { getProgramExercises } from "@/lib/db/program-exercises"
+import { getLatestProgressByExercises } from "@/lib/db/progress"
+import { getWeightRecommendation } from "@/lib/weight-recommendation"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Dumbbell, Clock, Weight } from "lucide-react"
+import { WorkoutDay } from "@/components/client/WorkoutDay"
+import { Dumbbell } from "lucide-react"
 import type { Program, ProgramAssignment, Exercise, ProgramExercise } from "@/types/database"
 
 export const metadata = { title: "My Workouts | DJP Athlete" }
@@ -24,16 +27,6 @@ const dayLabels: Record<number, string> = {
   5: "Friday",
   6: "Saturday",
   7: "Sunday",
-}
-
-function formatRestTime(seconds: number | null): string {
-  if (!seconds) return ""
-  if (seconds >= 60) {
-    const minutes = Math.floor(seconds / 60)
-    const remaining = seconds % 60
-    return remaining > 0 ? `${minutes}m ${remaining}s` : `${minutes}m`
-  }
-  return `${seconds}s`
 }
 
 export default async function ClientWorkoutsPage() {
@@ -60,6 +53,35 @@ export default async function ClientWorkoutsPage() {
     )
   } catch {
     // DB tables may not exist yet — render gracefully with empty data
+  }
+
+  // Collect all unique exercise IDs across all programs
+  const allExerciseIds = [
+    ...new Set(
+      programExercises.flatMap(({ exercises }) =>
+        exercises
+          .map((pe) => pe.exercise_id)
+          .filter(Boolean)
+      )
+    ),
+  ]
+
+  // Batch-fetch progress history for all exercises
+  let progressByExercise: Record<string, import("@/types/database").ExerciseProgress[]> = {}
+  try {
+    if (allExerciseIds.length > 0) {
+      progressByExercise = await getLatestProgressByExercises(userId, allExerciseIds, 5)
+    }
+  } catch {
+    // Progress table may not exist yet
+  }
+
+  // Check if an exercise was logged today
+  const todayStr = new Date().toISOString().slice(0, 10)
+  function wasLoggedToday(exerciseId: string): boolean {
+    const history = progressByExercise[exerciseId]
+    if (!history || history.length === 0) return false
+    return history[0].completed_at.slice(0, 10) === todayStr
   }
 
   return (
@@ -109,71 +131,35 @@ export default async function ClientWorkoutsPage() {
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {sortedDays.map((day) => (
-                      <div
-                        key={day}
-                        className="bg-white rounded-xl border border-border overflow-hidden"
-                      >
-                        <div className="bg-surface px-4 py-3 border-b border-border">
-                          <h3 className="text-sm font-semibold text-primary">
-                            {dayLabels[day] ?? `Day ${day}`}
-                          </h3>
-                        </div>
-                        <div className="divide-y divide-border">
-                          {exercisesByDay[day].map((pe) => {
-                            const exercise = pe.exercises
-                            if (!exercise) return null
+                    {sortedDays.map((day) => {
+                      const dayExercises = exercisesByDay[day]
+                        .filter((pe) => pe.exercises)
+                        .map((pe) => {
+                          const exercise = pe.exercises!
+                          const history = progressByExercise[exercise.id] ?? []
+                          const recommendation = getWeightRecommendation(
+                            history,
+                            exercise,
+                            pe
+                          )
+                          return {
+                            programExercise: pe as ProgramExercise,
+                            exercise,
+                            recommendation,
+                            loggedToday: wasLoggedToday(exercise.id),
+                          }
+                        })
 
-                            return (
-                              <div
-                                key={pe.id}
-                                className="px-4 py-3 flex items-center justify-between gap-4"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-foreground text-sm">
-                                    {exercise.name}
-                                  </p>
-                                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                    {pe.sets && pe.reps && (
-                                      <span className="flex items-center gap-1">
-                                        <Dumbbell
-                                          className="size-3"
-                                          strokeWidth={1.5}
-                                        />
-                                        {pe.sets} x {pe.reps}
-                                      </span>
-                                    )}
-                                    {pe.duration_seconds && (
-                                      <span className="flex items-center gap-1">
-                                        <Clock
-                                          className="size-3"
-                                          strokeWidth={1.5}
-                                        />
-                                        {formatRestTime(pe.duration_seconds)}
-                                      </span>
-                                    )}
-                                    {exercise.equipment && (
-                                      <span className="flex items-center gap-1">
-                                        <Weight
-                                          className="size-3"
-                                          strokeWidth={1.5}
-                                        />
-                                        {exercise.equipment}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {pe.rest_seconds && (
-                                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                    Rest: {formatRestTime(pe.rest_seconds)}
-                                  </span>
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    ))}
+                      return (
+                        <WorkoutDay
+                          key={day}
+                          day={day}
+                          dayLabel={dayLabels[day] ?? `Day ${day}`}
+                          exercises={dayExercises}
+                          assignmentId={assignment.id}
+                        />
+                      )
+                    })}
                   </div>
                 )}
               </div>

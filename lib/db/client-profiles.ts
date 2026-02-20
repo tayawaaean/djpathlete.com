@@ -44,3 +44,14 @@ export async function updateProfile(
   if (error) throw error
   return data as ClientProfile
 }
+
+export async function getProfilesWithQuestionnaire() {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("client_profiles")
+    .select("*, users!inner(first_name, last_name, email)")
+    .not("goals", "is", null)
+    .order("updated_at", { ascending: false })
+  if (error) throw error
+  return data
+}

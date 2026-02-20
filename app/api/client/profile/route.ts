@@ -61,8 +61,11 @@ export async function PATCH(request: Request) {
         emergency_contact_name: updates.emergency_contact_name ?? null,
         emergency_contact_phone: updates.emergency_contact_phone ?? null,
         available_equipment: [],
+        preferred_day_names: [],
         preferred_session_minutes: null,
         preferred_training_days: null,
+        time_efficiency_preference: null,
+        preferred_techniques: [],
         injury_details: [],
         training_years: null,
       })

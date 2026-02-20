@@ -1,11 +1,12 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getAssignments } from "@/lib/db/assignments"
-import { getProgress } from "@/lib/db/progress"
+import { getProgress, getWorkoutStreak } from "@/lib/db/progress"
+import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getUserById } from "@/lib/db/users"
 import { EmptyState } from "@/components/ui/empty-state"
 import { EmailVerificationBanner } from "@/components/client/EmailVerificationBanner"
-import { LayoutDashboard, Dumbbell, Activity, Flame } from "lucide-react"
+import { LayoutDashboard, Dumbbell, Activity, Flame, ClipboardList } from "lucide-react"
 import Link from "next/link"
 import type { Program, ProgramAssignment } from "@/types/database"
 
@@ -32,16 +33,22 @@ export default async function ClientDashboardPage() {
 
   let activeAssignments: AssignmentWithProgram[] = []
   let totalWorkouts = 0
+  let currentStreak = 0
+  let hasCompletedQuestionnaire = false
 
   try {
-    const [assignments, progress] = await Promise.all([
+    const [assignments, progress, streak, profile] = await Promise.all([
       getAssignments(userId),
       getProgress(userId),
+      getWorkoutStreak(userId),
+      getProfileByUserId(userId),
     ])
 
     const typedAssignments = assignments as AssignmentWithProgram[]
     activeAssignments = typedAssignments.filter((a) => a.status === "active")
     totalWorkouts = progress.length
+    currentStreak = streak
+    hasCompletedQuestionnaire = !!(profile?.goals && profile.goals.trim().length > 0)
   } catch {
     // DB tables may not exist yet — render gracefully with empty data
   }
@@ -53,6 +60,28 @@ export default async function ClientDashboardPage() {
       </h1>
 
       {!emailVerified && <EmailVerificationBanner userId={userId} />}
+
+      {!hasCompletedQuestionnaire && (
+        <Link
+          href="/client/questionnaire"
+          className="flex items-center gap-4 rounded-xl border border-accent/30 bg-accent/5 p-4 mb-6 hover:bg-accent/10 transition-colors"
+        >
+          <div className="flex items-center justify-center size-10 shrink-0 rounded-full bg-accent/20">
+            <ClipboardList className="size-5 text-accent-foreground" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground text-sm">
+              Complete Your Assessment
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Tell us about your goals, experience, and preferences so your coach can build the perfect program for you.
+            </p>
+          </div>
+          <span className="text-sm font-medium text-primary shrink-0">
+            Start &rarr;
+          </span>
+        </Link>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -85,8 +114,8 @@ export default async function ClientDashboardPage() {
             <Flame className="size-5 text-accent" strokeWidth={1.5} />
           </div>
           <div>
-            <p className="text-2xl font-semibold text-foreground">0</p>
-            <p className="text-sm text-muted-foreground">Current Streak</p>
+            <p className="text-2xl font-semibold text-foreground">{currentStreak}</p>
+            <p className="text-sm text-muted-foreground">Day Streak</p>
           </div>
         </div>
       </div>
@@ -101,6 +130,8 @@ export default async function ClientDashboardPage() {
           icon={LayoutDashboard}
           heading="No programs yet"
           description="You don't have any active programs. Browse available programs to get started on your training journey."
+          ctaLabel="Browse Programs"
+          ctaHref="/programs"
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -127,15 +158,15 @@ export default async function ClientDashboardPage() {
                 key={assignment.id}
                 className="bg-white rounded-xl border border-border p-6"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-semibold text-foreground">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-semibold text-foreground min-w-0">
                     {program.name}
                   </h3>
-                  <div className="flex gap-2">
-                    <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium capitalize">
+                  <div className="flex gap-2 shrink-0">
+                    <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium capitalize whitespace-nowrap">
                       {program.category.replace("_", " ")}
                     </span>
-                    <span className="rounded-full bg-accent/10 text-accent-foreground px-2 py-0.5 text-xs font-medium capitalize">
+                    <span className="rounded-full bg-accent/10 text-accent px-2 py-0.5 text-xs font-medium capitalize whitespace-nowrap">
                       {program.difficulty}
                     </span>
                   </div>

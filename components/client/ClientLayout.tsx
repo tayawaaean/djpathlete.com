@@ -1,21 +1,34 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Dumbbell, TrendingUp, User, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Dumbbell, TrendingUp, User, Settings, ClipboardList, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
+import { InstallPrompt } from "@/components/client/InstallPrompt"
+import { PullToRefresh } from "@/components/client/PullToRefresh"
 
 const navItems = [
   { label: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
   { label: "Workouts", href: "/client/workouts", icon: Dumbbell },
   { label: "Progress", href: "/client/progress", icon: TrendingUp },
+  { label: "Assessment", href: "/client/questionnaire", icon: ClipboardList },
   { label: "Profile", href: "/client/profile", icon: User },
   { label: "Settings", href: "/client/settings", icon: Settings },
 ]
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+
+  // Register service worker
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.error("SW registration failed:", err)
+      })
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-surface">
@@ -64,8 +77,13 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <main className="p-6">{children}</main>
+        <main className="p-6">
+          <PullToRefresh>{children}</PullToRefresh>
+        </main>
       </div>
+
+      {/* Install prompt */}
+      <InstallPrompt />
 
       {/* Mobile bottom tabs */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-border z-30">

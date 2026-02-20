@@ -30,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const isValid = await compare(password, user.password_hash)
         if (!isValid) return null
 
+        console.log(`[Auth] Login: ${user.email}, role: ${user.role}`)
         return {
           id: user.id,
           email: user.email,

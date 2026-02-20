@@ -1,10 +1,10 @@
 {
   "name": "DJP Athlete",
-  "short_name": "DJP Athlete",
-  "description": "Elite sports coaching and athletic performance platform",
-  "start_url": "/",
+  "short_name": "DJP",
+  "description": "Professional athletic training and coaching platform",
+  "start_url": "/client/dashboard",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "background_color": "#0E3F50",
   "theme_color": "#0E3F50",
   "orientation": "portrait-primary",
   "icons": [

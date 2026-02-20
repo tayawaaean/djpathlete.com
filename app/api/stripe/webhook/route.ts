@@ -3,6 +3,10 @@ import type Stripe from "stripe"
 import { verifyWebhookSignature } from "@/lib/stripe"
 import { createPayment, getPaymentByStripeId, updatePayment } from "@/lib/db/payments"
 import { createAssignment } from "@/lib/db/assignments"
+import { getUserById } from "@/lib/db/users"
+import { getProfileByUserId } from "@/lib/db/client-profiles"
+import { getProgramById } from "@/lib/db/programs"
+import { sendCoachPurchaseNotification } from "@/lib/email"
 import { ghlCreateContact, ghlTriggerWorkflow } from "@/lib/ghl"
 
 export async function POST(request: Request) {
@@ -78,6 +82,31 @@ export async function POST(request: Request) {
           }
         } catch {
           // GHL sync failure should not affect payment processing
+        }
+
+        // Notify coach/admin about the purchase (non-blocking)
+        try {
+          const [client, profile, program] = await Promise.all([
+            getUserById(userId),
+            getProfileByUserId(userId),
+            getProgramById(programId),
+          ])
+
+          const coachEmail = process.env.COACH_EMAIL ?? "admin@djpathlete.com"
+          const coachFirstName = process.env.COACH_FIRST_NAME ?? "Coach"
+
+          await sendCoachPurchaseNotification({
+            coachEmail,
+            coachFirstName,
+            clientName: `${client.first_name} ${client.last_name}`.trim(),
+            clientEmail: client.email,
+            clientId: userId,
+            programName: program?.name ?? "Unknown Program",
+            amountFormatted: `$${((session.amount_total ?? 0) / 100).toFixed(2)}`,
+            hasQuestionnaire: !!(profile?.goals && profile.goals.trim().length > 0),
+          })
+        } catch {
+          // Coach notification failure should not affect payment processing
         }
 
         break

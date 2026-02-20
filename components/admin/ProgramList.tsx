@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/ui/empty-state"
 import { ProgramFormDialog } from "@/components/admin/ProgramFormDialog"
+import { AiGenerateDialog } from "@/components/admin/AiGenerateDialog"
 import { PROGRAM_CATEGORIES, PROGRAM_DIFFICULTIES } from "@/lib/validators/program"
 import type { Program } from "@/types/database"
 
@@ -64,6 +65,7 @@ export function ProgramList({ programs }: ProgramListProps) {
 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false)
+  const [aiDialogOpen, setAiDialogOpen] = useState(false)
   const [editingProgram, setEditingProgram] = useState<Program | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -123,16 +125,24 @@ export function ProgramList({ programs }: ProgramListProps) {
           heading="No programs yet"
           description="Build structured training programs by combining exercises into weekly schedules. Assign programs to clients to track their progress."
         />
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-2">
           <Button onClick={handleCreate}>
             <Plus className="size-4" />
             Add Program
+          </Button>
+          <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+            <Sparkles className="size-4" />
+            AI Generate
           </Button>
         </div>
         <ProgramFormDialog
           open={formOpen}
           onOpenChange={setFormOpen}
           program={editingProgram}
+        />
+        <AiGenerateDialog
+          open={aiDialogOpen}
+          onOpenChange={setAiDialogOpen}
         />
       </div>
     )
@@ -145,10 +155,16 @@ export function ProgramList({ programs }: ProgramListProps) {
         <p className="text-sm text-muted-foreground">
           {programs.length} program{programs.length !== 1 ? "s" : ""} in library
         </p>
-        <Button onClick={handleCreate}>
-          <Plus className="size-4" />
-          Add Program
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+            <Sparkles className="size-4" />
+            AI Generate
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="size-4" />
+            Add Program
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-border shadow-sm">
@@ -352,6 +368,12 @@ export function ProgramList({ programs }: ProgramListProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Generate Dialog */}
+      <AiGenerateDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+      />
     </div>
   )
 }

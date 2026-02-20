@@ -40,7 +40,7 @@ export function EditExerciseDialog({
     setIsSubmitting(true)
 
     const formData = new FormData(e.currentTarget)
-    const body = {
+    const raw: Record<string, unknown> = {
       sets: formData.get("sets") || null,
       reps: formData.get("reps") || null,
       rest_seconds: formData.get("rest_seconds") || null,
@@ -51,6 +51,10 @@ export function EditExerciseDialog({
       tempo: formData.get("tempo") || null,
       group_tag: formData.get("group_tag") || null,
     }
+    // Only send fields that have a value — omit nulls so existing DB values aren't overwritten
+    const body = Object.fromEntries(
+      Object.entries(raw).filter(([, v]) => v !== null)
+    )
 
     try {
       const response = await fetch(

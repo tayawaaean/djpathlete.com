@@ -406,3 +406,139 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
     throw new Error("Failed to send email")
   }
 }
+
+/**
+ * Notify the coach/admin that a client purchased a program.
+ * Includes client details, program name, and whether the client has
+ * completed their assessment questionnaire.
+ */
+export async function sendCoachPurchaseNotification({
+  coachEmail,
+  coachFirstName,
+  clientName,
+  clientEmail,
+  clientId,
+  programName,
+  amountFormatted,
+  hasQuestionnaire,
+}: {
+  coachEmail: string
+  coachFirstName: string
+  clientName: string
+  clientEmail: string
+  clientId: string
+  programName: string
+  amountFormatted: string
+  hasQuestionnaire: boolean
+}) {
+  const baseUrl = getBaseUrl()
+  const clientUrl = `${baseUrl}/admin/clients/${clientId}`
+  const programsUrl = `${baseUrl}/admin/programs`
+
+  const questionnaireBadge = hasQuestionnaire
+    ? `<span style="display:inline-block; background-color:#dcfce7; color:#166534; font-size:12px; font-weight:600; padding:4px 12px; border-radius:20px;">Assessment Complete</span>`
+    : `<span style="display:inline-block; background-color:#fef3c7; color:#92400e; font-size:12px; font-weight:600; padding:4px 12px; border-radius:20px;">Assessment Pending</span>`
+
+  const nextStepText = hasQuestionnaire
+    ? "Their assessment is complete — you can review their profile and generate a personalized AI program."
+    : "They haven&rsquo;t completed their assessment yet. Once they do, you&rsquo;ll be able to generate a personalized program."
+
+  const html = emailLayout(`
+    <!-- Hero banner -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background: linear-gradient(180deg, #0E3F50 0%, #145569 100%); padding:36px 48px; text-align:center;">
+          <p style="margin:0 0 6px; font-family:Georgia, 'Times New Roman', serif; font-size:14px; color:#C49B7A; letter-spacing:1.5px; text-transform:uppercase;">
+            New Purchase
+          </p>
+          <h2 style="margin:0; font-family:'Trebuchet MS', Helvetica, Arial, sans-serif; font-size:26px; font-weight:700; color:#ffffff;">
+            ${clientName} just bought a program
+          </h2>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Details -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:36px 48px 24px;">
+          <p style="margin:0 0 24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.7;">
+            Hi ${coachFirstName}, a client just purchased a program. Here are the details:
+          </p>
+
+          <!-- Info card -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafb; border-radius:12px; border:1px solid #e5e7eb;">
+            <tr>
+              <td style="padding:24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="padding:0 0 12px;">
+                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Client</p>
+                      <p style="margin:4px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${clientName}</p>
+                      <p style="margin:2px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#666;">${clientEmail}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0; border-top:1px solid #e5e7eb;">
+                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Program</p>
+                      <p style="margin:4px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${programName}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0; border-top:1px solid #e5e7eb;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td width="50%">
+                            <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Amount</p>
+                            <p style="margin:4px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#166534;">${amountFormatted}</p>
+                          </td>
+                          <td width="50%">
+                            <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Assessment</p>
+                            <p style="margin:6px 0 0;">${questionnaireBadge}</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Next steps -->
+          <p style="margin:24px 0 20px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#555; line-height:1.7;">
+            ${nextStepText}
+          </p>
+
+          <!-- CTA buttons -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="padding-right:12px;">
+                <a href="${clientUrl}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none; padding:12px 28px; background-color:#C49B7A; border-radius:8px;">
+                  View Client Profile
+                </a>
+              </td>
+              <td>
+                <a href="${programsUrl}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; font-weight:600; color:#0E3F50; text-decoration:none; padding:12px 28px; border:2px solid #0E3F50; border-radius:8px;">
+                  Generate AI Program
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: coachEmail,
+    subject: `New purchase: ${clientName} bought ${programName}`,
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send coach notification email:", error)
+    // Non-blocking — don't throw
+  }
+}

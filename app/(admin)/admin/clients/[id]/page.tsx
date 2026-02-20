@@ -13,12 +13,24 @@ import {
   Ruler,
   Weight,
   Heart,
+  ClipboardList,
+  Clock,
+  ThumbsUp,
 } from "lucide-react"
 import { getUserById } from "@/lib/db/users"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getAssignments } from "@/lib/db/assignments"
 import { getPayments } from "@/lib/db/payments"
 import { EmptyState } from "@/components/ui/empty-state"
+import {
+  GOAL_LABELS,
+  EQUIPMENT_LABELS,
+} from "@/lib/validators/questionnaire"
+import {
+  parseGoalsFromProfile,
+  parseFieldFromProfile,
+  hasQuestionnaireData,
+} from "@/lib/profile-utils"
 import type {
   Program,
   ProgramAssignment,
@@ -249,6 +261,220 @@ function ProgramsSection({
   )
 }
 
+
+function QuestionnaireSection({ profile }: { profile: ClientProfile | null }) {
+  if (!profile || !profile.goals) {
+    return null
+  }
+
+  const goalsList = parseGoalsFromProfile(profile.goals)
+  const trainingBackground = parseFieldFromProfile(
+    profile.goals,
+    "Training background"
+  )
+  const likes = parseFieldFromProfile(profile.goals, "Likes")
+  const dislikes = parseFieldFromProfile(profile.goals, "Dislikes")
+  const notes = parseFieldFromProfile(profile.goals, "Notes")
+
+  if (!hasQuestionnaireData(profile)) return null
+
+  return (
+    <div className="bg-white rounded-xl border border-border p-6">
+      <h2 className="text-lg font-semibold text-primary mb-4">
+        Questionnaire Responses
+      </h2>
+      <div className="space-y-6">
+        {/* Goals */}
+        {goalsList.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="size-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Fitness Goals
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {goalsList.map((goal) => (
+                <span
+                  key={goal}
+                  className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {GOAL_LABELS[goal] ?? goal}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+          {/* Experience Level */}
+          <InfoRow
+            icon={Target}
+            label="Fitness Level"
+            value={
+              profile.experience_level
+                ? profile.experience_level.charAt(0).toUpperCase() +
+                  profile.experience_level.slice(1)
+                : null
+            }
+          />
+
+          {/* Training Years */}
+          <InfoRow
+            icon={Clock}
+            label="Training Experience"
+            value={
+              profile.training_years !== null
+                ? `${profile.training_years} year${profile.training_years !== 1 ? "s" : ""}`
+                : null
+            }
+          />
+
+          {/* Schedule */}
+          <InfoRow
+            icon={Calendar}
+            label="Training Schedule"
+            value={
+              profile.preferred_training_days !== null
+                ? `${profile.preferred_training_days} day${profile.preferred_training_days !== 1 ? "s" : ""}/week`
+                : null
+            }
+          />
+
+          <InfoRow
+            icon={Clock}
+            label="Session Duration"
+            value={
+              profile.preferred_session_minutes !== null
+                ? `${profile.preferred_session_minutes} minutes`
+                : null
+            }
+          />
+        </div>
+
+        {/* Training Background */}
+        {trainingBackground && (
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <ClipboardList className="size-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Training Background
+              </p>
+            </div>
+            <p className="text-sm text-foreground">{trainingBackground}</p>
+          </div>
+        )}
+
+        {/* Injuries */}
+        {(profile.injuries || profile.injury_details.length > 0) && (
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <AlertTriangle className="size-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Injuries & Limitations
+              </p>
+            </div>
+            {profile.injuries && (
+              <p className="text-sm text-foreground mb-2">
+                {profile.injuries}
+              </p>
+            )}
+            {profile.injury_details.length > 0 && (
+              <div className="space-y-1.5">
+                {profile.injury_details.map((injury, i) => (
+                  <div
+                    key={i}
+                    className="text-sm text-foreground bg-surface/50 rounded-lg px-3 py-2"
+                  >
+                    <span className="font-medium">{injury.area}</span>
+                    {injury.side && (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        ({injury.side})
+                      </span>
+                    )}
+                    {injury.severity && (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        &mdash; {injury.severity}
+                      </span>
+                    )}
+                    {injury.notes && (
+                      <span className="text-muted-foreground">
+                        : {injury.notes}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Equipment */}
+        {profile.available_equipment.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Dumbbell className="size-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Available Equipment
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {profile.available_equipment.map((eq) => (
+                <span
+                  key={eq}
+                  className="inline-flex items-center rounded-full border border-border text-foreground px-2 py-0.5 text-xs"
+                >
+                  {EQUIPMENT_LABELS[eq] ?? eq}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Preferences */}
+        {(likes || dislikes || notes) && (
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <ThumbsUp className="size-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Exercise Preferences
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              {likes && (
+                <p className="text-sm text-foreground">
+                  <span className="text-muted-foreground font-medium">
+                    Likes:
+                  </span>{" "}
+                  {likes}
+                </p>
+              )}
+              {dislikes && (
+                <p className="text-sm text-foreground">
+                  <span className="text-muted-foreground font-medium">
+                    Dislikes:
+                  </span>{" "}
+                  {dislikes}
+                </p>
+              )}
+              {notes && (
+                <p className="text-sm text-foreground">
+                  <span className="text-muted-foreground font-medium">
+                    Notes:
+                  </span>{" "}
+                  {notes}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function PaymentsSection({ payments }: { payments: Payment[] }) {
   return (
     <div className="bg-white rounded-xl border border-border p-6">
@@ -394,6 +620,7 @@ export default async function ClientDetailPage({
       {/* Sections */}
       <div className="space-y-6">
         <ProfileSection profile={profile} />
+        <QuestionnaireSection profile={profile} />
         <ProgramsSection
           assignments={assignments as AssignmentWithProgram[]}
         />

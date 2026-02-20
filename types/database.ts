@@ -41,6 +41,9 @@ export interface User {
   updated_at: string
 }
 
+export type TimeEfficiencyPreference = "supersets_circuits" | "shorter_rest" | "fewer_heavier" | "extend_session"
+export type TrainingTechnique = "straight_set" | "superset" | "dropset" | "giant_set" | "circuit" | "rest_pause" | "amrap"
+
 export interface ClientProfile {
   id: string
   user_id: string
@@ -58,6 +61,9 @@ export interface ClientProfile {
   available_equipment: string[]
   preferred_session_minutes: number | null
   preferred_training_days: number | null
+  preferred_day_names: number[]
+  time_efficiency_preference: TimeEfficiencyPreference | null
+  preferred_techniques: string[]
   injury_details: InjuryDetail[]
   training_years: number | null
   created_at: string
@@ -124,6 +130,7 @@ export interface ProgramExercise {
   intensity_pct: number | null
   tempo: string | null
   group_tag: string | null
+  technique: TrainingTechnique
   created_at: string
 }
 
