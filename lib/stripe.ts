@@ -8,8 +8,13 @@ export async function createCheckoutSession(
   userId: string,
   returnUrl?: string
 ) {
-  const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}${returnUrl ?? "/programs/success"}?session_id={CHECKOUT_SESSION_ID}`
-  const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/programs/${program.id}`
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    ?? process.env.NEXTAUTH_URL
+    ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
+    ?? "https://darrenjpaul.com"
+
+  const successUrl = `${baseUrl}${returnUrl ?? "/programs/success"}?session_id={CHECKOUT_SESSION_ID}`
+  const cancelUrl = `${baseUrl}/client/programs/${program.id}`
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
