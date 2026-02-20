@@ -9,6 +9,10 @@ export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded"
 export type NotificationType = "info" | "success" | "warning" | "error"
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say"
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced" | "elite"
+export type SleepHours = "5_or_less" | "6" | "7" | "8_plus"
+export type StressLevel = "low" | "moderate" | "high" | "very_high"
+export type OccupationActivityLevel = "sedentary" | "light" | "moderate" | "heavy"
+export type MovementConfidence = "learning" | "comfortable" | "proficient" | "expert"
 
 // AI program generation types
 export type MovementPattern = "push" | "pull" | "squat" | "hinge" | "lunge" | "carry" | "rotation" | "isometric" | "locomotion"
@@ -69,6 +73,14 @@ export interface ClientProfile {
   preferred_techniques: string[]
   injury_details: InjuryDetail[]
   training_years: number | null
+  sleep_hours: SleepHours | null
+  stress_level: StressLevel | null
+  occupation_activity_level: OccupationActivityLevel | null
+  movement_confidence: MovementConfidence | null
+  exercise_likes: string | null
+  exercise_dislikes: string | null
+  training_background: string | null
+  additional_notes: string | null
   created_at: string
   updated_at: string
 }

@@ -62,6 +62,63 @@ export const TECHNIQUE_DESCRIPTIONS: Record<string, string> = {
   amrap: "As many reps as possible in a set time",
 }
 
+export const SLEEP_OPTIONS = ["5_or_less", "6", "7", "8_plus"] as const
+
+export const SLEEP_LABELS: Record<string, string> = {
+  "5_or_less": "5 hours or fewer",
+  "6": "About 6 hours",
+  "7": "About 7 hours",
+  "8_plus": "8+ hours",
+}
+
+export const STRESS_LEVELS = ["low", "moderate", "high", "very_high"] as const
+
+export const STRESS_LABELS: Record<string, string> = {
+  low: "Low",
+  moderate: "Moderate",
+  high: "High",
+  very_high: "Very High",
+}
+
+export const OCCUPATION_LEVELS = ["sedentary", "light", "moderate", "heavy"] as const
+
+export const OCCUPATION_LABELS: Record<string, string> = {
+  sedentary: "Sedentary (desk job)",
+  light: "Light (mostly standing/walking)",
+  moderate: "Moderate (physical work)",
+  heavy: "Heavy (manual labour)",
+}
+
+export const MOVEMENT_CONFIDENCE_LEVELS = [
+  "learning",
+  "comfortable",
+  "proficient",
+  "expert",
+] as const
+
+export const MOVEMENT_CONFIDENCE_LABELS: Record<string, string> = {
+  learning: "Learning",
+  comfortable: "Comfortable",
+  proficient: "Proficient",
+  expert: "Expert",
+}
+
+export const MOVEMENT_CONFIDENCE_DESCRIPTIONS: Record<string, string> = {
+  learning: "Still learning basic movement patterns and form.",
+  comfortable: "Can perform most exercises with decent form when focused.",
+  proficient: "Confident with free weights and complex movements.",
+  expert: "Highly skilled — can teach others and self-correct.",
+}
+
+export const GENDER_OPTIONS = ["male", "female", "other", "prefer_not_to_say"] as const
+
+export const GENDER_LABELS: Record<string, string> = {
+  male: "Male",
+  female: "Female",
+  other: "Other",
+  prefer_not_to_say: "Prefer not to say",
+}
+
 export const GOAL_LABELS: Record<string, string> = {
   weight_loss: "Weight Loss",
   muscle_gain: "Muscle Gain",
@@ -127,17 +184,40 @@ export const step1Schema = z.object({
   goals: z
     .array(z.enum(FITNESS_GOALS))
     .min(1, "Please select at least one fitness goal"),
+  sport: z.string().max(200).optional().default(""),
 })
 
-// Step 2: Current Fitness Level
+// Step 2: About You
 export const step2Schema = z.object({
+  date_of_birth: z.string().optional().default(""),
+  gender: z.enum(GENDER_OPTIONS).nullable().optional().default(null),
+})
+
+// Step 3: Fitness Level (experience + movement confidence)
+export const step3Schema = z.object({
   experience_level: z.enum(EXPERIENCE_LEVELS, {
     message: "Please select your fitness level",
   }),
+  movement_confidence: z
+    .enum(MOVEMENT_CONFIDENCE_LEVELS)
+    .nullable()
+    .optional()
+    .default(null),
 })
 
-// Step 3: Training History
-export const step3Schema = z.object({
+// Step 4: Recovery & Lifestyle
+export const step4Schema = z.object({
+  sleep_hours: z.enum(SLEEP_OPTIONS).nullable().optional().default(null),
+  stress_level: z.enum(STRESS_LEVELS).nullable().optional().default(null),
+  occupation_activity_level: z
+    .enum(OCCUPATION_LEVELS)
+    .nullable()
+    .optional()
+    .default(null),
+})
+
+// Step 5: Training History
+export const step5Schema = z.object({
   training_years: z
     .number({ message: "Please enter a number" })
     .min(0, "Training years cannot be negative")
@@ -150,7 +230,7 @@ export const step3Schema = z.object({
     .default(""),
 })
 
-// Step 4: Injuries & Limitations
+// Step 6: Injuries & Limitations
 export const injuryDetailSchema = z.object({
   area: z.string().min(1, "Area is required"),
   side: z.string().optional().default(""),
@@ -158,7 +238,7 @@ export const injuryDetailSchema = z.object({
   notes: z.string().optional().default(""),
 })
 
-export const step4Schema = z.object({
+export const step6Schema = z.object({
   injuries_text: z
     .string()
     .max(2000, "Injuries text must be under 2000 characters")
@@ -167,13 +247,13 @@ export const step4Schema = z.object({
   injury_details: z.array(injuryDetailSchema).optional().default([]),
 })
 
-// Step 5: Available Equipment
-export const step5Schema = z.object({
+// Step 7: Available Equipment
+export const step7Schema = z.object({
   available_equipment: z.array(z.enum(EQUIPMENT_OPTIONS)).default([]),
 })
 
-// Step 6: Schedule
-export const step6Schema = z.object({
+// Step 8: Schedule
+export const step8Schema = z.object({
   preferred_day_names: z
     .array(z.number().min(1).max(7))
     .min(1, "Select at least one training day"),
@@ -189,8 +269,8 @@ export const step6Schema = z.object({
     .default(null),
 })
 
-// Step 7: Exercise Preferences
-export const step7Schema = z.object({
+// Step 9: Exercise Preferences
+export const step9Schema = z.object({
   preferred_techniques: z.array(z.enum(TRAINING_TECHNIQUES)).optional().default([]),
   exercise_likes: z
     .string()
@@ -211,15 +291,32 @@ export const step7Schema = z.object({
 
 // Full combined schema for final submission
 export const questionnaireSchema = z.object({
-  // Step 1
+  // Step 1: Goals
   goals: z
     .array(z.enum(FITNESS_GOALS))
     .min(1, "Please select at least one fitness goal"),
-  // Step 2
+  sport: z.string().max(200).optional().default(""),
+  // Step 2: About You
+  date_of_birth: z.string().optional().default(""),
+  gender: z.enum(GENDER_OPTIONS).nullable().optional().default(null),
+  // Step 3: Fitness Level
   experience_level: z.enum(EXPERIENCE_LEVELS, {
     message: "Please select your fitness level",
   }),
-  // Step 3
+  movement_confidence: z
+    .enum(MOVEMENT_CONFIDENCE_LEVELS)
+    .nullable()
+    .optional()
+    .default(null),
+  // Step 4: Recovery & Lifestyle
+  sleep_hours: z.enum(SLEEP_OPTIONS).nullable().optional().default(null),
+  stress_level: z.enum(STRESS_LEVELS).nullable().optional().default(null),
+  occupation_activity_level: z
+    .enum(OCCUPATION_LEVELS)
+    .nullable()
+    .optional()
+    .default(null),
+  // Step 5: Training History
   training_years: z
     .number()
     .min(0)
@@ -228,12 +325,12 @@ export const questionnaireSchema = z.object({
     .optional()
     .default(null),
   training_background: z.string().max(2000).optional().default(""),
-  // Step 4
+  // Step 6: Injuries
   injuries_text: z.string().max(2000).optional().default(""),
   injury_details: z.array(injuryDetailSchema).optional().default([]),
-  // Step 5
+  // Step 7: Equipment
   available_equipment: z.array(z.enum(EQUIPMENT_OPTIONS)).default([]),
-  // Step 6
+  // Step 8: Schedule
   preferred_day_names: z.array(z.number().min(1).max(7)).min(1),
   preferred_session_minutes: z
     .number()
@@ -243,7 +340,7 @@ export const questionnaireSchema = z.object({
     .nullable()
     .optional()
     .default(null),
-  // Step 7
+  // Step 9: Preferences
   preferred_techniques: z.array(z.enum(TRAINING_TECHNIQUES)).optional().default([]),
   exercise_likes: z.string().max(2000).optional().default(""),
   exercise_dislikes: z.string().max(2000).optional().default(""),
@@ -259,3 +356,5 @@ export type Step4Data = z.infer<typeof step4Schema>
 export type Step5Data = z.infer<typeof step5Schema>
 export type Step6Data = z.infer<typeof step6Schema>
 export type Step7Data = z.infer<typeof step7Schema>
+export type Step8Data = z.infer<typeof step8Schema>
+export type Step9Data = z.infer<typeof step9Schema>

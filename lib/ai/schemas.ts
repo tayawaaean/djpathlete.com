@@ -26,9 +26,9 @@ const sessionStructureSchema = z.object({
   warm_up_minutes: z.number().int().min(0).max(30),
   main_work_minutes: z.number().int().min(10).max(150),
   cool_down_minutes: z.number().int().min(0).max(30),
-  total_exercises: z.number().int().min(1).max(20),
-  compound_count: z.number().int().min(0).max(15),
-  isolation_count: z.number().int().min(0).max(15),
+  total_exercises: z.number().int().min(1).max(12),
+  compound_count: z.number().int().min(0).max(8),
+  isolation_count: z.number().int().min(0).max(6),
 })
 
 export const profileAnalysisSchema = z.object({
@@ -76,7 +76,7 @@ const programDaySchema = z.object({
   day_of_week: z.number().int().min(1).max(7),
   label: z.string().min(1),
   focus: z.string().min(1),
-  slots: z.array(exerciseSlotSchema).min(1),
+  slots: z.array(exerciseSlotSchema).min(1).max(12),
 })
 
 const programWeekSchema = z.object({

@@ -49,28 +49,19 @@ export async function POST(request: Request) {
 
     const data = parsed.data
 
-    // Build the goals string from selected goals + training background + preferences
-    const goalParts: string[] = []
-    if (data.goals.length > 0) {
-      goalParts.push(`Goals: ${data.goals.join(", ")}`)
-    }
-    if (data.training_background) {
-      goalParts.push(`Training background: ${data.training_background}`)
-    }
-    if (data.exercise_likes) {
-      goalParts.push(`Likes: ${data.exercise_likes}`)
-    }
-    if (data.exercise_dislikes) {
-      goalParts.push(`Dislikes: ${data.exercise_dislikes}`)
-    }
-    if (data.additional_notes) {
-      goalParts.push(`Notes: ${data.additional_notes}`)
-    }
-
+    // Store goals as a clean comma-separated list (no more pipe-delimited mess)
     const profileUpdates = {
-      goals: goalParts.join(" | "),
+      goals: data.goals.join(", "),
+      sport: data.sport || null,
+      date_of_birth: data.date_of_birth || null,
+      gender: data.gender ?? null,
       experience_level: data.experience_level,
+      movement_confidence: data.movement_confidence ?? null,
+      sleep_hours: data.sleep_hours ?? null,
+      stress_level: data.stress_level ?? null,
+      occupation_activity_level: data.occupation_activity_level ?? null,
       training_years: data.training_years ?? null,
+      training_background: data.training_background || null,
       injuries: data.injuries_text || null,
       injury_details: data.injury_details,
       available_equipment: data.available_equipment as string[],
@@ -79,6 +70,9 @@ export async function POST(request: Request) {
       preferred_session_minutes: data.preferred_session_minutes,
       time_efficiency_preference: data.time_efficiency_preference ?? null,
       preferred_techniques: data.preferred_techniques ?? [],
+      exercise_likes: data.exercise_likes || null,
+      exercise_dislikes: data.exercise_dislikes || null,
+      additional_notes: data.additional_notes || null,
     }
 
     // Check if profile exists; if not, create one first
@@ -87,11 +81,12 @@ export async function POST(request: Request) {
     if (!existingProfile) {
       const newProfile = await createProfile({
         user_id: userId,
-        date_of_birth: null,
-        gender: null,
-        sport: null,
+        date_of_birth: profileUpdates.date_of_birth,
+        gender: profileUpdates.gender,
+        sport: profileUpdates.sport,
         position: null,
         experience_level: profileUpdates.experience_level,
+        movement_confidence: profileUpdates.movement_confidence,
         goals: profileUpdates.goals,
         injuries: profileUpdates.injuries,
         height_cm: null,
@@ -106,6 +101,13 @@ export async function POST(request: Request) {
         preferred_techniques: profileUpdates.preferred_techniques,
         injury_details: profileUpdates.injury_details,
         training_years: profileUpdates.training_years,
+        sleep_hours: profileUpdates.sleep_hours,
+        stress_level: profileUpdates.stress_level,
+        occupation_activity_level: profileUpdates.occupation_activity_level,
+        exercise_likes: profileUpdates.exercise_likes,
+        exercise_dislikes: profileUpdates.exercise_dislikes,
+        training_background: profileUpdates.training_background,
+        additional_notes: profileUpdates.additional_notes,
       })
       return NextResponse.json({ profile: newProfile })
     }

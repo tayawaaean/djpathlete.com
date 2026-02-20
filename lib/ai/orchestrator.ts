@@ -106,23 +106,42 @@ export async function generateProgram(
       // Fall back to "Client" if user lookup fails
     }
 
+    // Calculate age from date_of_birth if available
+    let age: number | null = null
+    if (profile?.date_of_birth) {
+      const birthYear = parseInt(profile.date_of_birth, 10)
+      if (!isNaN(birthYear)) {
+        age = new Date().getFullYear() - birthYear
+      }
+    }
+
     const profileContext = profile
       ? JSON.stringify({
           goals: profile.goals,
+          sport: profile.sport,
+          gender: profile.gender,
+          age,
+          date_of_birth: profile.date_of_birth,
+          experience_level: profile.experience_level,
+          movement_confidence: profile.movement_confidence,
+          sleep_hours: profile.sleep_hours,
+          stress_level: profile.stress_level,
+          occupation_activity_level: profile.occupation_activity_level,
+          training_years: profile.training_years,
           injuries: profile.injuries,
           injury_details: profile.injury_details,
-          experience_level: profile.experience_level,
           available_equipment: profile.available_equipment,
           preferred_session_minutes: profile.preferred_session_minutes,
           preferred_training_days: profile.preferred_training_days,
-          training_years: profile.training_years,
-          sport: profile.sport,
-          gender: profile.gender,
-          height_cm: profile.height_cm,
-          weight_kg: profile.weight_kg,
+          preferred_day_names: profile.preferred_day_names,
           preferred_techniques: profile.preferred_techniques,
           time_efficiency_preference: profile.time_efficiency_preference,
-          preferred_day_names: profile.preferred_day_names,
+          height_cm: profile.height_cm,
+          weight_kg: profile.weight_kg,
+          exercise_likes: profile.exercise_likes,
+          exercise_dislikes: profile.exercise_dislikes,
+          training_background: profile.training_background,
+          additional_notes: profile.additional_notes,
         })
       : JSON.stringify({ note: "No profile found — use defaults for a general fitness client." })
 
@@ -143,7 +162,16 @@ ${request.equipment_override ? `- Equipment override: ${request.equipment_overri
 ${request.additional_instructions ? `- Additional instructions: ${request.additional_instructions}` : ""}
 ${profile?.preferred_day_names?.length ? `- Preferred training days: ${profile.preferred_day_names.map((d: number) => ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]).join(', ')}` : ''}
 ${profile?.time_efficiency_preference ? `- Time efficiency preference: ${profile.time_efficiency_preference}` : ''}
-${profile?.preferred_techniques?.length ? `- Preferred techniques: ${profile.preferred_techniques.join(', ')}` : ''}`
+${profile?.preferred_techniques?.length ? `- Preferred techniques: ${profile.preferred_techniques.join(', ')}` : ''}
+${age ? `- Client age: ${age}` : ''}
+${profile?.sleep_hours ? `- Sleep: ${profile.sleep_hours}` : ''}
+${profile?.stress_level ? `- Stress level: ${profile.stress_level}` : ''}
+${profile?.occupation_activity_level ? `- Occupation activity: ${profile.occupation_activity_level}` : ''}
+${profile?.movement_confidence ? `- Movement confidence: ${profile.movement_confidence}` : ''}
+${profile?.exercise_likes ? `- Exercise likes: ${profile.exercise_likes}` : ''}
+${profile?.exercise_dislikes ? `- Exercise dislikes: ${profile.exercise_dislikes}` : ''}
+${profile?.training_background ? `- Training background: ${profile.training_background}` : ''}
+${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}`
 
     const agent1Result = await callAgent<ProfileAnalysis>(
       PROFILE_ANALYZER_PROMPT,

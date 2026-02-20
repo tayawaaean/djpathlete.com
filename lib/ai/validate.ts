@@ -62,6 +62,26 @@ export function validateProgram(
   )
   const equipmentSet = new Set(availableEquipment.map((e) => e.toLowerCase()))
 
+  // ── ERROR: Excessive exercises per day (unrealistic session) ──
+  for (const week of skeleton.weeks) {
+    for (const day of week.days) {
+      const slotCount = day.slots.length
+      if (slotCount > 12) {
+        issues.push({
+          type: "error",
+          category: "excessive_exercises",
+          message: `Week ${week.week_number} ${day.label} has ${slotCount} exercises — maximum is 12 (including warm-up/cool-down). This is physically impossible in a single session.`,
+        })
+      } else if (slotCount > 10) {
+        issues.push({
+          type: "warning",
+          category: "excessive_exercises",
+          message: `Week ${week.week_number} ${day.label} has ${slotCount} exercises — this is very high and may not fit within the session time. Consider removing low-priority exercises.`,
+        })
+      }
+    }
+  }
+
   // Track per-day exercise usage and per-week patterns
   const dayExercises = new Map<string, string[]>() // "w1d1" -> [exerciseId, ...]
   const weekMovements = new Map<number, Set<string>>() // week -> set of movement patterns

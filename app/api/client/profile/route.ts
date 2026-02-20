@@ -68,6 +68,14 @@ export async function PATCH(request: Request) {
         preferred_techniques: [],
         injury_details: [],
         training_years: null,
+        sleep_hours: null,
+        stress_level: null,
+        occupation_activity_level: null,
+        movement_confidence: null,
+        exercise_likes: null,
+        exercise_dislikes: null,
+        training_background: null,
+        additional_notes: null,
       })
       return NextResponse.json(newProfile)
     }

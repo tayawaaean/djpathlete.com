@@ -19,6 +19,8 @@ import {
   Loader2,
   Plus,
   X,
+  User,
+  Heart,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,15 +50,28 @@ import {
   LEVEL_LABELS,
   EQUIPMENT_LABELS,
   EQUIPMENT_PRESETS,
+  SLEEP_OPTIONS,
+  SLEEP_LABELS,
+  STRESS_LEVELS,
+  STRESS_LABELS,
+  OCCUPATION_LEVELS,
+  OCCUPATION_LABELS,
+  MOVEMENT_CONFIDENCE_LEVELS,
+  MOVEMENT_CONFIDENCE_LABELS,
+  MOVEMENT_CONFIDENCE_DESCRIPTIONS,
+  GENDER_OPTIONS,
+  GENDER_LABELS,
 } from "@/lib/validators/questionnaire"
 import { EQUIPMENT_OPTIONS } from "@/lib/validators/exercise"
 import type { ClientProfile, InjuryDetail } from "@/types/database"
 
-const TOTAL_STEPS = 8
+const TOTAL_STEPS = 10
 
 const STEP_INFO = [
   { label: "Fitness Goals", icon: Target },
+  { label: "About You", icon: User },
   { label: "Fitness Level", icon: Activity },
+  { label: "Recovery & Lifestyle", icon: Heart },
   { label: "Training History", icon: History },
   { label: "Injuries", icon: AlertTriangle },
   { label: "Equipment", icon: Dumbbell },
@@ -67,7 +82,14 @@ const STEP_INFO = [
 
 interface FormData {
   goals: string[]
+  sport: string
+  date_of_birth: string
+  gender: string | null
   experience_level: string
+  movement_confidence: string | null
+  sleep_hours: string | null
+  stress_level: string | null
+  occupation_activity_level: string | null
   training_years: number | null
   training_background: string
   injuries_text: string
@@ -82,21 +104,26 @@ interface FormData {
   additional_notes: string
 }
 
+/** Backward-compat: parse goals from old pipe-delimited format */
 function parseGoalsFromProfile(goalsString: string | null): string[] {
   if (!goalsString) return []
-  // Extract goals from the format "Goals: weight_loss, muscle_gain | ..."
+  // New format: plain comma-separated goals (no "Goals:" prefix)
+  // Old format: "Goals: weight_loss, muscle_gain | Training background: ..."
   const goalsMatch = goalsString.match(/^Goals:\s*(.+?)(?:\s*\||$)/)
   if (goalsMatch) {
     return goalsMatch[1]
       .split(",")
       .map((g) => g.trim())
-      .filter((g) =>
-        (FITNESS_GOALS as readonly string[]).includes(g)
-      )
+      .filter((g) => (FITNESS_GOALS as readonly string[]).includes(g))
   }
-  return []
+  // New format: just comma-separated
+  return goalsString
+    .split(",")
+    .map((g) => g.trim())
+    .filter((g) => (FITNESS_GOALS as readonly string[]).includes(g))
 }
 
+/** Backward-compat: parse a field from old pipe-delimited goals string */
 function parseFieldFromProfile(
   goalsString: string | null,
   prefix: string
@@ -111,13 +138,20 @@ function buildInitialData(profile: ClientProfile | null): FormData {
   if (!profile) {
     return {
       goals: [],
+      sport: "",
+      date_of_birth: "",
+      gender: null,
       experience_level: "",
+      movement_confidence: null,
+      sleep_hours: null,
+      stress_level: null,
+      occupation_activity_level: null,
       training_years: null,
       training_background: "",
       injuries_text: "",
       injury_details: [],
       available_equipment: [],
-      preferred_day_names: [1, 3, 5], // Mon/Wed/Fri default
+      preferred_day_names: [1, 3, 5],
       preferred_session_minutes: 60,
       time_efficiency_preference: null,
       preferred_techniques: [],
@@ -127,14 +161,23 @@ function buildInitialData(profile: ClientProfile | null): FormData {
     }
   }
 
+  // Determine if profile uses old pipe-delimited format
+  const isOldFormat = profile.goals?.includes("|") ?? false
+
   return {
     goals: parseGoalsFromProfile(profile.goals),
+    sport: profile.sport ?? "",
+    date_of_birth: profile.date_of_birth ?? "",
+    gender: profile.gender ?? null,
     experience_level: profile.experience_level ?? "",
+    movement_confidence: profile.movement_confidence ?? null,
+    sleep_hours: profile.sleep_hours ?? null,
+    stress_level: profile.stress_level ?? null,
+    occupation_activity_level: profile.occupation_activity_level ?? null,
     training_years: profile.training_years,
-    training_background: parseFieldFromProfile(
-      profile.goals,
-      "Training background"
-    ),
+    training_background: isOldFormat
+      ? parseFieldFromProfile(profile.goals, "Training background")
+      : (profile.training_background ?? ""),
     injuries_text: profile.injuries ?? "",
     injury_details: profile.injury_details ?? [],
     available_equipment: profile.available_equipment ?? [],
@@ -145,9 +188,15 @@ function buildInitialData(profile: ClientProfile | null): FormData {
     preferred_session_minutes: profile.preferred_session_minutes ?? 60,
     time_efficiency_preference: profile.time_efficiency_preference ?? null,
     preferred_techniques: profile.preferred_techniques ?? [],
-    exercise_likes: parseFieldFromProfile(profile.goals, "Likes"),
-    exercise_dislikes: parseFieldFromProfile(profile.goals, "Dislikes"),
-    additional_notes: parseFieldFromProfile(profile.goals, "Notes"),
+    exercise_likes: isOldFormat
+      ? parseFieldFromProfile(profile.goals, "Likes")
+      : (profile.exercise_likes ?? ""),
+    exercise_dislikes: isOldFormat
+      ? parseFieldFromProfile(profile.goals, "Dislikes")
+      : (profile.exercise_dislikes ?? ""),
+    additional_notes: isOldFormat
+      ? parseFieldFromProfile(profile.goals, "Notes")
+      : (profile.additional_notes ?? ""),
   }
 }
 
@@ -162,7 +211,7 @@ export function QuestionnaireForm({
     buildInitialData(initialProfile)
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [direction, setDirection] = useState(1) // 1 = forward, -1 = backward
+  const [direction, setDirection] = useState(1)
 
   const updateField = useCallback(
     <K extends keyof FormData>(field: K, value: FormData[K]) => {
@@ -177,11 +226,11 @@ export function QuestionnaireForm({
         if (formData.goals.length === 0)
           return "Please select at least one fitness goal."
         return null
-      case 2:
+      case 3:
         if (!formData.experience_level)
           return "Please select your fitness level."
         return null
-      case 6:
+      case 8:
         if (formData.preferred_day_names.length === 0)
           return "Please select at least one training day."
         if (
@@ -326,25 +375,31 @@ export function QuestionnaireForm({
               <Step1Goals formData={formData} updateField={updateField} />
             )}
             {currentStep === 2 && (
-              <Step2Level formData={formData} updateField={updateField} />
+              <Step2AboutYou formData={formData} updateField={updateField} />
             )}
             {currentStep === 3 && (
-              <Step3History formData={formData} updateField={updateField} />
+              <Step3Level formData={formData} updateField={updateField} />
             )}
             {currentStep === 4 && (
-              <Step4Injuries formData={formData} updateField={updateField} />
+              <Step4Recovery formData={formData} updateField={updateField} />
             )}
             {currentStep === 5 && (
-              <Step5Equipment formData={formData} updateField={updateField} />
+              <Step5History formData={formData} updateField={updateField} />
             )}
             {currentStep === 6 && (
-              <Step6Schedule formData={formData} updateField={updateField} />
+              <Step6Injuries formData={formData} updateField={updateField} />
             )}
             {currentStep === 7 && (
-              <Step7Preferences formData={formData} updateField={updateField} />
+              <Step7Equipment formData={formData} updateField={updateField} />
             )}
             {currentStep === 8 && (
-              <Step8Review formData={formData} onGoToStep={goToStep} />
+              <Step8Schedule formData={formData} updateField={updateField} />
+            )}
+            {currentStep === 9 && (
+              <Step9Preferences formData={formData} updateField={updateField} />
+            )}
+            {currentStep === 10 && (
+              <Step10Review formData={formData} onGoToStep={goToStep} />
             )}
           </motion.div>
         </AnimatePresence>
@@ -393,6 +448,8 @@ interface StepProps {
   updateField: <K extends keyof FormData>(field: K, value: FormData[K]) => void
 }
 
+/* ─── Step 1: Fitness Goals ──────────────────────────────────────── */
+
 function Step1Goals({ formData, updateField }: StepProps) {
   const toggleGoal = (goal: string) => {
     const current = formData.goals
@@ -401,6 +458,9 @@ function Step1Goals({ formData, updateField }: StepProps) {
         "goals",
         current.filter((g) => g !== goal)
       )
+      if (goal === "sport_specific") {
+        updateField("sport", "")
+      }
     } else {
       updateField("goals", [...current, goal])
     }
@@ -444,11 +504,98 @@ function Step1Goals({ formData, updateField }: StepProps) {
           )
         })}
       </div>
+
+      {/* Conditional sport input */}
+      {formData.goals.includes("sport_specific") && (
+        <div className="mt-6">
+          <Label htmlFor="sport-input">Which sport?</Label>
+          <Input
+            id="sport-input"
+            placeholder="e.g. Rugby, Basketball, Tennis..."
+            value={formData.sport}
+            onChange={(e) => updateField("sport", e.target.value)}
+            className="mt-1.5 max-w-sm"
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-function Step2Level({ formData, updateField }: StepProps) {
+/* ─── Step 2: About You ──────────────────────────────────────────── */
+
+function Step2AboutYou({ formData, updateField }: StepProps) {
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 80 }, (_, i) => currentYear - 16 - i)
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold text-primary mb-2">
+        A bit about you
+      </h2>
+      <p className="text-sm text-muted-foreground mb-6">
+        This helps us fine-tune recovery expectations and program design. Both
+        fields are optional.
+      </p>
+      <div className="space-y-8">
+        {/* Birth year */}
+        <div>
+          <Label>Birth year</Label>
+          <Select
+            value={formData.date_of_birth}
+            onValueChange={(v) => updateField("date_of_birth", v)}
+          >
+            <SelectTrigger className="mt-1.5 max-w-[200px]">
+              <SelectValue placeholder="Select year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year} value={String(year)}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Used to estimate age-based recovery adjustments.
+          </p>
+        </div>
+
+        {/* Gender */}
+        <div>
+          <Label>Gender</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            {GENDER_OPTIONS.map((option) => {
+              const selected = formData.gender === option
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    updateField("gender", selected ? null : option)
+                  }
+                  className={`rounded-lg border py-3 px-2 text-center transition-all ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary text-primary font-semibold"
+                      : "border-border hover:border-primary/40 text-foreground"
+                  }`}
+                >
+                  <span className="text-sm font-medium">
+                    {GENDER_LABELS[option]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Step 3: Fitness Level + Movement Confidence ────────────────── */
+
+function Step3Level({ formData, updateField }: StepProps) {
   const LEVEL_DESCRIPTIONS: Record<string, string> = {
     beginner:
       "New to structured training, less than 6 months of consistent exercise.",
@@ -505,11 +652,178 @@ function Step2Level({ formData, updateField }: StepProps) {
           )
         })}
       </div>
+
+      {/* Movement confidence */}
+      <div className="mt-8">
+        <Label>How confident are you with exercise movements?</Label>
+        <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+          This determines exercise complexity in your program.
+        </p>
+        <div className="space-y-2">
+          {MOVEMENT_CONFIDENCE_LEVELS.map((level) => {
+            const selected = formData.movement_confidence === level
+            return (
+              <button
+                key={level}
+                type="button"
+                onClick={() =>
+                  updateField(
+                    "movement_confidence",
+                    selected ? null : level
+                  )
+                }
+                className={`flex flex-col w-full rounded-lg border p-3 text-left transition-all ${
+                  selected
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "border-border hover:border-primary/40 hover:bg-surface/50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex items-center justify-center size-5 rounded-full border-2 transition-colors ${
+                      selected
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {selected && (
+                      <div className="size-2 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {MOVEMENT_CONFIDENCE_LABELS[level]}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 ml-8">
+                  {MOVEMENT_CONFIDENCE_DESCRIPTIONS[level]}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
 
-function Step3History({ formData, updateField }: StepProps) {
+/* ─── Step 4: Recovery & Lifestyle ───────────────────────────────── */
+
+function Step4Recovery({ formData, updateField }: StepProps) {
+  return (
+    <div>
+      <h2 className="text-lg font-semibold text-primary mb-2">
+        Recovery & lifestyle
+      </h2>
+      <p className="text-sm text-muted-foreground mb-6">
+        These factors directly affect how much training volume your body can
+        handle. All fields are optional.
+      </p>
+      <div className="space-y-8">
+        {/* Sleep */}
+        <div>
+          <Label>How many hours do you typically sleep per night?</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            {SLEEP_OPTIONS.map((option) => {
+              const selected = formData.sleep_hours === option
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    updateField("sleep_hours", selected ? null : option)
+                  }
+                  className={`rounded-lg border py-3 px-2 text-center transition-all ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary text-primary font-semibold"
+                      : "border-border hover:border-primary/40 text-foreground"
+                  }`}
+                >
+                  <span className="text-sm font-medium">
+                    {SLEEP_LABELS[option]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Stress */}
+        <div>
+          <Label>What is your current overall stress level?</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            {STRESS_LEVELS.map((option) => {
+              const selected = formData.stress_level === option
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    updateField("stress_level", selected ? null : option)
+                  }
+                  className={`rounded-lg border py-3 px-2 text-center transition-all ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary text-primary font-semibold"
+                      : "border-border hover:border-primary/40 text-foreground"
+                  }`}
+                >
+                  <span className="text-sm font-medium">
+                    {STRESS_LABELS[option]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Occupation activity */}
+        <div>
+          <Label>How physically active is your day job / daily life?</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+            {OCCUPATION_LEVELS.map((option) => {
+              const selected = formData.occupation_activity_level === option
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    updateField(
+                      "occupation_activity_level",
+                      selected ? null : option
+                    )
+                  }
+                  className={`flex items-center gap-3 rounded-lg border p-3 text-left transition-all ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-border hover:border-primary/40"
+                  }`}
+                >
+                  <div
+                    className={`flex items-center justify-center size-5 rounded-full border-2 transition-colors ${
+                      selected
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {selected && (
+                      <div className="size-2 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {OCCUPATION_LABELS[option]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Step 5: Training History ───────────────────────────────────── */
+
+function Step5History({ formData, updateField }: StepProps) {
   return (
     <div>
       <h2 className="text-lg font-semibold text-primary mb-2">
@@ -558,7 +872,9 @@ function Step3History({ formData, updateField }: StepProps) {
   )
 }
 
-function Step4Injuries({ formData, updateField }: StepProps) {
+/* ─── Step 6: Injuries ───────────────────────────────────────────── */
+
+function Step6Injuries({ formData, updateField }: StepProps) {
   const addInjury = () => {
     updateField("injury_details", [
       ...formData.injury_details,
@@ -719,7 +1035,9 @@ function Step4Injuries({ formData, updateField }: StepProps) {
   )
 }
 
-function Step5Equipment({ formData, updateField }: StepProps) {
+/* ─── Step 7: Equipment ──────────────────────────────────────────── */
+
+function Step7Equipment({ formData, updateField }: StepProps) {
   const toggleEquipment = (equipment: string) => {
     const current = formData.available_equipment
     if (current.includes(equipment)) {
@@ -736,7 +1054,6 @@ function Step5Equipment({ formData, updateField }: StepProps) {
     updateField("available_equipment", [...presetItems])
   }
 
-  // Determine which preset is currently active (exact match)
   const activePreset = Object.entries(EQUIPMENT_PRESETS).find(
     ([, items]) =>
       items.length === formData.available_equipment.length &&
@@ -799,7 +1116,9 @@ function Step5Equipment({ formData, updateField }: StepProps) {
   )
 }
 
-function Step6Schedule({ formData, updateField }: StepProps) {
+/* ─── Step 8: Schedule ───────────────────────────────────────────── */
+
+function Step8Schedule({ formData, updateField }: StepProps) {
   const toggleDay = (day: number) => {
     const current = formData.preferred_day_names
     if (current.includes(day)) {
@@ -946,7 +1265,9 @@ function Step6Schedule({ formData, updateField }: StepProps) {
   )
 }
 
-function Step7Preferences({ formData, updateField }: StepProps) {
+/* ─── Step 9: Preferences ────────────────────────────────────────── */
+
+function Step9Preferences({ formData, updateField }: StepProps) {
   const toggleTechnique = (technique: string) => {
     const current = formData.preferred_techniques
     if (current.includes(technique)) {
@@ -1050,7 +1371,9 @@ function Step7Preferences({ formData, updateField }: StepProps) {
   )
 }
 
-function Step8Review({
+/* ─── Step 10: Review ────────────────────────────────────────────── */
+
+function Step10Review({
   formData,
   onGoToStep,
 }: {
@@ -1068,42 +1391,106 @@ function Step8Review({
       </p>
       <div className="space-y-4">
         {/* Goals */}
-        <ReviewCard
-          title="Fitness Goals"
-          stepNumber={1}
-          onEdit={onGoToStep}
-        >
+        <ReviewCard title="Fitness Goals" stepNumber={1} onEdit={onGoToStep}>
           {formData.goals.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {formData.goals.map((goal) => (
-                <Badge key={goal} variant="secondary">
-                  {GOAL_LABELS[goal] ?? goal}
-                </Badge>
-              ))}
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {formData.goals.map((goal) => (
+                  <Badge key={goal} variant="secondary">
+                    {GOAL_LABELS[goal] ?? goal}
+                  </Badge>
+                ))}
+              </div>
+              {formData.sport && (
+                <p className="text-sm text-foreground">
+                  <span className="text-muted-foreground">Sport:</span>{" "}
+                  {formData.sport}
+                </p>
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No goals selected</p>
           )}
         </ReviewCard>
 
+        {/* About You */}
+        <ReviewCard title="About You" stepNumber={2} onEdit={onGoToStep}>
+          <div className="space-y-1">
+            {formData.date_of_birth && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Birth year:</span>{" "}
+                {formData.date_of_birth}
+              </p>
+            )}
+            {formData.gender && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Gender:</span>{" "}
+                {GENDER_LABELS[formData.gender] ?? formData.gender}
+              </p>
+            )}
+            {!formData.date_of_birth && !formData.gender && (
+              <p className="text-sm text-muted-foreground">Not provided</p>
+            )}
+          </div>
+        </ReviewCard>
+
         {/* Fitness Level */}
+        <ReviewCard title="Fitness Level" stepNumber={3} onEdit={onGoToStep}>
+          <div className="space-y-1">
+            <p className="text-sm text-foreground">
+              {formData.experience_level
+                ? LEVEL_LABELS[formData.experience_level] ??
+                  formData.experience_level
+                : "Not selected"}
+            </p>
+            {formData.movement_confidence && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">
+                  Movement confidence:
+                </span>{" "}
+                {MOVEMENT_CONFIDENCE_LABELS[formData.movement_confidence]}
+              </p>
+            )}
+          </div>
+        </ReviewCard>
+
+        {/* Recovery & Lifestyle */}
         <ReviewCard
-          title="Fitness Level"
-          stepNumber={2}
+          title="Recovery & Lifestyle"
+          stepNumber={4}
           onEdit={onGoToStep}
         >
-          <p className="text-sm text-foreground">
-            {formData.experience_level
-              ? LEVEL_LABELS[formData.experience_level] ??
-                formData.experience_level
-              : "Not selected"}
-          </p>
+          <div className="space-y-1">
+            {formData.sleep_hours && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Sleep:</span>{" "}
+                {SLEEP_LABELS[formData.sleep_hours]}
+              </p>
+            )}
+            {formData.stress_level && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Stress:</span>{" "}
+                {STRESS_LABELS[formData.stress_level]}
+              </p>
+            )}
+            {formData.occupation_activity_level && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Occupation:</span>{" "}
+                {OCCUPATION_LABELS[formData.occupation_activity_level]}
+              </p>
+            )}
+            {!formData.sleep_hours &&
+              !formData.stress_level &&
+              !formData.occupation_activity_level && (
+                <p className="text-sm text-muted-foreground">Not provided</p>
+              )}
+          </div>
         </ReviewCard>
 
         {/* Training History */}
         <ReviewCard
           title="Training History"
-          stepNumber={3}
+          stepNumber={5}
           onEdit={onGoToStep}
         >
           <div className="space-y-1">
@@ -1130,7 +1517,7 @@ function Step8Review({
         {/* Injuries */}
         <ReviewCard
           title="Injuries & Limitations"
-          stepNumber={4}
+          stepNumber={6}
           onEdit={onGoToStep}
         >
           <div className="space-y-2">
@@ -1178,7 +1565,7 @@ function Step8Review({
         {/* Equipment */}
         <ReviewCard
           title="Available Equipment"
-          stepNumber={5}
+          stepNumber={7}
           onEdit={onGoToStep}
         >
           {formData.available_equipment.length > 0 ? (
@@ -1197,7 +1584,7 @@ function Step8Review({
         </ReviewCard>
 
         {/* Schedule */}
-        <ReviewCard title="Schedule" stepNumber={6} onEdit={onGoToStep}>
+        <ReviewCard title="Schedule" stepNumber={8} onEdit={onGoToStep}>
           <div className="space-y-1">
             <p className="text-sm text-foreground">
               <span className="text-muted-foreground">Days:</span>{" "}
@@ -1222,7 +1609,7 @@ function Step8Review({
         {/* Preferences */}
         <ReviewCard
           title="Exercise Preferences"
-          stepNumber={7}
+          stepNumber={9}
           onEdit={onGoToStep}
         >
           <div className="space-y-1">
