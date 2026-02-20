@@ -2,29 +2,24 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Loader2, ShoppingBag } from "lucide-react"
+import { toast } from "sonner"
 
-interface BuyButtonProps {
+interface ClientBuyButtonProps {
   programId: string
-  isLoggedIn: boolean
 }
 
-export function BuyButton({ programId, isLoggedIn }: BuyButtonProps) {
+export function ClientBuyButton({ programId }: ClientBuyButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   async function handleBuy() {
-    if (!isLoggedIn) {
-      router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`)
-      return
-    }
-
     setLoading(true)
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ programId }),
+        body: JSON.stringify({ programId, returnUrl: "/client/programs" }),
       })
 
       const data = await res.json()
@@ -37,7 +32,7 @@ export function BuyButton({ programId, isLoggedIn }: BuyButtonProps) {
         window.location.href = data.url
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to start checkout")
+      toast.error(err instanceof Error ? err.message : "Failed to start checkout")
       setLoading(false)
     }
   }
@@ -48,8 +43,12 @@ export function BuyButton({ programId, isLoggedIn }: BuyButtonProps) {
       disabled={loading}
       className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
     >
-      {loading && <Loader2 className="size-4 animate-spin" />}
-      {isLoggedIn ? "Buy Now" : "Sign In to Purchase"}
+      {loading ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : (
+        <ShoppingBag className="size-4" />
+      )}
+      Buy Now
     </button>
   )
 }

@@ -26,7 +26,7 @@ export default function PurchaseSuccessPage() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/client/dashboard"
+            href="/client/workouts"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Start Training

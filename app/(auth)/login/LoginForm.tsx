@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -41,7 +43,13 @@ export function LoginForm() {
     const sessionData = await sessionRes.json()
     const role = sessionData?.user?.role
 
-    router.push(role === "admin" ? "/admin/dashboard" : "/client/dashboard")
+    // If there's a callback URL (e.g., from program purchase), go there
+    // Otherwise redirect based on role
+    if (callbackUrl && !callbackUrl.startsWith("/admin") && !callbackUrl.startsWith("/client")) {
+      router.push(callbackUrl)
+    } else {
+      router.push(role === "admin" ? "/admin/dashboard" : "/client/dashboard")
+    }
     router.refresh()
   }
 

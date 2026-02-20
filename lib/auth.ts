@@ -45,11 +45,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     newUser: "/register",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // On initial sign-in, set id and role from the authorize() return
       if (user) {
         token.id = user.id as string
         token.role = user.role as "admin" | "client"
       }
+
+      // On every subsequent request, refresh role from DB to avoid stale role
+      // after switching accounts (e.g., client → admin)
+      if (trigger !== "signIn" && token.id) {
+        try {
+          const supabase = createServiceRoleClient()
+          const { data } = await supabase
+            .from("users")
+            .select("role")
+            .eq("id", token.id)
+            .single()
+          if (data) {
+            token.role = data.role as "admin" | "client"
+          }
+        } catch {
+          // If DB lookup fails, keep existing token role
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
@@ -62,5 +82,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
   },
 })

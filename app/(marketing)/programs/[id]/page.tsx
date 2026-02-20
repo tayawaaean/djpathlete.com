@@ -173,7 +173,7 @@ export default async function ProgramDetailPage({ params }: Props) {
 
             {owned ? (
               <Link
-                href="/client/dashboard"
+                href="/client/workouts"
                 className="inline-flex items-center rounded-full bg-success px-6 py-3 text-sm font-medium text-white hover:bg-success/90 transition-colors"
               >
                 Go to Program
