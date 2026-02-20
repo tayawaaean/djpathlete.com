@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { X, LayoutDashboard, Users, Dumbbell, ClipboardList, CreditCard, BarChart3, Star, Settings, LogOut } from "lucide-react"
+import { X, LayoutDashboard, Users, Dumbbell, ClipboardList, CreditCard, BarChart3, Brain, Star, Settings, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
@@ -13,6 +13,7 @@ const navItems = [
   { label: "Programs", href: "/admin/programs", icon: ClipboardList },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { label: "AI Usage", href: "/admin/ai-usage", icon: Brain },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]

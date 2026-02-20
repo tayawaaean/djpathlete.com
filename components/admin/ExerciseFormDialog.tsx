@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { ChevronDown } from "lucide-react"
@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -27,6 +28,7 @@ import {
   type ExerciseFormData,
 } from "@/lib/validators/exercise"
 import { extractYouTubeId, getYouTubeEmbedUrl } from "@/lib/youtube"
+import { ExerciseRelationships } from "@/components/admin/ExerciseRelationships"
 import type { Exercise } from "@/types/database"
 
 interface ExerciseFormDialogProps {
@@ -141,6 +143,9 @@ export function ExerciseFormDialog({
   const [equipmentRequired, setEquipmentRequired] = useState<string[]>(exercise?.equipment_required ?? [])
 
   const youtubeId = videoUrl ? extractYouTubeId(videoUrl) : null
+  const [iframeLoaded, setIframeLoaded] = useState(false)
+
+  const handleIframeLoad = useCallback(() => setIframeLoaded(true), [])
 
   function toggleItem(arr: string[], item: string, setter: (v: string[]) => void) {
     setter(arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item])
@@ -349,7 +354,10 @@ export function ExerciseFormDialog({
               name="video_url"
               type="url"
               value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
+              onChange={(e) => {
+                setVideoUrl(e.target.value)
+                setIframeLoaded(false)
+              }}
               placeholder="https://youtube.com/watch?v=..."
               disabled={isSubmitting}
             />
@@ -357,14 +365,21 @@ export function ExerciseFormDialog({
               <p className="text-xs text-destructive">{errors.video_url[0]}</p>
             )}
             {youtubeId && (
-              <div className="rounded-lg overflow-hidden border border-border aspect-video">
-                <iframe
-                  src={getYouTubeEmbedUrl(youtubeId)}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Video preview"
-                />
+              <div className="max-w-sm">
+                <div className="relative rounded-lg overflow-hidden border border-border aspect-video">
+                  {!iframeLoaded && (
+                    <Skeleton className="absolute inset-0 rounded-none" />
+                  )}
+                  <iframe
+                    key={youtubeId}
+                    src={getYouTubeEmbedUrl(youtubeId)}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Video preview"
+                    onLoad={handleIframeLoad}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -527,6 +542,14 @@ export function ExerciseFormDialog({
               </div>
             )}
           </div>
+
+          {/* Exercise Relationships (only when editing an existing exercise) */}
+          {isEditing && exercise && (
+            <ExerciseRelationships
+              exerciseId={exercise.id}
+              exerciseName={exercise.name}
+            />
+          )}
 
           <DialogFooter>
             <Button

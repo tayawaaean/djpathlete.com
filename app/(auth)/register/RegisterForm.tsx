@@ -68,7 +68,7 @@ export function RegisterForm() {
         return
       }
 
-      router.push("/client/dashboard")
+      router.push("/client/questionnaire")
       router.refresh()
     } catch {
       setError("An unexpected error occurred. Please try again.")
