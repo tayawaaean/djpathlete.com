@@ -98,7 +98,7 @@ export function ProgramHeader({ program, clients }: ProgramHeaderProps) {
               )}
             </div>
             {program.description && (
-              <p className="text-sm text-muted-foreground max-w-xl">
+              <p className="text-sm text-muted-foreground">
                 {program.description}
               </p>
             )}

@@ -1,5 +1,6 @@
 import type React from "react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -29,9 +30,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="font-heading text-xl font-semibold text-white tracking-tight">
-              DJP Athlete
-            </span>
+            <Image
+              src="/logos/logo-light.png"
+              alt="DJP Athlete"
+              width={140}
+              height={40}
+              className="object-contain"
+              priority
+            />
           </Link>
 
           {/* Quote */}
@@ -86,9 +92,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Mobile logo header */}
         <header className="flex items-center justify-center py-8 lg:hidden">
           <Link href="/" className="flex items-center">
-            <span className="font-heading text-xl font-semibold text-primary tracking-tight">
-              DJP Athlete
-            </span>
+            <Image
+              src="/logos/logo-dark.png"
+              alt="DJP Athlete"
+              width={130}
+              height={38}
+              className="object-contain"
+            />
           </Link>
         </header>
 

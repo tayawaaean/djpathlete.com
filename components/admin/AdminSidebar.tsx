@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -39,9 +40,14 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="p-6">
         <Link href="/admin/dashboard" className="flex items-center">
-          <span className="font-heading text-xl font-semibold text-white tracking-tight">
-            DJP Athlete
-          </span>
+          <Image
+            src="/logos/logo-light.png"
+            alt="DJP Athlete"
+            width={130}
+            height={38}
+            className="object-contain"
+            priority
+          />
         </Link>
         <p className="text-xs text-white/40 mt-1">Admin Dashboard</p>
       </div>

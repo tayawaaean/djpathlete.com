@@ -15,6 +15,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Play,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,8 +23,16 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
 import { AiCoachDialog } from "@/components/client/AiCoachDialog"
 import { CelebrationOverlay } from "@/components/client/CelebrationOverlay"
+import { extractYouTubeId } from "@/lib/youtube"
 import type { Exercise, ProgramExercise } from "@/types/database"
 import type { WeightRecommendation } from "@/lib/weight-recommendation"
 
@@ -76,6 +85,47 @@ function TrendIcon({ trend }: { trend: WeightRecommendation["trend"] }) {
   return <Minus className="size-3 text-muted-foreground" />
 }
 
+// ─── Exercise Video Sheet ───────────────────────────────────────────────────
+
+function ExerciseVideoSheet({
+  open,
+  onOpenChange,
+  videoUrl,
+  exerciseName,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  videoUrl: string
+  exerciseName: string
+}) {
+  const videoId = extractYouTubeId(videoUrl)
+  if (!videoId) return null
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="px-4 pb-8 pt-4 max-h-[85dvh]">
+        <SheetHeader className="p-0 pb-2">
+          <SheetTitle className="text-sm">{exerciseName}</SheetTitle>
+          <SheetDescription className="sr-only">
+            Exercise demonstration video
+          </SheetDescription>
+        </SheetHeader>
+        <div className="relative w-full overflow-hidden rounded-lg bg-black aspect-video">
+          {open && (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
+              title={`${exerciseName} demonstration`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 size-full border-0"
+            />
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 // ─── Exercise Card ──────────────────────────────────────────────────────────
 
 function ExerciseCard({
@@ -90,7 +140,10 @@ function ExerciseCard({
   const [loggedToday, setLoggedToday] = useState(initialLogged)
   const [submitting, setSubmitting] = useState(false)
   const [showAiCoach, setShowAiCoach] = useState(false)
+  const [showVideo, setShowVideo] = useState(false)
   const [showExtra, setShowExtra] = useState(false)
+
+  const hasVideo = Boolean(exercise.video_url && extractYouTubeId(exercise.video_url))
   const [celebrations, setCelebrations] = useState<
     Array<{
       achievement_type: string
@@ -209,21 +262,35 @@ function ExerciseCard({
             </div>
           </div>
 
-          {loggedToday ? (
-            <CheckCircle2 className="size-5 text-success shrink-0" />
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              className="shrink-0 gap-1"
-              onClick={() => setExpanded(!expanded)}
-            >
-              Log
-              <ChevronDown
-                className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
-              />
-            </Button>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {hasVideo && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8 rounded-full text-muted-foreground hover:text-primary"
+                onClick={() => setShowVideo(true)}
+                aria-label={`Watch ${exercise.name} video`}
+              >
+                <Play className="size-4" />
+              </Button>
+            )}
+
+            {loggedToday ? (
+              <CheckCircle2 className="size-5 text-success" />
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => setExpanded(!expanded)}
+              >
+                Log
+                <ChevronDown
+                  className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+                />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Expanded log form */}
@@ -440,6 +507,15 @@ function ExerciseCard({
         exerciseId={exercise.id}
         exerciseName={exercise.name}
       />
+
+      {hasVideo && exercise.video_url && (
+        <ExerciseVideoSheet
+          open={showVideo}
+          onOpenChange={setShowVideo}
+          videoUrl={exercise.video_url}
+          exerciseName={exercise.name}
+        />
+      )}
 
       <CelebrationOverlay
         achievements={celebrations}

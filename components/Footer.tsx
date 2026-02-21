@@ -3,6 +3,7 @@
 import { Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import Image from "next/image"
 import { FOOTER_SECTIONS } from "@/lib/constants"
 
 type FooterLink = {
@@ -60,9 +61,13 @@ export const Footer = ({
             className="col-span-2"
           >
             <div className="mb-4">
-              <span className="font-heading text-xl font-semibold text-primary tracking-tight">
-                {companyName}
-              </span>
+              <Image
+                src="/logos/logo-icon-dark.png"
+                alt={companyName}
+                width={100}
+                height={36}
+                className="object-contain"
+              />
               <p className="text-sm leading-5 text-muted-foreground max-w-xs mt-2">
                 {tagline}
               </p>

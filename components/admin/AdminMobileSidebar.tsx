@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { X, LayoutDashboard, Bot, Users, Dumbbell, ClipboardList, CreditCard, BarChart3, Brain, Star, Settings, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
@@ -37,9 +38,13 @@ export function AdminMobileSidebar({ open, onClose }: AdminMobileSidebarProps) {
       {/* Drawer */}
       <div className="fixed inset-y-0 left-0 z-50 w-64 bg-primary text-primary-foreground lg:hidden flex flex-col">
         <div className="flex items-center justify-between p-6">
-          <span className="font-heading text-xl font-semibold text-white tracking-tight">
-            DJP Athlete
-          </span>
+          <Image
+            src="/logos/logo-light.png"
+            alt="DJP Athlete"
+            width={120}
+            height={34}
+            className="object-contain"
+          />
           <button onClick={onClose} className="text-white/70 hover:text-white">
             <X className="size-5" />
           </button>

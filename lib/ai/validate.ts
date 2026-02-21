@@ -6,6 +6,104 @@ import type {
   ValidationIssue,
 } from "@/lib/ai/types"
 import type { CompressedExercise } from "@/lib/ai/exercise-context"
+import { stringSimilarity } from "string-similarity-js"
+
+/**
+ * Normalize equipment names to handle singular/plural mismatches and common aliases.
+ * Both the client questionnaire options ("dumbbell") and exercise DB values ("dumbbells")
+ * get normalized to the same canonical form for comparison.
+ *
+ * Uses a 3-layer approach:
+ * 1. Direct alias map lookup
+ * 2. Plural stripping + alias re-check
+ * 3. Fuzzy match against canonical names (string-similarity-js)
+ */
+
+const CANONICAL_EQUIPMENT = [
+  "barbell", "dumbbell", "kettlebell", "cable_machine", "smith_machine",
+  "resistance_band", "pull_up_bar", "bench", "squat_rack", "leg_press",
+  "leg_curl_machine", "lat_pulldown_machine", "rowing_machine", "treadmill",
+  "bike", "box", "plyo_box", "medicine_ball", "stability_ball", "foam_roller",
+  "trx", "landmine", "sled", "battle_ropes", "agility_ladder", "cones", "yoga_mat",
+] as const
+
+const EQUIPMENT_ALIASES: Record<string, string> = {
+  // Plural -> singular
+  dumbbells: "dumbbell",
+  barbells: "barbell",
+  kettlebells: "kettlebell",
+  cables: "cable_machine",
+  bands: "resistance_band",
+  cones_set: "cones",
+  // Short names / common variations
+  cable: "cable_machine",
+  cable_machine: "cable_machine",
+  db: "dumbbell",
+  bb: "barbell",
+  kb: "kettlebell",
+  pull_up: "pull_up_bar",
+  pullup_bar: "pull_up_bar",
+  pullup: "pull_up_bar",
+  chin_up_bar: "pull_up_bar",
+  chinup_bar: "pull_up_bar",
+  resistance_bands: "resistance_band",
+  band: "resistance_band",
+  battle_rope: "battle_ropes",
+  plyo: "plyo_box",
+  med_ball: "medicine_ball",
+  swiss_ball: "stability_ball",
+  exercise_ball: "stability_ball",
+  smith: "smith_machine",
+  lat_pulldown: "lat_pulldown_machine",
+  leg_curl: "leg_curl_machine",
+  leg_press_machine: "leg_press",
+  rower: "rowing_machine",
+  erg: "rowing_machine",
+  treadmills: "treadmill",
+  bikes: "bike",
+  boxes: "box",
+  mat: "yoga_mat",
+  foam_rollers: "foam_roller",
+  sleds: "sled",
+  agility_ladders: "agility_ladder",
+}
+
+/** Minimum similarity score (0-1) to accept a fuzzy match */
+const FUZZY_THRESHOLD = 0.7
+
+export function normalizeEquipment(name: string): string {
+  const n = name.toLowerCase().trim().replace(/\s+/g, "_")
+
+  // Layer 1: Direct alias match
+  if (EQUIPMENT_ALIASES[n]) return EQUIPMENT_ALIASES[n]
+
+  // Layer 2: Strip trailing 's' for plural normalization, then re-check alias
+  if (n.endsWith("s") && !n.endsWith("ss") && n.length > 3) {
+    const singular = n.slice(0, -1)
+    if (EQUIPMENT_ALIASES[singular]) return EQUIPMENT_ALIASES[singular]
+    // Check if the singular form is already canonical
+    if ((CANONICAL_EQUIPMENT as readonly string[]).includes(singular)) return singular
+  }
+
+  // Check if already canonical
+  if ((CANONICAL_EQUIPMENT as readonly string[]).includes(n)) return n
+
+  // Layer 3: Fuzzy match against canonical names
+  let bestMatch = ""
+  let bestScore = 0
+  for (const canonical of CANONICAL_EQUIPMENT) {
+    const score = stringSimilarity(n, canonical)
+    if (score > bestScore) {
+      bestScore = score
+      bestMatch = canonical
+    }
+  }
+
+  if (bestScore >= FUZZY_THRESHOLD) return bestMatch
+
+  // No match found — return as-is
+  return n
+}
 
 /**
  * Code-based program validation — replaces the AI Agent 4.
@@ -60,7 +158,7 @@ export function validateProgram(
       .filter((c) => c.type === "avoid_muscle")
       .map((c) => c.value.toLowerCase())
   )
-  const equipmentSet = new Set(availableEquipment.map((e) => e.toLowerCase()))
+  const equipmentSet = new Set(availableEquipment.map(normalizeEquipment))
 
   // ── ERROR: Excessive exercises per day (unrealistic session) ──
   for (const week of skeleton.weeks) {
@@ -109,7 +207,7 @@ export function validateProgram(
     // ── ERROR: Equipment violations ──
     if (exercise.equipment_required.length > 0 && !exercise.is_bodyweight) {
       for (const eq of exercise.equipment_required) {
-        if (!equipmentSet.has(eq.toLowerCase())) {
+        if (!equipmentSet.has(normalizeEquipment(eq))) {
           issues.push({
             type: "error",
             category: "equipment_violation",
@@ -122,7 +220,7 @@ export function validateProgram(
 
     // Also check avoided equipment
     for (const eq of exercise.equipment_required) {
-      if (avoidedEquipment.has(eq.toLowerCase())) {
+      if (avoidedEquipment.has(normalizeEquipment(eq))) {
         issues.push({
           type: "error",
           category: "equipment_violation",

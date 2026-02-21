@@ -44,7 +44,16 @@ import {
   SESSION_DURATIONS,
   EQUIPMENT_LABELS,
   LEVEL_LABELS,
+  DAY_NAMES,
+  TIME_EFFICIENCY_LABELS,
+  TECHNIQUE_LABELS,
+  GENDER_LABELS,
+  MOVEMENT_CONFIDENCE_LABELS,
+  SLEEP_LABELS,
+  STRESS_LABELS,
+  OCCUPATION_LABELS,
 } from "@/lib/validators/questionnaire"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   parseProfileSummary,
   type ProfileSummary,
@@ -102,6 +111,17 @@ function formatIssueMessage(message: string): string {
         .join(" ")}`
   )
   return formatted
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function SummaryField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium">{value}</p>
+    </div>
+  )
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -498,7 +518,7 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   // Form view
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="size-5 text-accent" />
@@ -593,106 +613,184 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               </button>
 
               {summaryExpanded && (
-                <div className="px-3 pb-3 space-y-3 border-t border-primary/10">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
-                    {profileSummary.experienceLevel && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Experience Level</p>
-                        <p className="text-sm font-medium">
-                          {LEVEL_LABELS[profileSummary.experienceLevel] ?? profileSummary.experienceLevel}
-                        </p>
-                      </div>
-                    )}
-                    {profileSummary.trainingYears !== null && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Training Years</p>
-                        <p className="text-sm font-medium">
-                          {profileSummary.trainingYears} year{profileSummary.trainingYears !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
-                    {profileSummary.sport && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Sport</p>
-                        <p className="text-sm font-medium">{profileSummary.sport}</p>
-                      </div>
-                    )}
-                    {profileSummary.position && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Position</p>
-                        <p className="text-sm font-medium">{profileSummary.position}</p>
-                      </div>
-                    )}
-                  </div>
+                <div className="px-3 pb-3 border-t border-primary/10">
+                  <Tabs defaultValue="profile" className="pt-2">
+                    <TabsList className="w-full">
+                      <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
+                      <TabsTrigger value="training" className="text-xs">Training</TabsTrigger>
+                      <TabsTrigger value="schedule" className="text-xs">Schedule</TabsTrigger>
+                      <TabsTrigger value="preferences" className="text-xs">Preferences</TabsTrigger>
+                    </TabsList>
 
-                  {/* Injuries */}
-                  {(profileSummary.injuries || profileSummary.injuryDetails.length > 0) && (
-                    <div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                        <AlertTriangle className="size-3" />
-                        Injuries & Limitations
-                      </p>
-                      {profileSummary.injuries && (
-                        <p className="text-sm">{profileSummary.injuries}</p>
+                    {/* Profile tab: About You + Recovery & Lifestyle */}
+                    <TabsContent value="profile" className="space-y-2 pt-2">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        {profileSummary.dateOfBirth && (
+                          <SummaryField label="Birth Year" value={profileSummary.dateOfBirth.slice(0, 4)} />
+                        )}
+                        {profileSummary.gender && (
+                          <SummaryField label="Gender" value={GENDER_LABELS[profileSummary.gender] ?? profileSummary.gender} />
+                        )}
+                        {profileSummary.sport && (
+                          <SummaryField label="Sport" value={profileSummary.sport} />
+                        )}
+                        {profileSummary.position && (
+                          <SummaryField label="Position" value={profileSummary.position} />
+                        )}
+                      </div>
+
+                      {/* Recovery & lifestyle */}
+                      {(profileSummary.sleepHours || profileSummary.stressLevel || profileSummary.occupationActivityLevel) && (
+                        <>
+                          <p className="text-xs font-medium text-muted-foreground pt-1">Recovery & Lifestyle</p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            {profileSummary.sleepHours && (
+                              <SummaryField label="Sleep" value={SLEEP_LABELS[profileSummary.sleepHours] ?? profileSummary.sleepHours} />
+                            )}
+                            {profileSummary.stressLevel && (
+                              <SummaryField label="Stress" value={STRESS_LABELS[profileSummary.stressLevel] ?? profileSummary.stressLevel} />
+                            )}
+                            {profileSummary.occupationActivityLevel && (
+                              <SummaryField label="Occupation" value={OCCUPATION_LABELS[profileSummary.occupationActivityLevel] ?? profileSummary.occupationActivityLevel} />
+                            )}
+                          </div>
+                        </>
                       )}
-                      {profileSummary.injuryDetails.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {profileSummary.injuryDetails.map((injury, i) => (
-                            <Badge key={i} variant="outline" className="text-xs gap-1 border-warning/30 text-warning">
-                              {injury.area}
-                              {injury.side ? ` (${injury.side})` : ""}
-                              {injury.severity ? ` - ${injury.severity}` : ""}
-                            </Badge>
-                          ))}
+                    </TabsContent>
+
+                    {/* Training tab: Level, History, Injuries, Equipment */}
+                    <TabsContent value="training" className="space-y-2 pt-2">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        {profileSummary.experienceLevel && (
+                          <SummaryField label="Experience" value={LEVEL_LABELS[profileSummary.experienceLevel] ?? profileSummary.experienceLevel} />
+                        )}
+                        {profileSummary.movementConfidence && (
+                          <SummaryField label="Movement Confidence" value={MOVEMENT_CONFIDENCE_LABELS[profileSummary.movementConfidence] ?? profileSummary.movementConfidence} />
+                        )}
+                        {profileSummary.trainingYears !== null && (
+                          <SummaryField label="Training Years" value={`${profileSummary.trainingYears} year${profileSummary.trainingYears !== 1 ? "s" : ""}`} />
+                        )}
+                      </div>
+
+                      {profileSummary.trainingBackground && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">Training Background</p>
+                          <p className="text-sm">{profileSummary.trainingBackground}</p>
                         </div>
                       )}
-                    </div>
-                  )}
 
-                  {/* Equipment */}
-                  {profileSummary.availableEquipment.length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                        <Dumbbell className="size-3" />
-                        Available Equipment
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {profileSummary.availableEquipment.map((eq) => (
-                          <Badge key={eq} variant="outline" className="text-xs border-border">
-                            {EQUIPMENT_LABELS[eq] ?? eq}
-                          </Badge>
-                        ))}
+                      {/* Injuries */}
+                      {(profileSummary.injuries || profileSummary.injuryDetails.length > 0) && (
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                            <AlertTriangle className="size-3" />
+                            Injuries & Limitations
+                          </p>
+                          {profileSummary.injuries && (
+                            <p className="text-sm">{profileSummary.injuries}</p>
+                          )}
+                          {profileSummary.injuryDetails.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {profileSummary.injuryDetails.map((injury, i) => (
+                                <Badge key={i} variant="outline" className="text-xs gap-1 border-warning/30 text-warning">
+                                  {injury.area}
+                                  {injury.side ? ` (${injury.side})` : ""}
+                                  {injury.severity ? ` - ${injury.severity}` : ""}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Equipment */}
+                      {profileSummary.availableEquipment.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                            <Dumbbell className="size-3" />
+                            Available Equipment
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {profileSummary.availableEquipment.map((eq) => (
+                              <Badge key={eq} variant="outline" className="text-xs border-border">
+                                {EQUIPMENT_LABELS[eq] ?? eq}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Schedule tab */}
+                    <TabsContent value="schedule" className="space-y-2 pt-2">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        {profileSummary.preferredTrainingDays !== null && (
+                          <SummaryField label="Sessions/Week" value={String(profileSummary.preferredTrainingDays)} />
+                        )}
+                        {profileSummary.preferredSessionMinutes !== null && (
+                          <SummaryField label="Session Length" value={`${profileSummary.preferredSessionMinutes} min`} />
+                        )}
                       </div>
-                    </div>
-                  )}
 
-                  {/* Training background */}
-                  {profileSummary.trainingBackground && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Training Background</p>
-                      <p className="text-sm">{profileSummary.trainingBackground}</p>
-                    </div>
-                  )}
+                      {profileSummary.preferredDayNames.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Preferred Days</p>
+                          <div className="flex flex-wrap gap-1">
+                            {profileSummary.preferredDayNames.map((dayNum) => (
+                              <Badge key={dayNum} variant="outline" className="text-xs border-border">
+                                {DAY_NAMES[dayNum - 1] ?? `Day ${dayNum}`}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                  {/* Exercise preferences */}
-                  {(profileSummary.likes || profileSummary.dislikes) && (
-                    <div className="space-y-1">
+                      {profileSummary.timeEfficiencyPreference && (
+                        <SummaryField label="Time Efficiency" value={TIME_EFFICIENCY_LABELS[profileSummary.timeEfficiencyPreference] ?? profileSummary.timeEfficiencyPreference} />
+                      )}
+                    </TabsContent>
+
+                    {/* Preferences tab: Techniques, Likes/Dislikes, Notes */}
+                    <TabsContent value="preferences" className="space-y-2 pt-2">
+                      {profileSummary.preferredTechniques.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Preferred Techniques</p>
+                          <div className="flex flex-wrap gap-1">
+                            {profileSummary.preferredTechniques.map((t) => (
+                              <Badge key={t} variant="outline" className="text-xs border-border">
+                                {TECHNIQUE_LABELS[t] ?? t}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {profileSummary.likes && (
-                        <p className="text-sm">
-                          <span className="text-muted-foreground text-xs font-medium">Likes:</span>{" "}
-                          {profileSummary.likes}
-                        </p>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">Likes</p>
+                          <p className="text-sm">{profileSummary.likes}</p>
+                        </div>
                       )}
                       {profileSummary.dislikes && (
-                        <p className="text-sm">
-                          <span className="text-muted-foreground text-xs font-medium">Dislikes:</span>{" "}
-                          {profileSummary.dislikes}
-                        </p>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">Dislikes</p>
+                          <p className="text-sm">{profileSummary.dislikes}</p>
+                        </div>
                       )}
-                    </div>
-                  )}
+                      {profileSummary.notes && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">Additional Notes</p>
+                          <p className="text-sm">{profileSummary.notes}</p>
+                        </div>
+                      )}
 
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 pt-1 border-t border-primary/10">
+                      {!profileSummary.preferredTechniques.length && !profileSummary.likes && !profileSummary.dislikes && !profileSummary.notes && (
+                        <p className="text-xs text-muted-foreground italic">No preferences provided.</p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 pt-2 mt-2 border-t border-primary/10">
                     <Info className="size-3" />
                     Goals, sessions/week, and session length were auto-filled. You can override any value below.
                   </p>

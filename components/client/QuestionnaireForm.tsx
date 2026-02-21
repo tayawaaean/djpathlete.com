@@ -167,7 +167,7 @@ function buildInitialData(profile: ClientProfile | null): FormData {
   return {
     goals: parseGoalsFromProfile(profile.goals),
     sport: profile.sport ?? "",
-    date_of_birth: profile.date_of_birth ?? "",
+    date_of_birth: profile.date_of_birth ? profile.date_of_birth.slice(0, 4) : "",
     gender: profile.gender ?? null,
     experience_level: profile.experience_level ?? "",
     movement_confidence: profile.movement_confidence ?? null,
@@ -279,8 +279,8 @@ export function QuestionnaireForm({
         throw new Error(errorData.error || "Failed to save questionnaire")
       }
 
-      toast.success("Assessment saved! Now find a program that fits your goals.")
-      router.push("/programs")
+      toast.success("Assessment saved! We'll notify you when a program that suits you is ready.")
+      router.push("/client/dashboard")
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Something went wrong"

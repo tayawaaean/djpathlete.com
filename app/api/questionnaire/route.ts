@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const profileUpdates = {
       goals: data.goals.join(", "),
       sport: data.sport || null,
-      date_of_birth: data.date_of_birth || null,
+      date_of_birth: data.date_of_birth ? `${data.date_of_birth}-01-01` : null,
       gender: data.gender ?? null,
       experience_level: data.experience_level,
       movement_confidence: data.movement_confidence ?? null,

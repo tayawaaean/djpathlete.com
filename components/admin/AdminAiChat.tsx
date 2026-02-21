@@ -605,22 +605,48 @@ export function AdminAiChat() {
       className="fixed inset-0 flex lg:left-64"
       style={{ top: "4rem" }}
     >
+      {/* ── Mobile sidebar backdrop ───────────────────────────────────── */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ── Conversation sidebar ──────────────────────────────────────── */}
       <div
         className={cn(
-          "shrink-0 flex flex-col bg-surface/60 border-r border-border transition-all duration-200 overflow-hidden",
-          sidebarOpen ? "w-64" : "w-0"
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-background border-r border-border transition-transform duration-300 ease-in-out",
+          "md:relative md:inset-auto md:z-auto md:transition-all md:duration-200",
+          sidebarOpen
+            ? "translate-x-0 md:w-64"
+            : "-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden"
         )}
       >
-        {/* New chat button */}
-        <div className="p-3">
+        {/* Sidebar header */}
+        <div className="flex items-center justify-between p-3 border-b border-border md:border-b-0">
           <Button
             onClick={startNewChat}
             variant="outline"
-            className="w-full justify-start gap-2 text-sm"
+            className="flex-1 justify-start gap-2 text-sm"
           >
             <Plus className="size-4" />
             New chat
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0 ml-2 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <PanelLeftClose className="size-4" />
           </Button>
         </div>
 
@@ -638,12 +664,15 @@ export function AdminAiChat() {
                   <div
                     key={convo.id}
                     className={cn(
-                      "group flex items-center gap-2 rounded-lg px-2 py-2 text-sm cursor-pointer transition-colors",
+                      "group flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm cursor-pointer transition-colors",
                       convo.id === activeId
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-foreground hover:bg-muted"
                     )}
-                    onClick={() => switchConversation(convo.id)}
+                    onClick={() => {
+                      switchConversation(convo.id)
+                      setSidebarOpen(false)
+                    }}
                   >
                     <MessageSquare className="size-4 shrink-0 opacity-60" />
                     <span className="flex-1 truncate">{convo.title}</span>
@@ -652,7 +681,7 @@ export function AdminAiChat() {
                         e.stopPropagation()
                         deleteConversation(convo.id)
                       }}
-                      className="opacity-0 group-hover:opacity-100 shrink-0 p-0.5 text-muted-foreground hover:text-destructive transition-all"
+                      className="opacity-0 group-hover:opacity-100 shrink-0 p-1 text-muted-foreground hover:text-destructive transition-all"
                       aria-label="Delete conversation"
                     >
                       <Trash2 className="size-3.5" />
@@ -674,55 +703,69 @@ export function AdminAiChat() {
       {/* ── Chat panel ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header bar */}
-        <div className="shrink-0 flex items-center justify-between h-10 px-3 border-b border-border bg-background">
-          <div className="flex items-center min-w-0">
+        <div className="shrink-0 flex items-center justify-between h-12 px-2 sm:px-3 border-b border-border bg-background">
+          <div className="flex items-center gap-1 min-w-0">
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 shrink-0"
+              className="size-9 shrink-0"
               onClick={() => setSidebarOpen((p) => !p)}
               aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
               {sidebarOpen ? (
-                <PanelLeftClose className="size-4" />
+                <PanelLeftClose className="size-4 hidden md:block" />
               ) : (
                 <PanelLeftOpen className="size-4" />
               )}
+              <PanelLeftOpen className="size-4 md:hidden" />
             </Button>
-            {activeConvo && (
-              <span className="ml-2 text-sm text-muted-foreground truncate">
-                {activeConvo.title}
-              </span>
-            )}
+            <span className="text-sm font-medium text-foreground truncate max-w-[40vw] sm:max-w-none">
+              {activeConvo?.title ?? "DJP Assistant"}
+            </span>
           </div>
 
-          {/* Model selector */}
-          <div className="flex items-center gap-1 shrink-0 bg-muted rounded-lg p-0.5">
-            {([
-              { value: "auto", label: "Auto", icon: Wand2 },
-              { value: "sonnet", label: "Sonnet", icon: Brain },
-              { value: "haiku", label: "Haiku", icon: Zap },
-            ] as const).map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                onClick={() => setModelPref(value)}
-                className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors",
-                  modelPref === value
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Icon className="size-3" />
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Model selector — icons only on mobile */}
+            <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
+              {([
+                { value: "auto", label: "Auto", icon: Wand2 },
+                { value: "sonnet", label: "Sonnet", icon: Brain },
+                { value: "haiku", label: "Haiku", icon: Zap },
+              ] as const).map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setModelPref(value)}
+                  className={cn(
+                    "flex items-center gap-1 rounded-md text-[11px] font-medium transition-colors",
+                    "p-1.5 sm:px-2 sm:py-1",
+                    modelPref === value
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title={label}
+                >
+                  <Icon className="size-3.5 sm:size-3" />
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* New chat shortcut on mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 shrink-0 md:hidden"
+              onClick={startNewChat}
+              aria-label="New chat"
+            >
+              <Plus className="size-4" />
+            </Button>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto min-h-0" role="log" aria-live="polite">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4">
             <AnimatePresence initial={false}>
               {messages.map((message, index) => {
                 if (
@@ -742,18 +785,18 @@ export function AdminAiChat() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={cn("flex gap-3", isUser && "justify-end")}
+                    className={cn("flex gap-2 sm:gap-3", isUser && "justify-end")}
                   >
                     {!isUser && (
-                      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 mt-0.5">
-                        <Bot className="size-3.5 text-primary" />
+                      <div className="flex size-6 sm:size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 mt-0.5">
+                        <Bot className="size-3 sm:size-3.5 text-primary" />
                       </div>
                     )}
 
-                    <div className={cn("flex flex-col gap-1", isUser ? "items-end max-w-[80%]" : "flex-1 min-w-0")}>
+                    <div className={cn("flex flex-col gap-1", isUser ? "items-end max-w-[85%] sm:max-w-[80%]" : "flex-1 min-w-0")}>
                       <div
                         className={cn(
-                          "rounded-2xl px-4 py-2.5 text-sm",
+                          "rounded-2xl px-3.5 py-2.5 text-sm",
                           isUser
                             ? "bg-primary text-primary-foreground rounded-br-sm"
                             : message.status === "error"
@@ -783,7 +826,7 @@ export function AdminAiChat() {
                     </div>
 
                     {isUser && (
-                      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary mt-0.5">
+                      <div className="hidden sm:flex size-7 shrink-0 items-center justify-center rounded-full bg-primary mt-0.5">
                         <User className="size-3.5 text-primary-foreground" />
                       </div>
                     )}
@@ -808,8 +851,8 @@ export function AdminAiChat() {
         </div>
 
         {/* Bottom input area */}
-        <div className="shrink-0 border-t border-border bg-background">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 space-y-3">
+        <div className="shrink-0 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 py-2 sm:py-3 space-y-2 sm:space-y-3">
             {showStop && (
               <div className="flex justify-center">
                 <Button variant="outline" size="sm" onClick={stopGenerating} className="gap-1.5 text-xs">
@@ -823,14 +866,14 @@ export function AdminAiChat() {
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
                   <Sparkles className="size-3.5 text-accent-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground">Suggested questions</span>
+                  <span className="text-xs font-medium text-muted-foreground">Suggested</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
                   {SUGGESTED_PROMPTS.map((prompt) => (
                     <button
                       key={prompt}
                       onClick={() => sendMessage(prompt)}
-                      className="inline-flex items-center rounded-full border border-border bg-surface/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors"
+                      className="inline-flex items-center justify-center rounded-xl border border-border bg-surface/50 px-3 py-2 text-xs font-medium text-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors text-center sm:rounded-full sm:py-1.5"
                     >
                       {prompt}
                     </button>
@@ -849,7 +892,7 @@ export function AdminAiChat() {
                   placeholder="Message DJP Assistant..."
                   disabled={isStreaming}
                   rows={1}
-                  className="!resize-none pr-12 min-h-[48px] max-h-[200px] rounded-xl border-border"
+                  className="!resize-none pr-12 min-h-[44px] sm:min-h-[48px] max-h-[200px] rounded-xl border-border text-base sm:text-sm"
                   autoComplete="off"
                   aria-label="Chat message"
                 />
@@ -857,7 +900,7 @@ export function AdminAiChat() {
                   type="submit"
                   size="icon"
                   disabled={!input.trim() || isStreaming}
-                  className="absolute right-2 bottom-2 size-8 rounded-lg"
+                  className="absolute right-1.5 bottom-1.5 size-8 rounded-lg"
                   aria-label="Send message"
                 >
                   <ArrowUp className="size-4" />

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -314,14 +315,22 @@ export function SiteNavbar() {
             style={{ height: isScrolled ? 56 : 80 }}
           >
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center">
+            <Link href="/" className="flex-shrink-0 flex items-center gap-2.5">
+              <Image
+                src={useLight ? "/logos/logo-icon-light.png" : "/logos/logo-icon-dark.png"}
+                alt="DJP Athlete"
+                width={160}
+                height={100}
+                className="transition-all duration-300 object-contain"
+                style={{ height: isScrolled ? 40 : 56, width: "auto" }}
+                priority
+              />
               <span
-                className={`font-heading font-semibold tracking-tight transition-all duration-300 ${
-                  useLight ? "text-white" : "text-primary"
-                }`}
-                style={{ fontSize: isScrolled ? 18 : 22 }}
+                className={`font-heading font-semibold tracking-[0.2em] uppercase transition-all duration-300 ${
+                  isScrolled ? "text-sm" : "text-base"
+                } ${useLight ? "text-white" : "text-foreground"}`}
               >
-                DJP Athlete
+                Athlete
               </span>
             </Link>
 
@@ -397,9 +406,17 @@ export function SiteNavbar() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
                   <SheetHeader>
-                    <SheetTitle>
-                      <span className="font-heading text-xl font-semibold text-primary">
-                        DJP Athlete
+                    <SheetTitle className="flex items-center gap-2">
+                      <Image
+                        src="/logos/logo-icon-dark.png"
+                        alt="DJP Athlete"
+                        width={140}
+                        height={90}
+                        className="object-contain"
+                        style={{ height: 36, width: "auto" }}
+                      />
+                      <span className="font-heading font-semibold tracking-[0.2em] text-xs uppercase text-foreground">
+                        Athlete
                       </span>
                     </SheetTitle>
                   </SheetHeader>

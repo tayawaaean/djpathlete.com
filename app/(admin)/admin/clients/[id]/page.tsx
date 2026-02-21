@@ -16,6 +16,10 @@ import {
   ClipboardList,
   Clock,
   ThumbsUp,
+  Moon,
+  Brain,
+  Briefcase,
+  Zap,
 } from "lucide-react"
 import { getUserById } from "@/lib/db/users"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
@@ -28,10 +32,18 @@ import { ClientProgressView } from "@/components/admin/ClientProgressView"
 import {
   GOAL_LABELS,
   EQUIPMENT_LABELS,
+  LEVEL_LABELS,
+  DAY_NAMES,
+  GENDER_LABELS,
+  MOVEMENT_CONFIDENCE_LABELS,
+  SLEEP_LABELS,
+  STRESS_LABELS,
+  OCCUPATION_LABELS,
+  TIME_EFFICIENCY_LABELS,
+  TECHNIQUE_LABELS,
 } from "@/lib/validators/questionnaire"
 import {
-  parseGoalsFromProfile,
-  parseFieldFromProfile,
+  parseProfileSummary,
   hasQuestionnaireData,
 } from "@/lib/profile-utils"
 import type {
@@ -267,39 +279,40 @@ function ProgramsSection({
 }
 
 
-function QuestionnaireSection({ profile }: { profile: ClientProfile | null }) {
-  if (!profile || !profile.goals) {
-    return null
-  }
-
-  const goalsList = parseGoalsFromProfile(profile.goals)
-  const trainingBackground = parseFieldFromProfile(
-    profile.goals,
-    "Training background"
+function SectionHeader({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+}) {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <Icon className="size-4 text-muted-foreground" />
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+        {label}
+      </p>
+    </div>
   )
-  const likes = parseFieldFromProfile(profile.goals, "Likes")
-  const dislikes = parseFieldFromProfile(profile.goals, "Dislikes")
-  const notes = parseFieldFromProfile(profile.goals, "Notes")
+}
 
-  if (!hasQuestionnaireData(profile)) return null
+function QuestionnaireSection({ profile }: { profile: ClientProfile | null }) {
+  if (!profile || !hasQuestionnaireData(profile)) return null
+
+  const summary = parseProfileSummary(profile)
 
   return (
     <div className="bg-white rounded-xl border border-border p-6">
-      <h2 className="text-lg font-semibold text-primary mb-4">
+      <h2 className="text-lg font-semibold text-primary mb-6">
         Questionnaire Responses
       </h2>
       <div className="space-y-6">
         {/* Goals */}
-        {goalsList.length > 0 && (
+        {summary.goals.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="size-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                Fitness Goals
-              </p>
-            </div>
+            <SectionHeader icon={Target} label="Fitness Goals" />
             <div className="flex flex-wrap gap-2">
-              {goalsList.map((goal) => (
+              {summary.goals.map((goal) => (
                 <span
                   key={goal}
                   className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium"
@@ -311,103 +324,102 @@ function QuestionnaireSection({ profile }: { profile: ClientProfile | null }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-          {/* Experience Level */}
-          <InfoRow
-            icon={Target}
-            label="Fitness Level"
-            value={
-              profile.experience_level
-                ? profile.experience_level.charAt(0).toUpperCase() +
-                  profile.experience_level.slice(1)
-                : null
-            }
-          />
+        {/* About You */}
+        {(summary.dateOfBirth || summary.gender || summary.sport || summary.position) && (
+          <div>
+            <SectionHeader icon={User} label="About" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+              <InfoRow
+                icon={Calendar}
+                label="Birth Year"
+                value={summary.dateOfBirth ? summary.dateOfBirth.slice(0, 4) : null}
+              />
+              <InfoRow
+                icon={User}
+                label="Gender"
+                value={summary.gender ? (GENDER_LABELS[summary.gender] ?? summary.gender) : null}
+              />
+              <InfoRow icon={Dumbbell} label="Sport" value={summary.sport} />
+              <InfoRow icon={Target} label="Position" value={summary.position} />
+            </div>
+          </div>
+        )}
 
-          {/* Training Years */}
-          <InfoRow
-            icon={Clock}
-            label="Training Experience"
-            value={
-              profile.training_years !== null
-                ? `${profile.training_years} year${profile.training_years !== 1 ? "s" : ""}`
-                : null
-            }
-          />
-
-          {/* Schedule */}
-          <InfoRow
-            icon={Calendar}
-            label="Training Schedule"
-            value={
-              profile.preferred_training_days !== null
-                ? `${profile.preferred_training_days} day${profile.preferred_training_days !== 1 ? "s" : ""}/week`
-                : null
-            }
-          />
-
-          <InfoRow
-            icon={Clock}
-            label="Session Duration"
-            value={
-              profile.preferred_session_minutes !== null
-                ? `${profile.preferred_session_minutes} minutes`
-                : null
-            }
-          />
+        {/* Fitness Level & Training History */}
+        <div>
+          <SectionHeader icon={Target} label="Fitness Level & History" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+            <InfoRow
+              icon={Target}
+              label="Experience Level"
+              value={summary.experienceLevel ? (LEVEL_LABELS[summary.experienceLevel] ?? summary.experienceLevel) : null}
+            />
+            <InfoRow
+              icon={Brain}
+              label="Movement Confidence"
+              value={summary.movementConfidence ? (MOVEMENT_CONFIDENCE_LABELS[summary.movementConfidence] ?? summary.movementConfidence) : null}
+            />
+            <InfoRow
+              icon={Clock}
+              label="Training Experience"
+              value={summary.trainingYears !== null ? `${summary.trainingYears} year${summary.trainingYears !== 1 ? "s" : ""}` : null}
+            />
+          </div>
+          {summary.trainingBackground && (
+            <div className="mt-3">
+              <p className="text-xs text-muted-foreground mb-0.5">Training Background</p>
+              <p className="text-sm text-foreground">{summary.trainingBackground}</p>
+            </div>
+          )}
         </div>
 
-        {/* Training Background */}
-        {trainingBackground && (
+        {/* Recovery & Lifestyle */}
+        {(summary.sleepHours || summary.stressLevel || summary.occupationActivityLevel) && (
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <ClipboardList className="size-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                Training Background
-              </p>
+            <SectionHeader icon={Moon} label="Recovery & Lifestyle" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+              <InfoRow
+                icon={Moon}
+                label="Sleep"
+                value={summary.sleepHours ? (SLEEP_LABELS[summary.sleepHours] ?? summary.sleepHours) : null}
+              />
+              <InfoRow
+                icon={Brain}
+                label="Stress Level"
+                value={summary.stressLevel ? (STRESS_LABELS[summary.stressLevel] ?? summary.stressLevel) : null}
+              />
+              <InfoRow
+                icon={Briefcase}
+                label="Occupation Activity"
+                value={summary.occupationActivityLevel ? (OCCUPATION_LABELS[summary.occupationActivityLevel] ?? summary.occupationActivityLevel) : null}
+              />
             </div>
-            <p className="text-sm text-foreground">{trainingBackground}</p>
           </div>
         )}
 
         {/* Injuries */}
-        {(profile.injuries || profile.injury_details.length > 0) && (
+        {(summary.injuries || summary.injuryDetails.length > 0) && (
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <AlertTriangle className="size-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                Injuries & Limitations
-              </p>
-            </div>
-            {profile.injuries && (
-              <p className="text-sm text-foreground mb-2">
-                {profile.injuries}
-              </p>
+            <SectionHeader icon={AlertTriangle} label="Injuries & Limitations" />
+            {summary.injuries && (
+              <p className="text-sm text-foreground mb-2">{summary.injuries}</p>
             )}
-            {profile.injury_details.length > 0 && (
+            {summary.injuryDetails.length > 0 && (
               <div className="space-y-1.5">
-                {profile.injury_details.map((injury, i) => (
+                {summary.injuryDetails.map((injury, i) => (
                   <div
                     key={i}
                     className="text-sm text-foreground bg-surface/50 rounded-lg px-3 py-2"
                   >
                     <span className="font-medium">{injury.area}</span>
                     {injury.side && (
-                      <span className="text-muted-foreground">
-                        {" "}
-                        ({injury.side})
-                      </span>
+                      <span className="text-muted-foreground"> ({injury.side})</span>
                     )}
                     {injury.severity && (
-                      <span className="text-muted-foreground">
-                        {" "}
-                        &mdash; {injury.severity}
-                      </span>
+                      <span className="text-muted-foreground"> &mdash; {injury.severity}</span>
                     )}
                     {injury.notes && (
-                      <span className="text-muted-foreground">
-                        : {injury.notes}
-                      </span>
+                      <span className="text-muted-foreground">: {injury.notes}</span>
                     )}
                   </div>
                 ))}
@@ -416,17 +428,49 @@ function QuestionnaireSection({ profile }: { profile: ClientProfile | null }) {
           </div>
         )}
 
-        {/* Equipment */}
-        {profile.available_equipment.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Dumbbell className="size-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                Available Equipment
-              </p>
+        {/* Schedule */}
+        <div>
+          <SectionHeader icon={Calendar} label="Training Schedule" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+            <InfoRow
+              icon={Calendar}
+              label="Sessions per Week"
+              value={summary.preferredTrainingDays !== null ? `${summary.preferredTrainingDays} day${summary.preferredTrainingDays !== 1 ? "s" : ""}` : null}
+            />
+            <InfoRow
+              icon={Clock}
+              label="Session Duration"
+              value={summary.preferredSessionMinutes !== null ? `${summary.preferredSessionMinutes} minutes` : null}
+            />
+            <InfoRow
+              icon={Zap}
+              label="Time Efficiency"
+              value={summary.timeEfficiencyPreference ? (TIME_EFFICIENCY_LABELS[summary.timeEfficiencyPreference] ?? summary.timeEfficiencyPreference) : null}
+            />
+          </div>
+          {summary.preferredDayNames.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-muted-foreground mb-1.5">Preferred Days</p>
+              <div className="flex flex-wrap gap-1.5">
+                {summary.preferredDayNames.map((dayNum) => (
+                  <span
+                    key={dayNum}
+                    className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium"
+                  >
+                    {DAY_NAMES[dayNum - 1] ?? `Day ${dayNum}`}
+                  </span>
+                ))}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Equipment */}
+        {summary.availableEquipment.length > 0 && (
+          <div>
+            <SectionHeader icon={Dumbbell} label="Available Equipment" />
             <div className="flex flex-wrap gap-1.5">
-              {profile.available_equipment.map((eq) => (
+              {summary.availableEquipment.map((eq) => (
                 <span
                   key={eq}
                   className="inline-flex items-center rounded-full border border-border text-foreground px-2 py-0.5 text-xs"
@@ -438,41 +482,45 @@ function QuestionnaireSection({ profile }: { profile: ClientProfile | null }) {
           </div>
         )}
 
-        {/* Preferences */}
-        {(likes || dislikes || notes) && (
+        {/* Exercise Preferences */}
+        {(summary.preferredTechniques.length > 0 || summary.likes || summary.dislikes) && (
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <ThumbsUp className="size-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                Exercise Preferences
-              </p>
-            </div>
+            <SectionHeader icon={ThumbsUp} label="Exercise Preferences" />
+            {summary.preferredTechniques.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground mb-1.5">Preferred Techniques</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {summary.preferredTechniques.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center rounded-full border border-border text-foreground px-2 py-0.5 text-xs"
+                    >
+                      {TECHNIQUE_LABELS[t] ?? t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="space-y-1.5">
-              {likes && (
+              {summary.likes && (
                 <p className="text-sm text-foreground">
-                  <span className="text-muted-foreground font-medium">
-                    Likes:
-                  </span>{" "}
-                  {likes}
+                  <span className="text-muted-foreground font-medium">Likes:</span> {summary.likes}
                 </p>
               )}
-              {dislikes && (
+              {summary.dislikes && (
                 <p className="text-sm text-foreground">
-                  <span className="text-muted-foreground font-medium">
-                    Dislikes:
-                  </span>{" "}
-                  {dislikes}
-                </p>
-              )}
-              {notes && (
-                <p className="text-sm text-foreground">
-                  <span className="text-muted-foreground font-medium">
-                    Notes:
-                  </span>{" "}
-                  {notes}
+                  <span className="text-muted-foreground font-medium">Dislikes:</span> {summary.dislikes}
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Additional Notes */}
+        {summary.notes && (
+          <div>
+            <SectionHeader icon={ClipboardList} label="Additional Notes" />
+            <p className="text-sm text-foreground">{summary.notes}</p>
           </div>
         )}
       </div>

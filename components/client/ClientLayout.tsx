@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, Dumbbell, ShoppingBag, TrendingUp, Trophy, User, CreditCard, Settings, ClipboardList, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
@@ -39,9 +40,14 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden lg:flex lg:flex-col w-64 fixed inset-y-0 left-0 bg-white border-r border-border">
         <div className="p-6">
           <Link href="/client/dashboard">
-            <span className="font-heading text-xl font-semibold text-primary tracking-tight">
-              DJP Athlete
-            </span>
+            <Image
+              src="/logos/logo-dark.png"
+              alt="DJP Athlete"
+              width={130}
+              height={38}
+              className="object-contain"
+              priority
+            />
           </Link>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
