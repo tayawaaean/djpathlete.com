@@ -602,6 +602,11 @@ function ExerciseCard({
                   {formatTempo(pe.tempo)}
                 </span>
               )}
+              {pe.rpe_target && (
+                <span className="text-muted-foreground/60">
+                  RPE {pe.rpe_target}
+                </span>
+              )}
               {pe.rest_seconds && (
                 <span className="text-muted-foreground/60">
                   Rest: {formatRestTime(pe.rest_seconds)}
@@ -696,7 +701,9 @@ function ExerciseCard({
                               <th className="text-left font-medium">Reps</th>
                             )}
                             {fields.showRpe && (
-                              <th style={{ width: 56 }} className="text-left font-medium">RPE</th>
+                              <th style={{ width: 56 }} className="text-left font-medium">
+                                RPE{pe.rpe_target ? <span className="font-normal text-muted-foreground/60 ml-0.5">/{pe.rpe_target}</span> : ""}
+                              </th>
                             )}
                             <th style={{ width: 28 }} />
                           </tr>
