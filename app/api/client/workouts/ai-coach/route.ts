@@ -46,7 +46,7 @@ const coachAnalysisSchema = z.object({
   plateau_detected: z.boolean(),
   suggested_weight_kg: z.number().nullable(),
   deload_recommended: z.boolean(),
-  key_observations: z.array(z.string()).min(2).max(4),
+  key_observations: z.array(z.string()),
 })
 
 const ANALYSIS_PROMPT = `You are a data analyst for a strength & conditioning coach. Given a client's exercise history and profile, output a structured assessment.

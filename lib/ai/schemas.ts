@@ -2,11 +2,20 @@ import { z } from "zod"
 import { SPLIT_TYPES, PERIODIZATION_TYPES } from "@/lib/validators/program"
 import { MOVEMENT_PATTERNS } from "@/lib/validators/exercise"
 
+// ─── Anthropic Structured Output Compatibility Notes ─────────────────────────
+// The Vercel AI SDK passes Zod-generated JSON Schema directly to Anthropic's
+// output_format WITHOUT stripping unsupported features. We must avoid:
+//   - minimum/maximum on numbers        (already removed)
+//   - minLength/maxLength on strings     → use z.string() without .min()
+//   - minItems > 1 or any maxItems       → use z.array() with only .min(1) at most
+// Supported: enum, default, nullable, pattern (basic regex), minItems 0 or 1
+// Range/length constraints are enforced by the system prompts instead.
+
 // ─── Agent 1: Profile Analysis Schema ────────────────────────────────────────
 
 const volumeTargetSchema = z.object({
-  muscle_group: z.string().min(1),
-  sets_per_week: z.number().int().min(0).max(40),
+  muscle_group: z.string(),
+  sets_per_week: z.number().int(),
   priority: z.enum(["high", "medium", "low"]),
 })
 
@@ -18,17 +27,17 @@ const exerciseConstraintSchema = z.object({
     "limit_load",
     "require_unilateral",
   ]),
-  value: z.string().min(1),
-  reason: z.string().min(1),
+  value: z.string(),
+  reason: z.string(),
 })
 
 const sessionStructureSchema = z.object({
-  warm_up_minutes: z.number().int().min(0).max(30),
-  main_work_minutes: z.number().int().min(10).max(150),
-  cool_down_minutes: z.number().int().min(0).max(30),
-  total_exercises: z.number().int().min(1).max(12),
-  compound_count: z.number().int().min(0).max(8),
-  isolation_count: z.number().int().min(0).max(6),
+  warm_up_minutes: z.number().int(),
+  main_work_minutes: z.number().int(),
+  cool_down_minutes: z.number().int(),
+  total_exercises: z.number().int(),
+  compound_count: z.number().int(),
+  isolation_count: z.number().int(),
 })
 
 export const profileAnalysisSchema = z.object({
@@ -44,7 +53,7 @@ export const profileAnalysisSchema = z.object({
 // ─── Agent 2: Program Skeleton Schema ────────────────────────────────────────
 
 const exerciseSlotSchema = z.object({
-  slot_id: z.string().min(1),
+  slot_id: z.string(),
   role: z.enum([
     "warm_up",
     "primary_compound",
@@ -54,11 +63,11 @@ const exerciseSlotSchema = z.object({
     "cool_down",
   ]),
   movement_pattern: z.enum(MOVEMENT_PATTERNS),
-  target_muscles: z.array(z.string().min(1)).min(1),
-  sets: z.number().int().min(1).max(10),
-  reps: z.string().min(1),
-  rest_seconds: z.number().int().min(0).max(600),
-  rpe_target: z.number().min(1).max(10).nullable(),
+  target_muscles: z.array(z.string()).min(1),
+  sets: z.number().int(),
+  reps: z.string(),
+  rest_seconds: z.number().int(),
+  rpe_target: z.number().nullable(),
   tempo: z.string().nullable(),
   group_tag: z.string().nullable(),
   technique: z.enum([
@@ -73,16 +82,16 @@ const exerciseSlotSchema = z.object({
 })
 
 const programDaySchema = z.object({
-  day_of_week: z.number().int().min(1).max(7),
-  label: z.string().min(1),
-  focus: z.string().min(1),
-  slots: z.array(exerciseSlotSchema).min(1).max(12),
+  day_of_week: z.number().int(),
+  label: z.string(),
+  focus: z.string(),
+  slots: z.array(exerciseSlotSchema).min(1),
 })
 
 const programWeekSchema = z.object({
-  week_number: z.number().int().min(1),
-  phase: z.string().min(1),
-  intensity_modifier: z.string().min(1),
+  week_number: z.number().int(),
+  phase: z.string(),
+  intensity_modifier: z.string(),
   days: z.array(programDaySchema).min(1),
 })
 
@@ -90,23 +99,16 @@ export const programSkeletonSchema = z.object({
   weeks: z.array(programWeekSchema).min(1),
   split_type: z.enum(SPLIT_TYPES),
   periodization: z.enum(PERIODIZATION_TYPES),
-  total_sessions: z.number().int().min(1),
+  total_sessions: z.number().int(),
   notes: z.string(),
 })
 
 // ─── Agent 3: Exercise Assignment Schema ─────────────────────────────────────
 
-// Use a relaxed UUID pattern (8-4-4-4-12 hex) instead of strict RFC 4122 v4
-// because seed exercise IDs don't have valid version/variant bits.
-const uuidLike = z.string().regex(
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-  "Invalid UUID format"
-)
-
 const assignedExerciseSchema = z.object({
-  slot_id: z.string().min(1),
-  exercise_id: uuidLike,
-  exercise_name: z.string().min(1),
+  slot_id: z.string(),
+  exercise_id: z.string(),
+  exercise_name: z.string(),
   notes: z.string().nullable(),
 })
 
@@ -119,8 +121,8 @@ export const exerciseAssignmentSchema = z.object({
 
 const validationIssueSchema = z.object({
   type: z.enum(["error", "warning"]),
-  category: z.string().min(1),
-  message: z.string().min(1),
+  category: z.string(),
+  message: z.string(),
   slot_ref: z.string().optional(),
 })
 
