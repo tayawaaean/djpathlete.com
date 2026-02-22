@@ -1,16 +1,13 @@
-import Link from "next/link"
-import {
-  Users,
-  Dumbbell,
-  DollarSign,
-  ClipboardCheck,
-  ArrowRight,
-} from "lucide-react"
 import { getUsers } from "@/lib/db/users"
 import { getPrograms } from "@/lib/db/programs"
 import { getPaymentsWithDetails } from "@/lib/db/payments"
 import { getAssignments } from "@/lib/db/assignments"
-import type { Payment } from "@/types/database"
+import { getAllProgress } from "@/lib/db/progress"
+import { getAllAchievements } from "@/lib/db/achievements"
+import { requireAdmin } from "@/lib/auth-helpers"
+import { DashboardContent } from "@/components/admin/dashboard/DashboardContent"
+import type { ActivityItem } from "@/components/admin/dashboard/ActivityFeed"
+import type { Payment, ProgramAssignment, User } from "@/types/database"
 
 export const metadata = { title: "Dashboard" }
 
@@ -18,231 +15,211 @@ function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
+function getMonthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 }
 
-const PAYMENT_STATUS_COLORS: Record<string, string> = {
-  succeeded: "bg-success/10 text-success",
-  pending: "bg-warning/10 text-warning",
-  failed: "bg-destructive/10 text-destructive",
-  refunded: "bg-muted text-muted-foreground",
+function getMonthLabel(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
 }
 
 export default async function DashboardPage() {
-  const [users, programs, payments, assignments] = await Promise.all([
-    getUsers(),
-    getPrograms(),
-    getPaymentsWithDetails(),
-    getAssignments(),
-  ])
+  const session = await requireAdmin()
+  const adminName = session.user?.name ?? "Admin"
+  const adminFirstName = adminName.split(" ")[0]
 
-  // Stats
-  const totalClients = users.filter((u) => u.role === "client").length
+  const [users, programs, payments, assignments, progress, achievements] =
+    await Promise.all([
+      getUsers(),
+      getPrograms(),
+      getPaymentsWithDetails(),
+      getAssignments(),
+      getAllProgress(),
+      getAllAchievements(),
+    ])
+
+  const now = new Date()
+  const clients = (users as User[]).filter((u) => u.role === "client")
+
+  // ---- Stats ----
+  const totalClients = clients.length
   const activePrograms = programs.length
-  const succeededPayments = payments.filter(
-    (p: Payment) => p.status === "succeeded"
-  )
-  const totalRevenue = succeededPayments.reduce(
-    (sum: number, p: Payment) => sum + p.amount_cents,
-    0
-  )
-  const activeAssignments = (assignments as { status: string }[]).filter(
+  const succeededPayments = (payments as (Payment & { users: { first_name: string; last_name: string; email: string } | null })[])
+    .filter((p) => p.status === "succeeded")
+  const totalRevenue = succeededPayments.reduce((s, p) => s + p.amount_cents, 0)
+  const activeAssignments = (assignments as ProgramAssignment[]).filter(
     (a) => a.status === "active"
   ).length
 
-  // Recent data
-  const recentPayments = payments.slice(0, 5)
-  const recentClients = users
-    .filter((u) => u.role === "client")
+  // ---- Revenue trend (this month vs last month) ----
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+  const thisMonthRevenue = succeededPayments
+    .filter((p) => new Date(p.created_at) >= thisMonthStart)
+    .reduce((s, p) => s + p.amount_cents, 0)
+  const lastMonthRevenue = succeededPayments
+    .filter((p) => {
+      const d = new Date(p.created_at)
+      return d >= lastMonthStart && d < thisMonthStart
+    })
+    .reduce((s, p) => s + p.amount_cents, 0)
+
+  // ---- Revenue by month (last 6) ----
+  const revenueByMonth: { label: string; revenue: number }[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = getMonthKey(d)
+    const label = getMonthLabel(d)
+    const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+    const revenue = succeededPayments
+      .filter((p) => {
+        const pd = new Date(p.created_at)
+        return pd >= d && pd < nextMonth
+      })
+      .reduce((s, p) => s + p.amount_cents, 0)
+    revenueByMonth.push({ label, revenue })
+  }
+
+  // ---- Engagement snapshot ----
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const workoutsThisWeek = progress.filter(
+    (p) => new Date(p.completed_at) >= weekAgo
+  ).length
+
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const prsThisMonth = progress.filter(
+    (p) => p.is_pr && new Date(p.completed_at) >= monthStart
+  ).length
+
+  // Avg RPE (last 30 days)
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const recentRPE = progress
+    .filter((p) => p.rpe != null && new Date(p.completed_at) >= thirtyDaysAgo)
+    .map((p) => p.rpe!)
+  const avgRPE =
+    recentRPE.length > 0
+      ? Math.round((recentRPE.reduce((s, v) => s + v, 0) / recentRPE.length) * 10) / 10
+      : null
+
+  // Active streaks: count users who logged a workout today or yesterday
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`
+
+  const usersWithRecentWorkout = new Set<string>()
+  for (const p of progress) {
+    const d = new Date(p.completed_at)
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+    if (ds === today || ds === yesterdayStr) {
+      usersWithRecentWorkout.add(p.user_id)
+    }
+  }
+  const activeStreaks = usersWithRecentWorkout.size
+
+  // ---- Activity feed (last 10 events) ----
+  const programMap = new Map<string, string>()
+  for (const prog of programs as { id: string; name: string }[]) {
+    programMap.set(prog.id, prog.name)
+  }
+
+  const userMap = new Map<string, string>()
+  for (const u of users as User[]) {
+    userMap.set(u.id, `${u.first_name} ${u.last_name}`)
+  }
+
+  const feedItems: ActivityItem[] = []
+
+  // Recent payments
+  for (const p of payments.slice(0, 15)) {
+    const name = p.users
+      ? `${p.users.first_name} ${p.users.last_name}`
+      : "Unknown"
+    feedItems.push({
+      id: `pay-${p.id}`,
+      type: "payment",
+      description: `${name} made a ${p.status} payment of ${formatCents(p.amount_cents)}`,
+      time: p.created_at,
+      date: new Date(p.created_at),
+    })
+  }
+
+  // Recent assignments
+  for (const a of (assignments as ProgramAssignment[]).slice(0, 15)) {
+    const name = userMap.get(a.user_id) ?? "Unknown"
+    const progName = programMap.get(a.program_id) ?? "a program"
+    feedItems.push({
+      id: `asgn-${a.id}`,
+      type: "assignment",
+      description: `${name} was assigned ${progName}`,
+      time: a.created_at,
+      date: new Date(a.created_at),
+    })
+  }
+
+  // Recent achievements
+  for (const a of achievements.slice(0, 15)) {
+    const name = userMap.get(a.user_id) ?? "Unknown"
+    feedItems.push({
+      id: `ach-${a.id}`,
+      type: "achievement",
+      description: `${name} earned: ${a.title}`,
+      time: a.earned_at,
+      date: new Date(a.earned_at),
+    })
+  }
+
+  // Sort by date descending, take 10
+  feedItems.sort((a, b) => b.date.getTime() - a.date.getTime())
+  const activityFeed = feedItems.slice(0, 10)
+
+  // ---- Recent clients ----
+  const recentClients = clients.slice(0, 5).map((c) => ({
+    id: c.id,
+    firstName: c.first_name,
+    lastName: c.last_name,
+    email: c.email,
+    createdAt: c.created_at,
+    status: c.status,
+  }))
+
+  // ---- Program popularity (top 5) ----
+  const assignmentCounts = new Map<string, number>()
+  for (const a of assignments as ProgramAssignment[]) {
+    assignmentCounts.set(
+      a.program_id,
+      (assignmentCounts.get(a.program_id) ?? 0) + 1
+    )
+  }
+  const programPopularity = Array.from(assignmentCounts.entries())
+    .map(([id, count]) => ({
+      label: programMap.get(id) ?? "Unknown",
+      count,
+    }))
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-primary mb-6">Dashboard</h1>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="size-4 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground">Total Clients</p>
-          </div>
-          <p className="text-2xl font-semibold text-primary">{totalClients}</p>
-        </div>
-
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Dumbbell className="size-4 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground">Active Programs</p>
-          </div>
-          <p className="text-2xl font-semibold text-primary">
-            {activePrograms}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-success/10">
-              <DollarSign className="size-4 text-success" />
-            </div>
-            <p className="text-sm text-muted-foreground">Total Revenue</p>
-          </div>
-          <p className="text-2xl font-semibold text-primary">
-            {formatCents(totalRevenue)}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <ClipboardCheck className="size-4 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Active Assignments
-            </p>
-          </div>
-          <p className="text-2xl font-semibold text-primary">
-            {activeAssignments}
-          </p>
-        </div>
-      </div>
-
-      {/* Recent Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Payments */}
-        <div className="bg-white rounded-xl border border-border shadow-sm">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h2 className="text-lg font-semibold text-primary">
-              Recent Payments
-            </h2>
-            <Link
-              href="/admin/payments"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              View All
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-
-          {recentPayments.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              No payments recorded yet.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-surface/50">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">
-                      Date
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">
-                      Client
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">
-                      Amount
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPayments.map((payment) => (
-                    <tr
-                      key={payment.id}
-                      className="border-b border-border last:border-b-0 hover:bg-surface/30 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                        {formatDate(payment.created_at)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {payment.users ? (
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {payment.users.first_name}{" "}
-                              {payment.users.last_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {payment.users.email}
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            {payment.user_id.slice(0, 8)}...
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-foreground">
-                        {formatCents(payment.amount_cents)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${PAYMENT_STATUS_COLORS[payment.status] ?? "bg-muted text-muted-foreground"}`}
-                        >
-                          {payment.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Recent Clients */}
-        <div className="bg-white rounded-xl border border-border shadow-sm">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h2 className="text-lg font-semibold text-primary">
-              Recent Clients
-            </h2>
-            <Link
-              href="/admin/clients"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              View All
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-
-          {recentClients.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              No clients have signed up yet.
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {recentClients.map((client) => (
-                <div
-                  key={client.id}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-surface/30 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {client.first_name} {client.last_name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {client.email}
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    Joined {formatDate(client.created_at)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <DashboardContent
+      adminFirstName={adminFirstName}
+      totalClients={totalClients}
+      activePrograms={activePrograms}
+      totalRevenue={totalRevenue}
+      activeAssignments={activeAssignments}
+      revenueTrend={{ current: thisMonthRevenue, previous: lastMonthRevenue }}
+      revenueByMonth={revenueByMonth}
+      thisMonthRevenue={thisMonthRevenue}
+      lastMonthRevenue={lastMonthRevenue}
+      engagement={{
+        workoutsThisWeek,
+        activeStreaks,
+        prsThisMonth,
+        avgRPE,
+      }}
+      activityFeed={activityFeed}
+      recentClients={recentClients}
+      programPopularity={programPopularity}
+    />
   )
 }
