@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { toast } from "sonner"
 import {
@@ -205,7 +204,6 @@ export function QuestionnaireForm({
 }: {
   initialProfile: ClientProfile | null
 }) {
-  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<FormData>(() =>
     buildInitialData(initialProfile)
@@ -280,7 +278,8 @@ export function QuestionnaireForm({
       }
 
       toast.success("Assessment saved! We'll notify you when a program that suits you is ready.")
-      router.push("/client/dashboard")
+      // Hard navigate so the server layout re-evaluates hasCompletedQuestionnaire
+      window.location.href = "/client/dashboard"
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Something went wrong"
