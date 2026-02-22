@@ -1,5 +1,6 @@
 import { getUsers } from "@/lib/db/users"
 import { ClientList } from "@/components/admin/ClientList"
+import { ClientsPageHeader } from "./ClientsPageHeader"
 
 export const metadata = { title: "Clients" }
 
@@ -8,7 +9,7 @@ export default async function ClientsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-primary mb-6">Clients</h1>
+      <ClientsPageHeader />
       <ClientList users={users} />
     </div>
   )

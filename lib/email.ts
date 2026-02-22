@@ -407,6 +407,88 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
   }
 }
 
+export async function sendAccountCreatedEmail(
+  to: string,
+  tempPassword: string,
+  firstName: string,
+  loginUrl: string
+) {
+  const html = emailLayout(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:40px 48px 48px;">
+
+          <p style="margin:0 0 20px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:18px; font-weight:600; color:#0E3F50;">
+            Hi ${firstName},
+          </p>
+
+          <p style="margin:0 0 24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#555; line-height:1.7;">
+            Your coach has created a DJP Athlete account for you. Use the temporary password below to log in and get started.
+          </p>
+
+          <!-- Password box -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f9fa; border-radius:8px; border-left:4px solid #C49B7A; margin-bottom:24px;">
+            <tr>
+              <td style="padding:16px 20px;">
+                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#0E3F50;">
+                  Temporary Password
+                </p>
+                <p style="margin:0; font-family:'Courier New', Courier, monospace; font-size:18px; font-weight:700; color:#0E3F50; letter-spacing:1px;">
+                  ${tempPassword}
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- CTA Button -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 32px;">
+            <tr>
+              <td align="center" style="background-color:#C49B7A; border-radius:8px;">
+                <a href="${loginUrl}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:8px;">
+                  Log In to Your Account
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Security note -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f9fa; border-radius:8px; border-left:4px solid #0E3F50;">
+            <tr>
+              <td style="padding:16px 20px;">
+                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#0E3F50;">
+                  Important
+                </p>
+                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#666; line-height:1.6;">
+                  Please change your password after your first login for security.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Fallback link -->
+          <p style="margin:24px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:#999; line-height:1.6;">
+            Button not working? Copy and paste this link into your browser:<br />
+            <a href="${loginUrl}" style="color:#0E3F50; word-break:break-all;">${loginUrl}</a>
+          </p>
+
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Your DJP Athlete account has been created",
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send account created email:", error)
+    throw new Error("Failed to send email")
+  }
+}
+
 /**
  * Notify the coach/admin that a client purchased a program.
  * Includes client details, program name, and whether the client has
