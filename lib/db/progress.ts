@@ -115,6 +115,16 @@ export async function getWorkoutStreak(userId: string): Promise<number> {
   return streak
 }
 
+export async function getAllProgress() {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("exercise_progress")
+    .select("*, exercises(name)")
+    .order("completed_at", { ascending: false })
+  if (error) throw error
+  return data as (ExerciseProgress & { exercises: { name: string } | null })[]
+}
+
 export async function logProgress(
   progress: Omit<ExerciseProgress, "id" | "created_at">
 ) {

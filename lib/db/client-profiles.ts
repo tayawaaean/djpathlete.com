@@ -45,6 +45,15 @@ export async function updateProfile(
   return data as ClientProfile
 }
 
+export async function getAllProfiles() {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("client_profiles")
+    .select("*")
+  if (error) throw error
+  return data as ClientProfile[]
+}
+
 export async function getProfilesWithQuestionnaire() {
   const supabase = getClient()
   const { data, error } = await supabase

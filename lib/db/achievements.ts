@@ -69,6 +69,16 @@ export async function markCelebrated(id: string) {
   return data as Achievement
 }
 
+export async function getAllAchievements() {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("achievements")
+    .select("*")
+    .order("earned_at", { ascending: false })
+  if (error) throw error
+  return data as Achievement[]
+}
+
 export async function getExercisePRs(userId: string, exerciseId: string) {
   const supabase = getClient()
   const { data, error } = await supabase
