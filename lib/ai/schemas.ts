@@ -5,8 +5,11 @@ import { MOVEMENT_PATTERNS } from "@/lib/validators/exercise"
 // ─── Anthropic Structured Output Compatibility Notes ─────────────────────────
 // The Vercel AI SDK passes Zod-generated JSON Schema directly to Anthropic's
 // output_format WITHOUT stripping unsupported features. We must avoid:
-//   - minimum/maximum on numbers        (already removed)
-//   - minLength/maxLength on strings     → use z.string() without .min()
+//   - "integer" type entirely            → use z.number() not z.number()
+//     (Anthropic rejects minimum/maximum on integer, and zod-to-json-schema
+//      may add implicit safe-integer bounds when .int() is used)
+//   - minimum/maximum on numbers         → no .min()/.max() on z.number()
+//   - minLength/maxLength on strings     → no .min() on z.string()
 //   - minItems > 1 or any maxItems       → use z.array() with only .min(1) at most
 // Supported: enum, default, nullable, pattern (basic regex), minItems 0 or 1
 // Range/length constraints are enforced by the system prompts instead.
@@ -15,7 +18,7 @@ import { MOVEMENT_PATTERNS } from "@/lib/validators/exercise"
 
 const volumeTargetSchema = z.object({
   muscle_group: z.string(),
-  sets_per_week: z.number().int(),
+  sets_per_week: z.number(),
   priority: z.enum(["high", "medium", "low"]),
 })
 
@@ -32,12 +35,12 @@ const exerciseConstraintSchema = z.object({
 })
 
 const sessionStructureSchema = z.object({
-  warm_up_minutes: z.number().int(),
-  main_work_minutes: z.number().int(),
-  cool_down_minutes: z.number().int(),
-  total_exercises: z.number().int(),
-  compound_count: z.number().int(),
-  isolation_count: z.number().int(),
+  warm_up_minutes: z.number(),
+  main_work_minutes: z.number(),
+  cool_down_minutes: z.number(),
+  total_exercises: z.number(),
+  compound_count: z.number(),
+  isolation_count: z.number(),
 })
 
 export const profileAnalysisSchema = z.object({
@@ -64,9 +67,9 @@ const exerciseSlotSchema = z.object({
   ]),
   movement_pattern: z.enum(MOVEMENT_PATTERNS),
   target_muscles: z.array(z.string()).min(1),
-  sets: z.number().int(),
+  sets: z.number(),
   reps: z.string(),
-  rest_seconds: z.number().int(),
+  rest_seconds: z.number(),
   rpe_target: z.number().nullable(),
   tempo: z.string().nullable(),
   group_tag: z.string().nullable(),
@@ -82,14 +85,14 @@ const exerciseSlotSchema = z.object({
 })
 
 const programDaySchema = z.object({
-  day_of_week: z.number().int(),
+  day_of_week: z.number(),
   label: z.string(),
   focus: z.string(),
   slots: z.array(exerciseSlotSchema).min(1),
 })
 
 const programWeekSchema = z.object({
-  week_number: z.number().int(),
+  week_number: z.number(),
   phase: z.string(),
   intensity_modifier: z.string(),
   days: z.array(programDaySchema).min(1),
@@ -99,7 +102,7 @@ export const programSkeletonSchema = z.object({
   weeks: z.array(programWeekSchema).min(1),
   split_type: z.enum(SPLIT_TYPES),
   periodization: z.enum(PERIODIZATION_TYPES),
-  total_sessions: z.number().int(),
+  total_sessions: z.number(),
   notes: z.string(),
 })
 
