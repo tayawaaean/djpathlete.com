@@ -237,7 +237,7 @@ export async function generateProgram(
     input_params: request as unknown as Record<string, unknown>,
     output_summary: null,
     error_message: null,
-    model_used: "haiku+sonnet-per-session",
+    model_used: "haiku-per-session",
     tokens_used: null,
     duration_ms: null,
     completed_at: null,
@@ -485,7 +485,7 @@ ${formatExerciseLibrary(sessionExercises)}`
         SESSION_PLANNER_PROMPT,
         userMessage,
         sessionPlanSchema,
-        { maxTokens: 4096, cacheSystemPrompt: true }
+        { maxTokens: 2048, model: MODEL_HAIKU, cacheSystemPrompt: true }
       ).then((result) => ({
         ctx,
         plan: result.content,
