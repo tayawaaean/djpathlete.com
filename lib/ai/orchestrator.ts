@@ -148,8 +148,8 @@ export async function generateProgram(
         })
       : JSON.stringify({ note: "No profile found — use defaults for a general fitness client." })
 
-    // Step 3: Agent 1 — Profile Analyzer
-    console.log("[orchestrator] Step 3: Agent 1 — Profile Analyzer starting...")
+    // Step 3: Agent 1 — Profile Analyzer  (run in parallel with exercise library fetch)
+    console.log("[orchestrator] Step 3: Agent 1 + exercise fetch starting in parallel...")
     const agent1Start = Date.now()
     const agent1UserMessage = `Client Profile:
 ${profileContext}
@@ -176,16 +176,22 @@ ${profile?.exercise_dislikes ? `- Exercise dislikes: ${profile.exercise_dislikes
 ${profile?.training_background ? `- Training background: ${profile.training_background}` : ''}
 ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}`
 
-    const agent1Result = await callAgent<ProfileAnalysis>(
-      PROFILE_ANALYZER_PROMPT,
-      agent1UserMessage,
-      profileAnalysisSchema,
-      { model: MODEL_HAIKU, cacheSystemPrompt: true }
-    )
+    // Run Agent 1 and exercise library fetch concurrently — they are independent
+    const [agent1Result, allExercises] = await Promise.all([
+      callAgent<ProfileAnalysis>(
+        PROFILE_ANALYZER_PROMPT,
+        agent1UserMessage,
+        profileAnalysisSchema,
+        { model: MODEL_HAIKU, cacheSystemPrompt: true }
+      ),
+      getExercisesForAI(),
+    ])
     tokenUsage.agent1 = agent1Result.tokens_used
 
     const analysis = agent1Result.content
+    const compressed = compressExercises(allExercises)
     console.log(`[orchestrator] Agent 1 done in ${Date.now() - agent1Start}ms (${agent1Result.tokens_used} tokens)`)
+    console.log(`[orchestrator] Exercise library fetched: ${allExercises.length} exercises, ${compressed.length} compressed`)
 
     // Apply overrides from request
     if (request.split_type) {
@@ -195,14 +201,16 @@ ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` 
       analysis.recommended_periodization = request.periodization
     }
 
-    // Step 4: Agent 2 — Program Architect
-    console.log("[orchestrator] Step 4: Agent 2 — Program Architect starting...")
+    // Step 4: Agent 2 — Program Architect (split into 2 parallel chunks for speed)
+    console.log("[orchestrator] Step 4: Agent 2 — Program Architect starting (2 parallel chunks)...")
     const agent2Start = Date.now()
-    const agent2UserMessage = `Profile Analysis:
+    const midWeek = Math.ceil(request.duration_weeks / 2)
+
+    const baseAgent2Context = `Profile Analysis:
 ${JSON.stringify(analysis)}
 
 Training Parameters:
-- Duration: ${request.duration_weeks} weeks
+- Duration: ${request.duration_weeks} weeks (FULL program)
 - Sessions per week: ${request.sessions_per_week}
 - Session length: ${request.session_minutes ?? 60} minutes
 - Split type: ${analysis.recommended_split}
@@ -210,21 +218,49 @@ Training Parameters:
 - Goals: ${request.goals.join(", ")}
 ${request.additional_instructions ? `- Additional instructions: ${request.additional_instructions}` : ""}`
 
-    const agent2Result = await callAgent<ProgramSkeleton>(
-      PROGRAM_ARCHITECT_PROMPT,
-      agent2UserMessage,
-      programSkeletonSchema,
-      { maxTokens: 16384, cacheSystemPrompt: true }
-    )
-    tokenUsage.agent2 = agent2Result.tokens_used
+    const agent2aUserMessage = `${baseAgent2Context}
 
-    const skeleton = agent2Result.content
-    console.log(`[orchestrator] Agent 2 done in ${Date.now() - agent2Start}ms (${agent2Result.tokens_used} tokens)`)
+CHUNK INSTRUCTION: You are generating the FIRST HALF of this program.
+- Output ONLY weeks 1 through ${midWeek} (of ${request.duration_weeks} total weeks).
+- Another agent will generate weeks ${midWeek + 1}-${request.duration_weeks} in parallel.
+- Design your periodization phases for the early portion of the program (e.g., adaptation/accumulation).
+- Set total_sessions to the count for YOUR weeks only.
+- Use slot_id format w{week}d{day}s{slot} as normal (w1d1s1, w1d1s2, etc.).`
 
-    // Step 5: Fetch, compress, and pre-filter exercise library
-    console.log("[orchestrator] Step 5: Fetching exercise library...")
-    const allExercises = await getExercisesForAI()
-    const compressed = compressExercises(allExercises)
+    const agent2bUserMessage = `${baseAgent2Context}
+
+CHUNK INSTRUCTION: You are generating the SECOND HALF of this program.
+- Output ONLY weeks ${midWeek + 1} through ${request.duration_weeks} (of ${request.duration_weeks} total weeks).
+- Another agent already generated weeks 1-${midWeek} (early adaptation/accumulation phase).
+- Design your periodization phases for the later portion (e.g., intensification, peak, or deload).
+- Set total_sessions to the count for YOUR weeks only.
+- slot_ids MUST use actual week numbers: w${midWeek + 1}d1s1, w${midWeek + 1}d1s2, etc.
+- Keep the SAME day labels and split structure (same day_of_week values, same session focus areas) so the program feels cohesive.`
+
+    const [agent2aResult, agent2bResult] = await Promise.all([
+      callAgent<ProgramSkeleton>(
+        PROGRAM_ARCHITECT_PROMPT,
+        agent2aUserMessage,
+        programSkeletonSchema,
+        { maxTokens: 10000, cacheSystemPrompt: true }
+      ),
+      callAgent<ProgramSkeleton>(
+        PROGRAM_ARCHITECT_PROMPT,
+        agent2bUserMessage,
+        programSkeletonSchema,
+        { maxTokens: 10000, cacheSystemPrompt: true }
+      ),
+    ])
+
+    // Merge the two chunks into a single skeleton
+    const skeleton: ProgramSkeleton = {
+      ...agent2aResult.content,
+      weeks: [...agent2aResult.content.weeks, ...agent2bResult.content.weeks],
+      total_sessions: agent2aResult.content.total_sessions + agent2bResult.content.total_sessions,
+      notes: `${agent2aResult.content.notes} ${agent2bResult.content.notes}`.trim(),
+    }
+    tokenUsage.agent2 = agent2aResult.tokens_used + agent2bResult.tokens_used
+    console.log(`[orchestrator] Agent 2 done in ${Date.now() - agent2Start}ms (${tokenUsage.agent2} tokens, ${skeleton.weeks.length} weeks)`)
 
     // Build equipment context
     const availableEquipment =
