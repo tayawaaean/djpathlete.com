@@ -168,6 +168,8 @@ Current date: ${new Date().toLocaleDateString()}`,
             tokens_used: tokensUsed,
             duration_ms: Date.now() - startTime,
             completed_at: new Date().toISOString(),
+            current_step: 0,
+            total_steps: 0,
           }).catch(() => {})
         } catch (err) {
           const message =
@@ -192,6 +194,8 @@ Current date: ${new Date().toLocaleDateString()}`,
             tokens_used: null,
             duration_ms: Date.now() - startTime,
             completed_at: null,
+            current_step: 0,
+            total_steps: 0,
           }).catch(() => {})
         }
       },
@@ -223,6 +227,8 @@ Current date: ${new Date().toLocaleDateString()}`,
         tokens_used: null,
         duration_ms: durationMs,
         completed_at: null,
+        current_step: 0,
+        total_steps: 0,
       }).catch(() => {})
     }
 

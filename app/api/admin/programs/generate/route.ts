@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { aiGenerationRequestSchema } from "@/lib/validators/ai-generation"
-import { generateProgram } from "@/lib/ai/orchestrator"
-import { createAssignment } from "@/lib/db/assignments"
-import { getUserById } from "@/lib/db/users"
-import { getProgramById } from "@/lib/db/programs"
-import { sendProgramReadyEmail } from "@/lib/email"
+import { generateProgramSync } from "@/lib/ai/orchestrator"
+import { createGenerationLog } from "@/lib/db/ai-generation-log"
+import { createCloudTask } from "@/lib/cloud-tasks"
 
-export const maxDuration = 120 // Allow up to 120 seconds for AI generation
+export const maxDuration = 120
 
 export async function POST(request: Request) {
   try {
@@ -37,54 +35,59 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log("[generate] Starting orchestration for client:", result.data.client_id)
-    const startTime = Date.now()
+    // Dev mode: run synchronously (existing behavior)
+    if (process.env.NODE_ENV === "development") {
+      console.log("[generate] Dev mode: running synchronous pipeline for client:", result.data.client_id)
+      const startTime = Date.now()
 
-    // Run the AI program generation pipeline
-    const orchestrationResult = await generateProgram(
-      result.data,
-      session.user.id
-    )
+      const orchestrationResult = await generateProgramSync(
+        result.data,
+        session.user.id
+      )
 
-    console.log(`[generate] Complete in ${Date.now() - startTime}ms — program_id: ${orchestrationResult.program_id}`)
+      console.log(`[generate] Complete in ${Date.now() - startTime}ms — program_id: ${orchestrationResult.program_id}`)
 
-    // Auto-assign program to the client
-    try {
-      await createAssignment({
-        program_id: orchestrationResult.program_id,
-        user_id: result.data.client_id,
-        assigned_by: session.user.id,
-        start_date: new Date().toISOString().split("T")[0],
-        end_date: null,
-        status: "active",
-        notes: "Auto-assigned from AI program generation",
-      })
-      console.log(`[generate] Program auto-assigned to client ${result.data.client_id}`)
-    } catch (assignError) {
-      console.error("[generate] Failed to auto-assign program:", assignError)
+      return NextResponse.json(
+        {
+          program_id: orchestrationResult.program_id,
+          validation: orchestrationResult.validation,
+          token_usage: orchestrationResult.token_usage,
+          duration_ms: orchestrationResult.duration_ms,
+          retries: orchestrationResult.retries,
+        },
+        { status: 201 }
+      )
     }
 
-    // Send email notification to the client
-    try {
-      const [client, program] = await Promise.all([
-        getUserById(result.data.client_id),
-        getProgramById(orchestrationResult.program_id),
-      ])
-      await sendProgramReadyEmail(client.email, client.first_name, program.name)
-      console.log(`[generate] Notification email sent to ${client.email}`)
-    } catch (emailError) {
-      console.error("[generate] Failed to send notification email:", emailError)
-    }
+    // Production: create log and enqueue background job
+    console.log("[generate] Creating generation log and enqueueing Cloud Task for client:", result.data.client_id)
+
+    const log = await createGenerationLog({
+      program_id: null,
+      client_id: result.data.client_id,
+      requested_by: session.user.id,
+      status: "pending",
+      input_params: result.data as unknown as Record<string, unknown>,
+      output_summary: null,
+      error_message: null,
+      model_used: "haiku+sonnet-mixed",
+      tokens_used: null,
+      duration_ms: null,
+      completed_at: null,
+      current_step: 0,
+      total_steps: 3,
+    })
+
+    await createCloudTask({ logId: log.id, step: 1 })
+
+    console.log(`[generate] Enqueued step 1 for logId=${log.id}`)
 
     return NextResponse.json(
       {
-        program_id: orchestrationResult.program_id,
-        validation: orchestrationResult.validation,
-        token_usage: orchestrationResult.token_usage,
-        duration_ms: orchestrationResult.duration_ms,
-        retries: orchestrationResult.retries,
+        log_id: log.id,
+        status: "pending",
       },
-      { status: 201 }
+      { status: 202 }
     )
   } catch (error) {
     console.error("[generate] AI program generation failed:", error)

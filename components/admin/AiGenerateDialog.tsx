@@ -185,6 +185,7 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   const [progressStage, setProgressStage] = useState(0)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Fetch clients when dialog opens
   const fetchClients = useCallback(async () => {
@@ -274,7 +275,13 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     return () => { cancelled = true }
   }, [clientId])
 
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => stopPolling()
+  }, [])
+
   function resetForm() {
+    stopPolling()
     setClientId("")
     setGoals([])
     setDurationWeeks(4)
@@ -309,6 +316,55 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     )
   }
 
+  function stopPolling() {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+  }
+
+  function mapStepToStage(status: string, currentStep: number): number {
+    // Map backend steps to progress stages:
+    // pending → 0, step_1 → 0-1, step_2 → 2, step_3 → 3, completed → 3
+    if (status === "pending") return 0
+    if (status === "step_1") return currentStep >= 1 ? 1 : 0
+    if (status === "step_2") return 2
+    if (status === "step_3") return 3
+    if (status === "completed") return 3
+    return 0
+  }
+
+  async function pollStatus(logId: string) {
+    try {
+      const res = await fetch(`/api/admin/programs/generate/status?logId=${logId}`)
+      if (!res.ok) return
+
+      const data = await res.json()
+      setProgressStage(mapStepToStage(data.status, data.current_step))
+
+      if (data.status === "completed") {
+        stopPolling()
+        setResult({
+          program_id: data.program_id,
+          validation: data.validation ?? { pass: true, issues: [], summary: "Program generated successfully." },
+          token_usage: data.token_usage ?? { agent1: 0, agent2: 0, agent3: 0, agent4: 0, total: 0 },
+          duration_ms: data.duration_ms ?? 0,
+          retries: 0,
+        })
+        setIsGenerating(false)
+        toast.success("Program generated successfully!")
+        router.refresh()
+      } else if (data.status === "failed") {
+        stopPolling()
+        setError(data.error_message || "Program generation failed")
+        setIsGenerating(false)
+        toast.error("Program generation failed")
+      }
+    } catch {
+      // Silently retry on network errors — polling will continue
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -326,14 +382,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     setResult(null)
     setProgressStage(0)
 
-    // Simulate progress stages over time
-    const progressInterval = setInterval(() => {
-      setProgressStage((prev) => {
-        if (prev < PROGRESS_MESSAGES.length - 1) return prev + 1
-        return prev
-      })
-    }, 12000) // Advance stage every 12 seconds
-
     try {
       const body: Record<string, unknown> = {
         client_id: clientId,
@@ -349,7 +397,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
       if (additionalInstructions.trim()) {
         body.additional_instructions = additionalInstructions.trim()
       }
-      // Pass equipment from questionnaire so the orchestrator can constrain exercise selection
       if (profileSummary && profileSummary.availableEquipment.length > 0) {
         body.equipment_override = profileSummary.availableEquipment
       }
@@ -366,17 +413,26 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         throw new Error(data.error || "Failed to generate program")
       }
 
-      setResult(data as GenerationResult)
-      toast.success("Program generated successfully!")
-      router.refresh()
+      // Check if this is a synchronous response (dev mode, status 201)
+      // or an async response (production, status 202)
+      if (response.status === 201) {
+        // Dev mode: synchronous result
+        setResult(data as GenerationResult)
+        setIsGenerating(false)
+        toast.success("Program generated successfully!")
+        router.refresh()
+      } else if (response.status === 202 && data.log_id) {
+        // Production: start polling
+        const logId = data.log_id as string
+        pollingRef.current = setInterval(() => pollStatus(logId), 3000)
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred"
       setError(message)
-      toast.error("Program generation failed")
-    } finally {
-      clearInterval(progressInterval)
       setIsGenerating(false)
+      toast.error("Program generation failed")
+      stopPolling()
     }
   }
 

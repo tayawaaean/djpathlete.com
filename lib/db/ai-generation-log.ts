@@ -39,6 +39,17 @@ export interface GenerationLogFilters {
   requested_by?: string
 }
 
+export async function getGenerationLogById(id: string) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("ai_generation_log")
+    .select("*")
+    .eq("id", id)
+    .single()
+  if (error) throw error
+  return data as AiGenerationLog
+}
+
 export async function getGenerationLogs(filters?: GenerationLogFilters) {
   const supabase = getClient()
   let query = supabase

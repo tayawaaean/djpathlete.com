@@ -21,7 +21,7 @@ export type Laterality = "bilateral" | "unilateral" | "alternating"
 export type SplitType = "full_body" | "upper_lower" | "push_pull_legs" | "push_pull" | "body_part" | "movement_pattern" | "custom"
 export type Periodization = "linear" | "undulating" | "block" | "reverse_linear" | "none"
 export type ExerciseRelationshipType = "progression" | "regression" | "alternative" | "variation"
-export type AiGenerationStatus = "pending" | "generating" | "completed" | "failed"
+export type AiGenerationStatus = "pending" | "generating" | "completed" | "failed" | "step_1" | "step_2" | "step_3"
 export type WeightUnit = "kg" | "lbs"
 export type AchievementType = "pr" | "streak" | "milestone" | "completion"
 export type PrType = "weight" | "reps" | "volume" | "estimated_1rm"
@@ -265,6 +265,8 @@ export interface AiGenerationLog {
   model_used: string | null
   tokens_used: number | null
   duration_ms: number | null
+  current_step: number
+  total_steps: number
   created_at: string
   completed_at: string | null
 }
