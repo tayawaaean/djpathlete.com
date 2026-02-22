@@ -21,14 +21,7 @@ export const NAV_ITEMS: NavGroup[] = [
   },
   { label: "Programs", href: "/programs" },
   { label: "Education", href: "/education" },
-  {
-    label: "Resources",
-    children: [
-      { label: "Blog", href: "/blog", description: "Articles & insights" },
-      { label: "Performance Database", href: "/resources", description: "Data-driven benchmarks" },
-      { label: "Comeback Code", href: "/resources", description: "Injury recovery protocols" },
-    ],
-  },
+  { label: "Blog", href: "/blog" },
   { label: "Shop", href: "/shop" },
 ]
 
@@ -53,8 +46,6 @@ export const FOOTER_SECTIONS = [
   {
     title: "Resources",
     links: [
-      { label: "Performance Database", href: "/resources" },
-      { label: "Comeback Code", href: "/resources" },
       { label: "Blog", href: "/blog" },
       { label: "Workshop Clinic", href: "/resources" },
     ],

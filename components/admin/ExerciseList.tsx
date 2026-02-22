@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Dumbbell, Upload, Download } from "lucide-react"
-import { EXERCISE_TEMPLATE_CSV, EXERCISE_RELATIONSHIPS_TEMPLATE_CSV } from "@/lib/csv-templates"
+import { EXERCISE_RELATIONSHIPS_TEMPLATE_CSV } from "@/lib/csv-templates"
+import { generateExerciseTemplate } from "@/lib/excel-templates"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -77,17 +78,26 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
     }
   }, [templateMenuOpen])
 
-  function downloadTemplate(type: "exercises" | "relationships") {
-    const csv = type === "exercises" ? EXERCISE_TEMPLATE_CSV : EXERCISE_RELATIONSHIPS_TEMPLATE_CSV
-    const filename = type === "exercises" ? "exercises_import_template.csv" : "exercise_relationships_template.csv"
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
+  async function downloadTemplate(type: "exercises" | "relationships") {
     setTemplateMenuOpen(false)
+
+    if (type === "exercises") {
+      const blob = await generateExerciseTemplate()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "DJP_Exercise_Template.xlsx"
+      a.click()
+      URL.revokeObjectURL(url)
+    } else {
+      const blob = new Blob([EXERCISE_RELATIONSHIPS_TEMPLATE_CSV], { type: "text/csv" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "exercise_relationships_template.csv"
+      a.click()
+      URL.revokeObjectURL(url)
+    }
   }
 
   // Selection states
