@@ -125,6 +125,25 @@ export interface SessionPlan {
   slots: SessionSlotWithExercise[]
 }
 
+// ─── Exercise Coordinator Output ─────────────────────────────────────────────
+
+export interface ExerciseRef {
+  exercise_id: string
+  exercise_name: string
+}
+
+export interface DayExerciseAssignment {
+  label: string
+  primary_compound: ExerciseRef
+  secondary_compound: ExerciseRef
+  accessory_pool_a: ExerciseRef[]
+  accessory_pool_b: ExerciseRef[]
+}
+
+export interface ExerciseCoordination {
+  days: DayExerciseAssignment[]
+}
+
 // ─── Program Plan (code-generated context for per-session agents) ────────────
 
 export interface SessionContext {

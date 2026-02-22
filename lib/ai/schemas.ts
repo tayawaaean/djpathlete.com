@@ -106,6 +106,25 @@ export const programSkeletonSchema = z.object({
   notes: z.string(),
 })
 
+// ─── Exercise Coordinator Schema ─────────────────────────────────────────────
+
+const exerciseRefSchema = z.object({
+  exercise_id: z.string(),
+  exercise_name: z.string(),
+})
+
+const dayExerciseAssignmentSchema = z.object({
+  label: z.string(),
+  primary_compound: exerciseRefSchema,
+  secondary_compound: exerciseRefSchema,
+  accessory_pool_a: z.array(exerciseRefSchema).min(1),
+  accessory_pool_b: z.array(exerciseRefSchema).min(1),
+})
+
+export const exerciseCoordinationSchema = z.object({
+  days: z.array(dayExerciseAssignmentSchema).min(1),
+})
+
 // ─── Per-Session Agent Schema ────────────────────────────────────────────────
 
 const sessionSlotWithExerciseSchema = z.object({
