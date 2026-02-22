@@ -133,7 +133,7 @@ export default function OnlinePage() {
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
               More than Training.
-              <br className="hidden sm:block" /> Complete Performance System.
+              <br className="hidden sm:block" /> A Complete Performance System.
             </h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               The Online Performance System is a fully personalised,

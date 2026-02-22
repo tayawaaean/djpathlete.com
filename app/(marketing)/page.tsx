@@ -44,9 +44,10 @@ const organizationSchema = {
   description:
     "DJP Athlete provides elite performance coaching by Darren J Paul. In-person training, online coaching, and return-to-performance assessment for serious athletes.",
   sameAs: [
-    "https://twitter.com/djpathlete",
-    "https://facebook.com/djpathlete",
-    "https://instagram.com/djpathlete",
+    "https://www.linkedin.com/in/darren-paul-phd-b022a213b",
+    "https://www.instagram.com/darrenjpaul/",
+    "https://www.tiktok.com/@darrenpaul_coach",
+    "https://www.facebook.com/share/1BwzDFUg66/?mibextid=wwXIfr",
   ],
 }
 

@@ -15,7 +15,7 @@ export const NAV_ITEMS: NavGroup[] = [
     label: "Services",
     children: [
       { label: "In-Person Coaching", href: "/in-person", description: "Assessment-led, hands-on training" },
-      { label: "Online Coaching", href: "/online", description: "Complete performance system, anywhere" },
+      { label: "Online Coaching", href: "/online", description: "A complete performance system" },
       { label: "Assessment", href: "/assessment", description: "Return-to-performance testing" },
     ],
   },
@@ -31,6 +31,13 @@ export const NAV_ITEMS: NavGroup[] = [
   },
   { label: "Shop", href: "/shop" },
 ]
+
+export const SOCIAL_LINKS = {
+  linkedin: "https://www.linkedin.com/in/darren-paul-phd-b022a213b",
+  instagram: "https://www.instagram.com/darrenjpaul/",
+  tiktok: "https://www.tiktok.com/@darrenpaul_coach",
+  facebook: "https://www.facebook.com/share/1BwzDFUg66/?mibextid=wwXIfr",
+} as const
 
 export const FOOTER_SECTIONS = [
   {

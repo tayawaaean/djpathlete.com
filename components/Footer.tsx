@@ -1,10 +1,18 @@
 "use client"
 
-import { Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
+import { Linkedin, Instagram, Facebook } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
-import { FOOTER_SECTIONS } from "@/lib/constants"
+import { FOOTER_SECTIONS, SOCIAL_LINKS } from "@/lib/constants"
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.75a8.18 8.18 0 0 0 4.76 1.52V6.84a4.83 4.83 0 0 1-1-.15z" />
+    </svg>
+  )
+}
 
 type FooterLink = {
   label: string
@@ -21,10 +29,10 @@ type FooterProps = {
   tagline?: string
   sections?: FooterSection[]
   socialLinks?: {
-    twitter?: string
     linkedin?: string
     instagram?: string
-    youtube?: string
+    tiktok?: string
+    facebook?: string
   }
   copyrightText?: string
 }
@@ -35,12 +43,7 @@ export const Footer = ({
   companyName = "DJP Athlete",
   tagline = "Elite sports coaching and athletic performance training. Personalized programs built by coaches, for athletes at every level.",
   sections = defaultSections,
-  socialLinks = {
-    twitter: "#",
-    linkedin: "#",
-    instagram: "#",
-    youtube: "#",
-  },
+  socialLinks = SOCIAL_LINKS,
   copyrightText,
 }: FooterProps) => {
   const copyright = copyrightText || `\u00A9 ${new Date().getFullYear()} DJP Athlete. All rights reserved.`
@@ -75,11 +78,6 @@ export const Footer = ({
 
             {/* Social Links */}
             <div className="flex items-center gap-3 mt-6">
-              {socialLinks.twitter && (
-                <a href={socialLinks.twitter} className={iconClass} aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-                  <Twitter className="w-4 h-4" />
-                </a>
-              )}
               {socialLinks.linkedin && (
                 <a href={socialLinks.linkedin} className={iconClass} aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
                   <Linkedin className="w-4 h-4" />
@@ -90,9 +88,14 @@ export const Footer = ({
                   <Instagram className="w-4 h-4" />
                 </a>
               )}
-              {socialLinks.youtube && (
-                <a href={socialLinks.youtube} className={iconClass} aria-label="YouTube" target="_blank" rel="noopener noreferrer">
-                  <Youtube className="w-4 h-4" />
+              {socialLinks.tiktok && (
+                <a href={socialLinks.tiktok} className={iconClass} aria-label="TikTok" target="_blank" rel="noopener noreferrer">
+                  <TikTokIcon className="w-4 h-4" />
+                </a>
+              )}
+              {socialLinks.facebook && (
+                <a href={socialLinks.facebook} className={iconClass} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                  <Facebook className="w-4 h-4" />
                 </a>
               )}
             </div>
