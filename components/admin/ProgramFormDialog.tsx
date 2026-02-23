@@ -257,7 +257,7 @@ export function ProgramFormDialog({
           </div>
 
           {/* Category */}
-          <div className="space-y-2">
+          <div id="category" className="space-y-2">
             <Label>Category *</Label>
             <div className="flex flex-wrap gap-2">
               {PROGRAM_CATEGORIES.map((cat) => {
