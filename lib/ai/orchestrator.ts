@@ -36,7 +36,6 @@ import {
 } from "@/lib/db/ai-generation-log"
 import { getUserById } from "@/lib/db/users"
 import { createAssignment } from "@/lib/db/assignments"
-import { sendProgramReadyEmail } from "@/lib/email"
 
 const MAX_RETRIES = 2
 
@@ -507,18 +506,6 @@ ${exerciseLibrary}${feedbackSection}`
     console.error("[orchestrator:step3] Failed to auto-assign:", assignError)
   }
 
-  // Send email notification
-  try {
-    const [client, programData] = await Promise.all([
-      getUserById(request.client_id),
-      getProgramById(program.id),
-    ])
-    await sendProgramReadyEmail(client.email, client.first_name, programData.name)
-    console.log(`[orchestrator:step3] Email sent to ${client.email}`)
-  } catch (emailError) {
-    console.error("[orchestrator:step3] Failed to send email:", emailError)
-  }
-
   // Update generation log to completed
   const totalDurationMs = Date.now() - new Date(log.created_at).getTime()
 
@@ -796,14 +783,6 @@ ${exerciseLibrary}${feedbackSection}`
       await createAssignment({ program_id: program.id, user_id: request.client_id, assigned_by: requestedBy, start_date: new Date().toISOString().split("T")[0], end_date: null, status: "active", notes: "Auto-assigned from AI program generation" })
     } catch (assignError) {
       console.error("[generate] Failed to auto-assign:", assignError)
-    }
-
-    // Email notification
-    try {
-      const [client, programData] = await Promise.all([getUserById(request.client_id), getProgramById(program.id)])
-      await sendProgramReadyEmail(client.email, client.first_name, programData.name)
-    } catch (emailError) {
-      console.error("[generate] Failed to send email:", emailError)
     }
 
     // Update log

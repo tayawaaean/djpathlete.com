@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { assignmentSchema } from "@/lib/validators/assignment"
 import { createAssignment, getAssignmentByUserAndProgram } from "@/lib/db/assignments"
+import { getProgramById } from "@/lib/db/programs"
+import { getUserById } from "@/lib/db/users"
+import { sendProgramReadyEmail } from "@/lib/email"
 
 export async function POST(
   request: Request,
@@ -35,6 +38,17 @@ export async function POST(
       end_date: null,
       status: "active",
     })
+
+    // Send email notification
+    try {
+      const [client, program] = await Promise.all([
+        getUserById(result.data.user_id),
+        getProgramById(id),
+      ])
+      await sendProgramReadyEmail(client.email, client.first_name, program.name)
+    } catch (emailError) {
+      console.error("[assign] Failed to send email:", emailError)
+    }
 
     return NextResponse.json(assignment, { status: 201 })
   } catch {
