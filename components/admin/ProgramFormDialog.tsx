@@ -121,7 +121,7 @@ export function ProgramFormDialog({
     setLoadingClients(true)
     fetch("/api/admin/users?role=client")
       .then((res) => res.json())
-      .then((data) => setClients(Array.isArray(data) ? data : []))
+      .then((data) => setClients(Array.isArray(data?.users) ? data.users : []))
       .catch(() => setClients([]))
       .finally(() => setLoadingClients(false))
   }, [open])
