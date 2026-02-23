@@ -138,6 +138,12 @@ export const PROGRAM_TOUR_STEPS: TourStep[] = [
       "How training days are organized. Full Body = every muscle each session, Upper/Lower = alternating, Push/Pull/Legs = three-day rotation. Leave as None if unsure.",
   },
   {
+    target: "tier",
+    title: "Tier",
+    description:
+      "Generalize = client can log workouts only, no coach interaction. Premium = includes AI coaching feedback from DJP with personalized guidance. This affects what features the client gets.",
+  },
+  {
     target: "periodization",
     title: "Periodization",
     description:
@@ -160,6 +166,18 @@ export const PROGRAM_TOUR_STEPS: TourStep[] = [
     title: "Price",
     description:
       "How much to charge for this program (in dollars). Leave blank for programs included in a membership. Stripe integration is coming soon.",
+  },
+  {
+    target: "target_user_id",
+    title: "Target Client",
+    description:
+      "Assign this program to a specific client. When set, the program becomes private and only that client can see it. If a price is set, the client will receive an email to purchase. Leave blank for general programs.",
+  },
+  {
+    target: "visibility",
+    title: "Visibility",
+    description:
+      "Private = only assigned clients can access this program. Public = visible in the program store for anyone to browse and purchase. Automatically set to Private when a target client is selected.",
   },
   {
     target: "description",

@@ -112,7 +112,8 @@ export function ProgramFormDialog({
     Array.isArray(program?.category) ? program.category : program?.category ? [program.category] : []
   )
   const [targetUserId, setTargetUserId] = useState<string | null>(program?.target_user_id ?? null)
-  const [clients, setClients] = useState<{ id: string; first_name: string; last_name: string }[]>([])
+  const [clients, setClients] = useState<{ id: string; first_name: string; last_name: string; email: string }[]>([])
+  const [selectedTier, setSelectedTier] = useState(program?.tier ?? "generalize")
   const [loadingClients, setLoadingClients] = useState(false)
 
   // Fetch clients when dialog opens
@@ -133,6 +134,7 @@ export function ProgramFormDialog({
       Array.isArray(program?.category) ? program.category : program?.category ? [program.category] : []
     )
     setTargetUserId(program?.target_user_id ?? null)
+    setSelectedTier(program?.tier ?? "generalize")
   }, [program])
   const tour = useFormTour({ steps: PROGRAM_TOUR_STEPS, scrollContainerRef: dialogRef })
 
@@ -331,7 +333,8 @@ export function ProgramFormDialog({
             <select
               id="tier"
               name="tier"
-              defaultValue={program?.tier ?? "generalize"}
+              value={selectedTier}
+              onChange={(e) => setSelectedTier(e.target.value)}
               required
               disabled={isSubmitting}
               className={selectClass}
@@ -341,7 +344,7 @@ export function ProgramFormDialog({
               ))}
             </select>
             <p className="text-[11px] text-muted-foreground">
-              {TIER_DESCRIPTIONS[program?.tier ?? "generalize"]}
+              {TIER_DESCRIPTIONS[selectedTier]}
             </p>
             {errors.tier && (
               <p className="text-xs text-destructive">{errors.tier[0]}</p>
@@ -445,7 +448,7 @@ export function ProgramFormDialog({
               <option value="">No specific client</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.first_name} {c.last_name}
+                  {c.first_name} {c.last_name} — {c.email}
                 </option>
               ))}
             </select>
@@ -457,7 +460,7 @@ export function ProgramFormDialog({
           </div>
 
           {/* Visibility */}
-          <div className="space-y-2">
+          <div id="visibility" className="space-y-2">
             <Label>Visibility</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
