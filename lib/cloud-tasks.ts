@@ -38,7 +38,8 @@ export async function createCloudTask(payload: CloudTaskPayload): Promise<void> 
     throw new Error("QSTASH_TOKEN must be set for production task queuing")
   }
 
-  const res = await fetch(`https://qstash.upstash.io/v2/publish/${workerUrl}`, {
+  const qstashBaseUrl = process.env.QSTASH_URL ?? "https://qstash.upstash.io"
+  const res = await fetch(`${qstashBaseUrl}/v2/publish/${workerUrl}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${qstashToken}`,
