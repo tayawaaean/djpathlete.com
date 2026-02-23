@@ -20,6 +20,7 @@ import {
   programFormSchema,
   PROGRAM_CATEGORIES,
   PROGRAM_DIFFICULTIES,
+  PROGRAM_TIERS,
   SPLIT_TYPES,
   PERIODIZATION_TYPES,
   type ProgramFormData,
@@ -52,6 +53,16 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   elite: "Elite",
 }
 
+const TIER_LABELS: Record<string, string> = {
+  generalize: "Generalize",
+  premium: "Premium",
+}
+
+const TIER_DESCRIPTIONS: Record<string, string> = {
+  generalize: "Workout logging only, no coach interaction",
+  premium: "Includes AI coaching feedback from DJP",
+}
+
 const SPLIT_TYPE_LABELS: Record<string, string> = {
   full_body: "Full Body",
   upper_lower: "Upper/Lower",
@@ -80,6 +91,7 @@ const FIELD_LABELS: Record<string, string> = {
   price_cents: "Price",
   split_type: "Split type",
   periodization: "Periodization",
+  tier: "Tier",
 }
 
 const selectClass =
@@ -139,6 +151,7 @@ export function ProgramFormDialog({
       description: (formData.get("description") as string) || null,
       category: selectedCategories,
       difficulty: formData.get("difficulty") as string,
+      tier: formData.get("tier") as string,
       duration_weeks: formData.get("duration_weeks") as string,
       sessions_per_week: formData.get("sessions_per_week") as string,
       price_cents: priceCents,
@@ -310,6 +323,29 @@ export function ProgramFormDialog({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Tier */}
+          <div className="space-y-2">
+            <Label htmlFor="tier">Tier *</Label>
+            <select
+              id="tier"
+              name="tier"
+              defaultValue={program?.tier ?? "generalize"}
+              required
+              disabled={isSubmitting}
+              className={selectClass}
+            >
+              {PROGRAM_TIERS.map((t) => (
+                <option key={t} value={t}>{TIER_LABELS[t]}</option>
+              ))}
+            </select>
+            <p className="text-[11px] text-muted-foreground">
+              {TIER_DESCRIPTIONS[program?.tier ?? "generalize"]}
+            </p>
+            {errors.tier && (
+              <p className="text-xs text-destructive">{errors.tier[0]}</p>
+            )}
           </div>
 
           {/* Periodization */}

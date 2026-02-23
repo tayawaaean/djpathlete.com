@@ -16,6 +16,11 @@ export const PROGRAM_DIFFICULTIES = [
   "elite",
 ] as const
 
+export const PROGRAM_TIERS = [
+  "generalize",
+  "premium",
+] as const
+
 export const SPLIT_TYPES = [
   "full_body",
   "upper_lower",
@@ -47,6 +52,9 @@ export const programFormSchema = z.object({
   category: z.array(z.enum(PROGRAM_CATEGORIES)).min(1, "Select at least one category"),
   difficulty: z.enum(PROGRAM_DIFFICULTIES, {
     message: "Difficulty is required",
+  }),
+  tier: z.enum(PROGRAM_TIERS, {
+    message: "Tier is required",
   }),
   duration_weeks: z.coerce
     .number()

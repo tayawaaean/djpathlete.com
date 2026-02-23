@@ -18,7 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state"
 import { ProgramFormDialog } from "@/components/admin/ProgramFormDialog"
 import { AiGenerateDialog } from "@/components/admin/AiGenerateDialog"
-import { PROGRAM_CATEGORIES, PROGRAM_DIFFICULTIES } from "@/lib/validators/program"
+import { PROGRAM_CATEGORIES, PROGRAM_DIFFICULTIES, PROGRAM_TIERS } from "@/lib/validators/program"
 import type { Program } from "@/types/database"
 
 interface ProgramListProps {
@@ -49,6 +49,16 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   elite: "bg-primary/10 text-primary",
 }
 
+const TIER_LABELS: Record<string, string> = {
+  generalize: "Generalize",
+  premium: "Premium",
+}
+
+const TIER_COLORS: Record<string, string> = {
+  generalize: "bg-muted text-muted-foreground",
+  premium: "bg-accent/15 text-accent",
+}
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 function formatPrice(cents: number | null): string {
@@ -61,6 +71,7 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all")
+  const [tierFilter, setTierFilter] = useState<string>("all")
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(10)
 
@@ -79,7 +90,8 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
     const cats: string[] = Array.isArray(prog.category) ? prog.category : [prog.category]
     const matchesCategory = categoryFilter === "all" || cats.includes(categoryFilter)
     const matchesDifficulty = difficultyFilter === "all" || prog.difficulty === difficultyFilter
-    return matchesSearch && matchesCategory && matchesDifficulty
+    const matchesTier = tierFilter === "all" || prog.tier === tierFilter
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesTier
   })
 
   const totalPages = Math.ceil(filtered.length / perPage)
@@ -202,6 +214,16 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
                 <option key={diff} value={diff}>{DIFFICULTY_LABELS[diff]}</option>
               ))}
             </select>
+            <select
+              value={tierFilter}
+              onChange={(e) => { setTierFilter(e.target.value); setPage(1) }}
+              className="h-9 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+            >
+              <option value="all">All Tiers</option>
+              {PROGRAM_TIERS.map((t) => (
+                <option key={t} value={t}>{TIER_LABELS[t]}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -228,6 +250,9 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
                       <Link href={`/admin/programs/${program.id}`} className="hover:underline">
                         {program.name}
                       </Link>
+                      <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${TIER_COLORS[program.tier] ?? "bg-muted text-muted-foreground"}`} title={`${TIER_LABELS[program.tier] ?? program.tier} tier`}>
+                        {TIER_LABELS[program.tier] ?? program.tier}
+                      </span>
                       {program.is_ai_generated && (
                         <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-accent/20 text-accent shrink-0" title="AI Generated">
                           <Sparkles className="size-2.5" />

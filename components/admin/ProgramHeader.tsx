@@ -36,6 +36,16 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   elite: "bg-primary/10 text-primary border-primary/20",
 }
 
+const TIER_LABELS: Record<string, string> = {
+  generalize: "Generalize",
+  premium: "Premium",
+}
+
+const TIER_COLORS: Record<string, string> = {
+  generalize: "bg-muted text-muted-foreground border-border",
+  premium: "bg-accent/15 text-accent border-accent/25",
+}
+
 const SPLIT_TYPE_LABELS: Record<string, string> = {
   full_body: "Full Body",
   upper_lower: "Upper/Lower",
@@ -81,6 +91,11 @@ export function ProgramHeader({ program, clients }: ProgramHeaderProps) {
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize border ${DIFFICULTY_COLORS[program.difficulty] ?? "bg-muted text-muted-foreground"}`}
               >
                 {DIFFICULTY_LABELS[program.difficulty] ?? program.difficulty}
+              </span>
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize border ${TIER_COLORS[program.tier] ?? "bg-muted text-muted-foreground"}`}
+              >
+                {TIER_LABELS[program.tier] ?? program.tier}
               </span>
               {program.split_type && (
                 <Badge variant="outline" className="capitalize">

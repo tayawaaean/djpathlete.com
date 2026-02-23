@@ -4,6 +4,7 @@ export type ExerciseCategory = "strength" | "cardio" | "flexibility" | "plyometr
 export type ExerciseDifficulty = "beginner" | "intermediate" | "advanced"
 export type ProgramCategory = "strength" | "conditioning" | "sport_specific" | "recovery" | "nutrition" | "hybrid"
 export type ProgramDifficulty = "beginner" | "intermediate" | "advanced" | "elite"
+export type ProgramTier = "generalize" | "premium"
 export type AssignmentStatus = "active" | "paused" | "completed" | "cancelled"
 export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded"
 export type NotificationType = "info" | "success" | "warning" | "error"
@@ -126,6 +127,7 @@ export interface Program {
   description: string | null
   category: ProgramCategory[]
   difficulty: ProgramDifficulty
+  tier: ProgramTier
   duration_weeks: number
   sessions_per_week: number
   price_cents: number | null
