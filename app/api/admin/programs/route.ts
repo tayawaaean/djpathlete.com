@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { programFormSchema } from "@/lib/validators/program"
 import { createProgram } from "@/lib/db/programs"
-import { getUserById } from "@/lib/db/users"
-import { sendProgramAvailableForPurchaseEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -34,23 +32,6 @@ export async function POST(request: Request) {
       is_ai_generated: false,
       ai_generation_params: null,
     })
-
-    // Notify targeted client (non-blocking)
-    if (data.target_user_id && data.price_cents) {
-      getUserById(data.target_user_id)
-        .then((user) =>
-          sendProgramAvailableForPurchaseEmail(
-            user.email,
-            user.first_name,
-            program.name,
-            program.id,
-            user.id
-          )
-        )
-        .catch((err) =>
-          console.error("[API programs POST] Failed to send notification:", err)
-        )
-    }
 
     return NextResponse.json(program, { status: 201 })
   } catch (err) {
