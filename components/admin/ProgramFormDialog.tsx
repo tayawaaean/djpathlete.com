@@ -334,7 +334,7 @@ export function ProgramFormDialog({
               id="tier"
               name="tier"
               value={selectedTier}
-              onChange={(e) => setSelectedTier(e.target.value)}
+              onChange={(e) => setSelectedTier(e.target.value as "generalize" | "premium")}
               required
               disabled={isSubmitting}
               className={selectClass}
