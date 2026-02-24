@@ -55,6 +55,10 @@ export async function POST(request: Request) {
           metadata: { programId },
         })
 
+        // Fetch program to get duration_weeks for week tracking
+        const { getProgramById } = await import("@/lib/db/programs")
+        const purchasedProgram = await getProgramById(programId)
+
         await createAssignment({
           program_id: programId,
           user_id: userId,
@@ -63,6 +67,8 @@ export async function POST(request: Request) {
           end_date: null,
           status: "active",
           notes: null,
+          current_week: 1,
+          total_weeks: purchasedProgram.duration_weeks ?? null,
         })
 
         // Sync purchase to GoHighLevel (non-blocking)

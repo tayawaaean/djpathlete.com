@@ -500,6 +500,8 @@ ${exerciseLibrary}${feedbackSection}`
       end_date: null,
       status: "active",
       notes: "Auto-assigned from AI program generation",
+      current_week: 1,
+      total_weeks: program.duration_weeks ?? null,
     })
     console.log(`[orchestrator:step3] Program auto-assigned to client ${request.client_id}`)
   } catch (assignError) {
@@ -780,7 +782,7 @@ ${exerciseLibrary}${feedbackSection}`
 
     // Auto-assign
     try {
-      await createAssignment({ program_id: program.id, user_id: request.client_id, assigned_by: requestedBy, start_date: new Date().toISOString().split("T")[0], end_date: null, status: "active", notes: "Auto-assigned from AI program generation" })
+      await createAssignment({ program_id: program.id, user_id: request.client_id, assigned_by: requestedBy, start_date: new Date().toISOString().split("T")[0], end_date: null, status: "active", notes: "Auto-assigned from AI program generation", current_week: 1, total_weeks: program.duration_weeks ?? null })
     } catch (assignError) {
       console.error("[generate] Failed to auto-assign:", assignError)
     }

@@ -13,6 +13,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { WorkoutDay } from "@/components/client/WorkoutDay"
+import { CompleteWeekButton } from "@/components/client/CompleteWeekButton"
 import type { WorkoutDayProps } from "@/components/client/WorkoutDay"
 
 interface ProgramWorkout {
@@ -67,6 +68,11 @@ function ProgramCard({
     .filter((d) => d.day === todayDow)
     .reduce((sum, d) => sum + d.exercises.length, 0)
 
+  const weekProgressPct =
+    program.totalWeeks > 0
+      ? Math.round(((program.currentWeek - 1) / program.totalWeeks) * 100)
+      : 0
+
   return (
     <button
       onClick={onSelect}
@@ -103,7 +109,68 @@ function ProgramCard({
           </span>
         )}
       </div>
+
+      {/* Week progress bar on card */}
+      {program.totalWeeks > 1 && (
+        <div className="mt-2.5">
+          <Progress
+            value={weekProgressPct}
+            className="h-1.5"
+          />
+        </div>
+      )}
     </button>
+  )
+}
+
+// ─── Week Progress Indicator ─────────────────────────────────────────────
+
+function WeekProgressIndicator({
+  currentWeek,
+  totalWeeks,
+}: {
+  currentWeek: number
+  totalWeeks: number
+}) {
+  if (totalWeeks <= 1) return null
+
+  const completedWeeks = currentWeek - 1
+  const progressPct = Math.round((completedWeeks / totalWeeks) * 100)
+
+  return (
+    <div className="mb-4 bg-white rounded-xl border border-border px-4 py-3">
+      <div className="flex items-center justify-between text-xs mb-2">
+        <span className="text-muted-foreground">
+          Program Progress
+        </span>
+        <span className="font-semibold text-foreground">
+          {completedWeeks}/{totalWeeks} weeks
+        </span>
+      </div>
+      <div className="flex gap-1">
+        {Array.from({ length: totalWeeks }, (_, i) => {
+          const weekNum = i + 1
+          const isCompleted = weekNum < currentWeek
+          const isCurrent = weekNum === currentWeek
+          return (
+            <div
+              key={weekNum}
+              className={cn(
+                "flex-1 h-2 rounded-full transition-colors",
+                isCompleted
+                  ? "bg-success"
+                  : isCurrent
+                    ? "bg-primary"
+                    : "bg-muted"
+              )}
+            />
+          )
+        })}
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1.5">
+        {progressPct}% complete
+      </p>
+    </div>
   )
 }
 
@@ -177,6 +244,13 @@ function ProgramDetail({
     totalCount > 0 ? Math.round((loggedCount / totalCount) * 100) : 0
   const remaining = totalCount - loggedCount
 
+  // Check if ALL exercises across ALL days in the current week are logged
+  const allWeekExercisesLogged = days.length > 0 && days.every((d) =>
+    d.exercises.length === 0 || d.exercises.every(
+      (e) => e.loggedToday || sessionLoggedIds.has(e.exercise.id)
+    )
+  )
+
   function handleExerciseLogged(exerciseId: string) {
     setSessionLoggedIds((prev) => new Set(prev).add(exerciseId))
   }
@@ -206,6 +280,12 @@ function ProgramDetail({
           </span>
         ))}
       </div>
+
+      {/* Week progress indicator */}
+      <WeekProgressIndicator
+        currentWeek={effectiveCurrentWeek}
+        totalWeeks={program.totalWeeks}
+      />
 
       {/* Week selector */}
       {program.totalWeeks > 1 && (
@@ -361,6 +441,16 @@ function ProgramDetail({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Complete Week button — only shown on the current week when all exercises are logged */}
+      {isCurrentWeek && (
+        <CompleteWeekButton
+          assignmentId={program.assignmentId}
+          currentWeek={effectiveCurrentWeek}
+          totalWeeks={program.totalWeeks}
+          allExercisesLogged={allWeekExercisesLogged}
+        />
+      )}
     </div>
   )
 }

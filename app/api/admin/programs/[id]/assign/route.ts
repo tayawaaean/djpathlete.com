@@ -29,6 +29,9 @@ export async function POST(
       )
     }
 
+    // Fetch program to get duration_weeks for total_weeks tracking
+    const programData = await getProgramById(id)
+
     const assignment = await createAssignment({
       program_id: id,
       user_id: result.data.user_id,
@@ -37,6 +40,8 @@ export async function POST(
       assigned_by: null,
       end_date: null,
       status: "active",
+      current_week: 1,
+      total_weeks: programData.duration_weeks ?? null,
     })
 
     // Send email notification

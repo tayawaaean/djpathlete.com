@@ -37,7 +37,8 @@ function getTodayDow(): number {
   return jsDay === 0 ? 7 : jsDay
 }
 
-function getCurrentWeek(startDate: string, totalWeeks: number): number {
+/** Fallback: compute current week from start date if DB current_week is not available */
+function getCurrentWeekFromDate(startDate: string, totalWeeks: number): number {
   const start = new Date(startDate)
   const now = new Date()
   const daysSinceStart = Math.floor(
@@ -122,8 +123,9 @@ export default async function ClientWorkoutsPage() {
     .filter(({ assignment }) => assignment.programs)
     .map(({ assignment, exercises }) => {
       const program = assignment.programs!
-      const totalWeeks = program.duration_weeks || 1
-      const currentWeek = getCurrentWeek(assignment.start_date, totalWeeks)
+      const totalWeeks = assignment.total_weeks ?? program.duration_weeks ?? 1
+      // Use DB-tracked current_week; fall back to date-based calculation
+      const currentWeek = assignment.current_week ?? getCurrentWeekFromDate(assignment.start_date, totalWeeks)
 
       // Group exercises by week_number, then by day_of_week
       const weekMap = new Map<number, Map<number, ProgramExerciseWithExercise[]>>()
