@@ -181,6 +181,8 @@ export interface ProgramAssignment {
   end_date: string | null
   status: AssignmentStatus
   notes: string | null
+  current_week: number
+  total_weeks: number | null
   created_at: string
   updated_at: string
 }

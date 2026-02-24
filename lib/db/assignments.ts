@@ -76,3 +76,52 @@ export async function updateAssignment(
   if (error) throw error
   return data as ProgramAssignment
 }
+
+/** Advance assignment to next week. If past total_weeks, mark as completed. */
+export async function advanceWeek(assignmentId: string) {
+  const supabase = getClient()
+
+  // Fetch current assignment
+  const { data: assignment, error: fetchError } = await supabase
+    .from("program_assignments")
+    .select("current_week, total_weeks")
+    .eq("id", assignmentId)
+    .single()
+  if (fetchError) throw fetchError
+
+  const nextWeek = (assignment.current_week ?? 1) + 1
+
+  if (assignment.total_weeks && nextWeek > assignment.total_weeks) {
+    // Program complete
+    const { data, error } = await supabase
+      .from("program_assignments")
+      .update({ status: "completed" as const, current_week: assignment.current_week })
+      .eq("id", assignmentId)
+      .select()
+      .single()
+    if (error) throw error
+    return { ...(data as ProgramAssignment), program_completed: true }
+  }
+
+  // Advance to next week
+  const { data, error } = await supabase
+    .from("program_assignments")
+    .update({ current_week: nextWeek })
+    .eq("id", assignmentId)
+    .select()
+    .single()
+  if (error) throw error
+  return { ...(data as ProgramAssignment), program_completed: false }
+}
+
+/** Get the assignment by ID, verifying ownership */
+export async function getAssignmentById(assignmentId: string) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("program_assignments")
+    .select("*")
+    .eq("id", assignmentId)
+    .single()
+  if (error) throw error
+  return data as ProgramAssignment
+}
