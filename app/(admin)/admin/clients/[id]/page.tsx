@@ -722,6 +722,26 @@ export default async function ClientDetailPage({
       <div className="space-y-6">
         <ProfileSection profile={profile} />
         <QuestionnaireSection profile={profile} />
+
+        {/* Assessment Results Link */}
+        <div className="bg-white rounded-xl border border-border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-primary mb-1">Assessment Results</h2>
+              <p className="text-sm text-muted-foreground">
+                View movement screen results and computed ability levels.
+              </p>
+            </div>
+            <Link
+              href={`/admin/clients/${id}/assessments`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              View Assessments
+              <ArrowLeft className="size-3.5 rotate-180" />
+            </Link>
+          </div>
+        </div>
+
         <ProgramsSection
           assignments={assignments as AssignmentWithProgram[]}
         />
