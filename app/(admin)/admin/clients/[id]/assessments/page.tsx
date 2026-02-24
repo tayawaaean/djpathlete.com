@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, ClipboardCheck } from "lucide-react"
 import { getUserById } from "@/lib/db/users"
-import { getAssessmentResults } from "@/lib/db/assessments"
+import { getAssessmentResultsByUser } from "@/lib/db/assessments"
 import { ClientAssessmentTimeline } from "@/components/admin/ClientAssessmentTimeline"
 import type { AssessmentResult } from "@/types/database"
 
@@ -24,7 +24,7 @@ export default async function ClientAssessmentHistoryPage({
 
   let results: AssessmentResult[] = []
   try {
-    results = await getAssessmentResults(id)
+    results = await getAssessmentResultsByUser(id)
   } catch {
     // Assessment tables may not exist yet
   }

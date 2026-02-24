@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { AssessmentQuestionBuilder } from "@/components/admin/AssessmentQuestionBuilder"
 import { cn } from "@/lib/utils"
-import type { AssessmentResult, AbilityLevel } from "@/types/database"
+import type { AssessmentResult, AssessmentFeedback, AbilityLevel } from "@/types/database"
 
 type ResultWithUser = AssessmentResult & {
   users: { first_name: string; last_name: string; email: string } | null
@@ -141,7 +141,7 @@ export function AssessmentPageClient({ results }: AssessmentPageClientProps) {
                         <td className="px-4 py-3 hidden lg:table-cell">
                           {result.feedback ? (
                             <span className="capitalize text-muted-foreground">
-                              {result.feedback.overall_feeling.replace(
+                              {((result.feedback as unknown as AssessmentFeedback).overall_feeling ?? "").replace(
                                 "_",
                                 " "
                               )}

@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { AssessmentResult, AbilityLevel, ComputedLevels } from "@/types/database"
+import type { AssessmentResult, AssessmentFeedback, AbilityLevel, ComputedLevels } from "@/types/database"
 
 interface ClientAssessmentTimelineProps {
   results: AssessmentResult[]
@@ -123,6 +123,7 @@ export function ClientAssessmentTimeline({
       <div className="space-y-6">
         {sorted.map((result, index) => {
           const isInitial = result.assessment_type === "initial"
+          const fb = result.feedback as AssessmentFeedback | null
           const previousResult = sorted[index + 1] // Previous chronologically (next in array since sorted newest first)
           const change = getDifficultyChange(
             result.max_difficulty_score,
@@ -218,7 +219,7 @@ export function ClientAssessmentTimeline({
                 )}
 
                 {/* Feedback Summary (for reassessments) */}
-                {result.feedback && (
+                {fb && (
                   <div className="bg-surface/50 rounded-lg p-3 mb-3">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-1.5">
                       Feedback
@@ -229,45 +230,45 @@ export function ClientAssessmentTimeline({
                           Overall feeling:
                         </span>{" "}
                         <span className="capitalize">
-                          {result.feedback.overall_feeling.replace("_", " ")}
+                          {fb.overall_feeling.replace("_", " ")}
                         </span>
                       </p>
-                      {result.feedback.exercises_too_easy.length > 0 && (
+                      {fb.exercises_too_easy.length > 0 && (
                         <p>
                           <span className="text-muted-foreground">
                             Too easy:
                           </span>{" "}
-                          {result.feedback.exercises_too_easy.length} exercise
-                          {result.feedback.exercises_too_easy.length !== 1
+                          {fb.exercises_too_easy.length} exercise
+                          {fb.exercises_too_easy.length !== 1
                             ? "s"
                             : ""}
                         </p>
                       )}
-                      {result.feedback.exercises_too_hard.length > 0 && (
+                      {fb.exercises_too_hard.length > 0 && (
                         <p>
                           <span className="text-muted-foreground">
                             Too hard:
                           </span>{" "}
-                          {result.feedback.exercises_too_hard.length} exercise
-                          {result.feedback.exercises_too_hard.length !== 1
+                          {fb.exercises_too_hard.length} exercise
+                          {fb.exercises_too_hard.length !== 1
                             ? "s"
                             : ""}
                         </p>
                       )}
-                      {result.feedback.rpe_average !== undefined && (
+                      {fb.rpe_average !== undefined && (
                         <p>
                           <span className="text-muted-foreground">
                             Avg RPE:
                           </span>{" "}
-                          {result.feedback.rpe_average}
+                          {fb.rpe_average}
                         </p>
                       )}
-                      {result.feedback.new_injuries && (
+                      {fb.new_injuries && (
                         <p>
                           <span className="text-muted-foreground">
                             New injuries:
                           </span>{" "}
-                          {result.feedback.new_injuries}
+                          {String(fb.new_injuries)}
                         </p>
                       )}
                     </div>

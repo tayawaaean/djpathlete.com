@@ -4,7 +4,7 @@ import { getAssignments } from "@/lib/db/assignments"
 import { getProgress, getWorkoutStreak } from "@/lib/db/progress"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getUserById } from "@/lib/db/users"
-import { getAssessmentResults } from "@/lib/db/assessments"
+import { getAssessmentResultsByUser } from "@/lib/db/assessments"
 import { EmptyState } from "@/components/ui/empty-state"
 import { EmailVerificationBanner } from "@/components/client/EmailVerificationBanner"
 import { ReassessmentBanner } from "@/components/client/ReassessmentBanner"
@@ -57,7 +57,7 @@ export default async function ClientDashboardPage() {
     const completedAssignments = typedAssignments.filter((a) => a.status === "completed")
     if (completedAssignments.length > 0) {
       try {
-        const assessmentResults = await getAssessmentResults(userId)
+        const assessmentResults = await getAssessmentResultsByUser(userId)
 
         // Find most recent completed assignment that doesn't have a reassessment after it
         for (const assignment of completedAssignments) {

@@ -4,12 +4,12 @@ import {
   getLatestAssessmentResult,
   getActiveQuestions,
   createAssessmentResult,
-  getAverageRpeForAssignment,
 } from "@/lib/db/assessments"
 import { getAssignments } from "@/lib/db/assignments"
+import { getProgress } from "@/lib/db/progress"
 import {
   computeReassessmentAdjustment,
-  computeMovementScoresFromAnswers,
+  computeAssessmentScores,
 } from "@/lib/assessment-scoring"
 import type { AssessmentFeedback, ProgramAssignment } from "@/types/database"
 
@@ -47,11 +47,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get movement screen questions for scoring
-    const questions = await getActiveQuestions("movement_screen")
+    // Get all active questions for scoring
+    const questions = await getActiveQuestions()
 
     // Compute new movement scores from re-tested answers
-    const newMovementScores = computeMovementScoresFromAnswers(answers, questions)
+    const { computed_levels: newComputedLevels, max_difficulty_score: newMovementMaxDifficulty } =
+      computeAssessmentScores({ answers: answers as Record<string, string>, questions })
 
     // Get the most recently completed assignment for RPE data
     const allAssignments = await getAssignments(userId)
@@ -59,34 +60,51 @@ export async function POST(request: Request) {
       (a) => a.status === "completed"
     )
 
-    let averageRpe: number | null = null
+    // Compute average RPE from exercise progress for the completed assignment
+    let avgRpe: number = 7 // default mid-range RPE
     if (completedAssignment) {
-      averageRpe = await getAverageRpeForAssignment(userId, completedAssignment.id)
+      try {
+        const progressRecords = await getProgress(userId)
+        const assignmentProgress = progressRecords.filter(
+          (p: { assignment_id: string | null; rpe: number | null }) =>
+            p.assignment_id === completedAssignment.id && p.rpe != null
+        )
+        if (assignmentProgress.length > 0) {
+          avgRpe =
+            assignmentProgress.reduce((sum: number, p: { rpe: number | null }) => sum + (p.rpe ?? 0), 0) /
+            assignmentProgress.length
+        }
+      } catch {
+        // If progress query fails, use default
+      }
     }
 
-    // Compute the reassessment adjustment
-    const { newComputedLevels, newMaxDifficultyScore, adjustment } =
-      computeReassessmentAdjustment({
-        feedback,
-        averageRpe,
-        previousResult,
-        newMovementScores,
-        questions,
-      })
+    // Check if movement scores improved compared to previous
+    const movementImproved = newMovementMaxDifficulty > previousResult.max_difficulty_score
+
+    // Compute the reassessment adjustment (returns a number: the new max difficulty score)
+    const newMaxDifficultyScore = computeReassessmentAdjustment({
+      feedback,
+      avgRpe,
+      movementImproved,
+      previousMaxDifficulty: previousResult.max_difficulty_score,
+    })
+
+    const adjustment = newMaxDifficultyScore - previousResult.max_difficulty_score
 
     // Create the new assessment result
     const newResult = await createAssessmentResult({
       user_id: userId,
       assessment_type: "reassessment",
-      answers,
+      answers: answers as Record<string, string>,
       computed_levels: newComputedLevels,
       max_difficulty_score: newMaxDifficultyScore,
       triggered_program_id: null, // Will be set when AI generates the program
       previous_assessment_id: previousResult.id,
       feedback: {
         ...feedback,
-        rpe_average: averageRpe ?? undefined,
-      },
+        rpe_average: avgRpe,
+      } as Record<string, unknown>,
       completed_at: new Date().toISOString(),
     })
 

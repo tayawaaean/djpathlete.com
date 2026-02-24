@@ -312,10 +312,7 @@ export interface Achievement {
 }
 
 // Assessment Engine types
-export type AssessmentType = "initial" | "reassessment"
 export type AssessmentQuestionSection = "movement_screen" | "background" | "context" | "preferences"
-export type AssessmentQuestionType = "yes_no" | "single_select" | "multi_select" | "number" | "text"
-export type AbilityLevel = "beginner" | "intermediate" | "advanced" | "elite"
 
 export interface AssessmentQuestion {
   id: string
@@ -349,12 +346,12 @@ export interface AssessmentResult {
   id: string
   user_id: string
   assessment_type: AssessmentType
-  answers: Record<string, string | string[] | number>
+  answers: Record<string, string>
   computed_levels: ComputedLevels
   max_difficulty_score: number
   triggered_program_id: string | null
   previous_assessment_id: string | null
-  feedback: AssessmentFeedback | null
+  feedback: Record<string, unknown> | null
   completed_at: string
   created_at: string
 }
@@ -369,43 +366,6 @@ export interface NotificationPreferences {
   workout_reminders: boolean
   created_at: string
   updated_at: string
-}
-
-export interface AssessmentQuestion {
-  id: string
-  section: AssessmentSection
-  movement_pattern: string | null
-  question_text: string
-  question_type: AssessmentQuestionType
-  options: { value: string; label: string }[] | null
-  parent_question_id: string | null
-  parent_answer: string | null
-  level_impact: Record<string, number> | null
-  order_index: number
-  is_active: boolean
-  created_at: string
-}
-
-export interface ComputedLevels {
-  overall: AbilityLevel
-  squat: AbilityLevel
-  push: AbilityLevel
-  pull: AbilityLevel
-  hinge: AbilityLevel
-}
-
-export interface AssessmentResult {
-  id: string
-  user_id: string
-  assessment_type: AssessmentType
-  answers: Record<string, string>
-  computed_levels: ComputedLevels
-  max_difficulty_score: number
-  triggered_program_id: string | null
-  previous_assessment_id: string | null
-  feedback: Record<string, unknown> | null
-  completed_at: string
-  created_at: string
 }
 
 export interface Database {

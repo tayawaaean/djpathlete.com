@@ -80,7 +80,8 @@ export default async function ReassessmentPage() {
   // Get active assessment questions (movement_screen section)
   let assessmentQuestions: AssessmentQuestion[] = []
   try {
-    assessmentQuestions = await getActiveQuestions("movement_screen")
+    const allQuestions = await getActiveQuestions()
+    assessmentQuestions = allQuestions.filter((q) => q.section === "movement_screen")
   } catch {
     // Tables may not exist yet
   }
