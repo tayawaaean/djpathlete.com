@@ -415,6 +415,7 @@ Validation checks to perform:
 7. Volume check: Verify weekly sets per muscle group roughly matches the analysis targets (within +/- 30%). Flag as "warning" if far off.
 8. Rest periods: Verify rest_seconds are appropriate for the role (compounds >= 90s, isolations >= 30s). Flag as "warning".
 9. Progressive overload: For programs using linear/undulating periodization, verify that intensity progresses appropriately across weeks. Flag as "warning".
+10. Difficulty score violation: If a max_difficulty_score constraint is provided, check that NO assigned exercise has a difficulty_score exceeding this limit. Flag as "error" — this is a hard safety constraint from the client's assessment results.
 
 Rules:
 - "pass" should be true ONLY if there are zero issues with type "error". Warnings are acceptable.

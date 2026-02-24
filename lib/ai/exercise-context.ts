@@ -10,6 +10,7 @@ export interface CompressedExercise {
   name: string
   category: string[]
   difficulty: string
+  difficulty_score: number | null
   muscle_group: string | null
   movement_pattern: MovementPattern | null
   primary_muscles: string[]
@@ -31,6 +32,7 @@ export function compressExercises(exercises: Exercise[]): CompressedExercise[] {
     name: ex.name,
     category: ex.category,
     difficulty: ex.difficulty,
+    difficulty_score: (ex as Exercise & { difficulty_score?: number | null }).difficulty_score ?? null,
     muscle_group: ex.muscle_group,
     movement_pattern: ex.movement_pattern,
     primary_muscles: ex.primary_muscles,
@@ -41,6 +43,24 @@ export function compressExercises(exercises: Exercise[]): CompressedExercise[] {
     is_bodyweight: ex.is_bodyweight,
     is_compound: ex.is_compound,
   }))
+}
+
+/**
+ * Filter compressed exercises by max difficulty score.
+ * When maxDifficultyScore is provided, only exercises at or below that score are kept.
+ * Exercises without a difficulty_score are excluded when filtering is active.
+ */
+export function filterByDifficultyScore(
+  exercises: CompressedExercise[],
+  maxDifficultyScore?: number
+): CompressedExercise[] {
+  if (maxDifficultyScore === undefined) return exercises
+
+  return exercises.filter((ex) => {
+    // Exclude exercises without a difficulty_score when filtering is active
+    if (ex.difficulty_score === null || ex.difficulty_score === undefined) return false
+    return ex.difficulty_score <= maxDifficultyScore
+  })
 }
 
 /**

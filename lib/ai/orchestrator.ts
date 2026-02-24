@@ -23,7 +23,7 @@ import {
   EXERCISE_SELECTOR_PROMPT,
 } from "@/lib/ai/prompts"
 import { validateProgram } from "@/lib/ai/validate"
-import { compressExercises, formatExerciseLibrary } from "@/lib/ai/exercise-context"
+import { compressExercises, filterByDifficultyScore, formatExerciseLibrary } from "@/lib/ai/exercise-context"
 import type { CompressedExercise } from "@/lib/ai/exercise-context"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getExercisesForAI } from "@/lib/db/exercises"
@@ -38,6 +38,21 @@ import { getUserById } from "@/lib/db/users"
 import { createAssignment } from "@/lib/db/assignments"
 
 const MAX_RETRIES = 2
+
+// ─── Assessment Result Context ──────────────────────────────────────────────
+
+export interface AssessmentContext {
+  assessmentResultId: string
+  computedLevels: {
+    overall: string
+    squat: string
+    push: string
+    pull: string
+    hinge: string
+  }
+  maxDifficultyScore: number
+  generationTrigger: "initial_assessment" | "reassessment"
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -80,6 +95,9 @@ export async function runStep1(logId: string): Promise<void> {
   const log = await getGenerationLogById(logId)
   const request = log.input_params as unknown as AiGenerationRequest
   const requestedBy = log.requested_by
+
+  // Reconstruct assessment context from log if this was assessment-triggered
+  const logAssessmentContext = (log.input_params as Record<string, unknown>)?._assessmentContext as AssessmentContext | undefined
 
   // Fetch client profile
   const profile = await getProfileByUserId(request.client_id)
@@ -129,6 +147,23 @@ export async function runStep1(logId: string): Promise<void> {
       })
     : JSON.stringify({ note: "No profile found — use defaults for a general fitness client." })
 
+  // Build assessment context section for the prompt (only when assessment-triggered)
+  const stepAssessmentCtx = logAssessmentContext
+  const assessmentPromptSection = stepAssessmentCtx
+    ? `\n\n## Client Assessment Results
+Overall Level: ${stepAssessmentCtx.computedLevels.overall}
+Squat Pattern: ${stepAssessmentCtx.computedLevels.squat}
+Push Pattern: ${stepAssessmentCtx.computedLevels.push}
+Pull Pattern: ${stepAssessmentCtx.computedLevels.pull}
+Hinge Pattern: ${stepAssessmentCtx.computedLevels.hinge}
+Maximum Exercise Difficulty: ${stepAssessmentCtx.maxDifficultyScore}/10
+
+IMPORTANT: Only select exercises with difficulty_score <= ${stepAssessmentCtx.maxDifficultyScore}.
+For patterns where the client is at beginner level, use foundational/beginner exercises (difficulty 1-4).
+For intermediate patterns, use intermediate exercises (difficulty 4-7).
+For advanced patterns, use advanced exercises (difficulty 7-9).`
+    : ""
+
   const agent1UserMessage = `Client Profile:
 ${profileContext}
 
@@ -152,7 +187,7 @@ ${profile?.movement_confidence ? `- Movement confidence: ${profile.movement_conf
 ${profile?.exercise_likes ? `- Exercise likes: ${profile.exercise_likes}` : ''}
 ${profile?.exercise_dislikes ? `- Exercise dislikes: ${profile.exercise_dislikes}` : ''}
 ${profile?.training_background ? `- Training background: ${profile.training_background}` : ''}
-${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}`
+${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}${assessmentPromptSection}`
 
   // Run Agent 1 and exercise library fetch concurrently (no rate limit issue)
   const [agent1Result, allExercises] = await Promise.all([
@@ -166,8 +201,12 @@ ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` 
   ])
 
   const analysis = agent1Result.content
-  const compressed = compressExercises(allExercises)
-  console.log(`[orchestrator:step1] Agent 1 done in ${Date.now() - stepStart}ms (${agent1Result.tokens_used} tokens), ${compressed.length} exercises`)
+  // Apply difficulty score filter when assessment context is available
+  const allCompressed = compressExercises(allExercises)
+  const compressed = stepAssessmentCtx
+    ? filterByDifficultyScore(allCompressed, stepAssessmentCtx.maxDifficultyScore)
+    : allCompressed
+  console.log(`[orchestrator:step1] Agent 1 done in ${Date.now() - stepStart}ms (${agent1Result.tokens_used} tokens), ${compressed.length} exercises (${allCompressed.length} total, filtered by difficulty)`)
 
   // Apply overrides
   if (request.split_type) {
@@ -271,6 +310,9 @@ export async function runStep3(logId: string): Promise<void> {
   const request = log.input_params as unknown as AiGenerationRequest
   const requestedBy = log.requested_by
 
+  // Read assessment context from input_params if available
+  const step3AssessmentCtx = (log.input_params as Record<string, unknown>)?._assessmentContext as AssessmentContext | undefined
+
   const outputSummary = log.output_summary as Record<string, unknown>
   const step1Data = outputSummary?.step1 as {
     analysis: ProfileAnalysis
@@ -356,7 +398,8 @@ ${exerciseLibrary}${feedbackSection}`
         analysis,
         compressed,
         availableEquipment,
-        clientDifficulty
+        clientDifficulty,
+        step3AssessmentCtx?.maxDifficultyScore
       )
       console.log(`[orchestrator:step3] Validation: pass=${validation.pass}, issues=${validation.issues.length}`)
 
@@ -535,7 +578,8 @@ ${exerciseLibrary}${feedbackSection}`
 
 export async function generateProgramSync(
   request: AiGenerationRequest,
-  requestedBy: string
+  requestedBy: string,
+  assessmentContext?: AssessmentContext
 ): Promise<OrchestrationResult> {
   const startTime = Date.now()
   const tokenUsage = { agent1: 0, agent2: 0, agent3: 0, agent4: 0, total: 0 }
@@ -555,6 +599,8 @@ export async function generateProgramSync(
     completed_at: null,
     current_step: 0,
     total_steps: 3,
+    generation_trigger: assessmentContext?.generationTrigger ?? "admin_manual",
+    assessment_result_id: assessmentContext?.assessmentResultId ?? null,
   })
 
   try {
@@ -606,6 +652,22 @@ export async function generateProgramSync(
         })
       : JSON.stringify({ note: "No profile found — use defaults for a general fitness client." })
 
+    // Build assessment context section for the prompt (only when assessment-triggered)
+    const assessmentSection = assessmentContext
+      ? `\n\n## Client Assessment Results
+Overall Level: ${assessmentContext.computedLevels.overall}
+Squat Pattern: ${assessmentContext.computedLevels.squat}
+Push Pattern: ${assessmentContext.computedLevels.push}
+Pull Pattern: ${assessmentContext.computedLevels.pull}
+Hinge Pattern: ${assessmentContext.computedLevels.hinge}
+Maximum Exercise Difficulty: ${assessmentContext.maxDifficultyScore}/10
+
+IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.maxDifficultyScore}.
+For patterns where the client is at beginner level, use foundational/beginner exercises (difficulty 1-4).
+For intermediate patterns, use intermediate exercises (difficulty 4-7).
+For advanced patterns, use advanced exercises (difficulty 7-9).`
+      : ""
+
     const agent1UserMessage = `Client Profile:
 ${profileContext}
 
@@ -629,7 +691,7 @@ ${profile?.movement_confidence ? `- Movement confidence: ${profile.movement_conf
 ${profile?.exercise_likes ? `- Exercise likes: ${profile.exercise_likes}` : ''}
 ${profile?.exercise_dislikes ? `- Exercise dislikes: ${profile.exercise_dislikes}` : ''}
 ${profile?.training_background ? `- Training background: ${profile.training_background}` : ''}
-${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}`
+${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}${assessmentSection}`
 
     // Agent 1 + exercise fetch in parallel
     const [agent1Result, allExercises] = await Promise.all([
@@ -644,7 +706,12 @@ ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` 
     tokenUsage.agent1 = agent1Result.tokens_used
 
     const analysis = agent1Result.content
-    const compressed = compressExercises(allExercises)
+    // Apply difficulty score filter when assessment context is provided
+    const allCompressed = compressExercises(allExercises)
+    const compressed = assessmentContext
+      ? filterByDifficultyScore(allCompressed, assessmentContext.maxDifficultyScore)
+      : allCompressed
+    console.log(`[orchestrator:sync] Exercises: ${allCompressed.length} total, ${compressed.length} after difficulty filter`)
 
     if (request.split_type) analysis.recommended_split = request.split_type
     if (request.periodization) analysis.recommended_periodization = request.periodization
@@ -717,7 +784,7 @@ ${exerciseLibrary}${feedbackSection}`
         tokenUsage.agent3 += agent3Result.tokens_used
         assignment = agent3Result.content
 
-        validation = validateProgram(skeleton, assignment, analysis, compressed, availableEquipment, profile?.experience_level ?? "beginner")
+        validation = validateProgram(skeleton, assignment, analysis, compressed, availableEquipment, profile?.experience_level ?? "beginner", assessmentContext?.maxDifficultyScore)
 
         if (validation.pass || !validation.issues.some((i) => i.type === "error")) break
         retries++

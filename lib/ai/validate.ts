@@ -117,7 +117,8 @@ export function validateProgram(
   analysis: ProfileAnalysis,
   exercises: CompressedExercise[],
   availableEquipment: string[],
-  clientDifficulty: string
+  clientDifficulty: string,
+  maxDifficultyScore?: number
 ): ValidationResult {
   const issues: ValidationIssue[] = []
 
@@ -287,6 +288,21 @@ export function validateProgram(
         type: "warning",
         category: "difficulty_mismatch",
         message: `${exercise.name} (${exercise.difficulty}) may be too advanced for a ${clientDifficulty} client`,
+        slot_ref: assigned.slot_id,
+      })
+    }
+
+    // ── ERROR: Difficulty score exceeds max (assessment constraint) ──
+    if (
+      maxDifficultyScore !== undefined &&
+      exercise.difficulty_score !== null &&
+      exercise.difficulty_score !== undefined &&
+      exercise.difficulty_score > maxDifficultyScore
+    ) {
+      issues.push({
+        type: "error",
+        category: "difficulty_score_violation",
+        message: `${exercise.name} has difficulty_score ${exercise.difficulty_score} which exceeds the client's max of ${maxDifficultyScore}`,
         slot_ref: assigned.slot_id,
       })
     }
