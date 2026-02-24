@@ -4,8 +4,10 @@ import { getAssignments } from "@/lib/db/assignments"
 import { getProgress, getWorkoutStreak } from "@/lib/db/progress"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getUserById } from "@/lib/db/users"
+import { getAssessmentResults } from "@/lib/db/assessments"
 import { EmptyState } from "@/components/ui/empty-state"
 import { EmailVerificationBanner } from "@/components/client/EmailVerificationBanner"
+import { ReassessmentBanner } from "@/components/client/ReassessmentBanner"
 import { LayoutDashboard, Dumbbell, Activity, Flame, ClipboardList } from "lucide-react"
 import Link from "next/link"
 import type { Program, ProgramAssignment } from "@/types/database"
@@ -35,6 +37,7 @@ export default async function ClientDashboardPage() {
   let totalWorkouts = 0
   let currentStreak = 0
   let hasCompletedQuestionnaire = false
+  let completedAssignmentNeedingReassessment: string | null = null
 
   try {
     const [assignments, progress, streak, profile] = await Promise.all([
@@ -49,6 +52,30 @@ export default async function ClientDashboardPage() {
     totalWorkouts = progress.length
     currentStreak = streak
     hasCompletedQuestionnaire = !!(profile?.goals && profile.goals.trim().length > 0)
+
+    // Check for completed assignments without a follow-up reassessment
+    const completedAssignments = typedAssignments.filter((a) => a.status === "completed")
+    if (completedAssignments.length > 0) {
+      try {
+        const assessmentResults = await getAssessmentResults(userId)
+
+        // Find most recent completed assignment that doesn't have a reassessment after it
+        for (const assignment of completedAssignments) {
+          const completedDate = assignment.updated_at
+          const hasFollowUp = assessmentResults.some(
+            (r) =>
+              r.assessment_type === "reassessment" &&
+              new Date(r.completed_at) >= new Date(completedDate)
+          )
+          if (!hasFollowUp) {
+            completedAssignmentNeedingReassessment = assignment.id
+            break
+          }
+        }
+      } catch {
+        // Assessment tables may not exist yet
+      }
+    }
   } catch {
     // DB tables may not exist yet — render gracefully with empty data
   }
@@ -60,6 +87,12 @@ export default async function ClientDashboardPage() {
       </h1>
 
       {!emailVerified && <EmailVerificationBanner userId={userId} />}
+
+      {completedAssignmentNeedingReassessment && (
+        <ReassessmentBanner
+          completedAssignmentId={completedAssignmentNeedingReassessment}
+        />
+      )}
 
       {!hasCompletedQuestionnaire && (
         <Link
