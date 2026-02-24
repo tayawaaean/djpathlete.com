@@ -28,6 +28,12 @@ export type AchievementType = "pr" | "streak" | "milestone" | "completion"
 export type PrType = "weight" | "reps" | "volume" | "estimated_1rm"
 export type TargetMetric = "weight" | "reps" | "time"
 
+// Assessment engine types
+export type AssessmentSection = "movement_screen" | "background" | "context" | "preferences"
+export type AssessmentQuestionType = "yes_no" | "single_select" | "multi_select" | "number" | "text"
+export type AbilityLevel = "beginner" | "intermediate" | "advanced" | "elite"
+export type AssessmentType = "initial" | "reassessment"
+
 export interface SetDetail {
   set_number: number
   weight_kg: number | null
@@ -308,6 +314,40 @@ export interface NotificationPreferences {
   workout_reminders: boolean
   created_at: string
   updated_at: string
+}
+
+export interface AssessmentQuestion {
+  id: string
+  section: AssessmentSection
+  movement_pattern: string | null
+  question_text: string
+  question_type: AssessmentQuestionType
+  options: { value: string; label: string }[] | null
+  parent_question_id: string | null
+  parent_answer: string | null
+  level_impact: Record<string, number> | null
+  order_index: number
+  is_active: boolean
+  created_at: string
+}
+
+export interface AssessmentResult {
+  id: string
+  user_id: string
+  assessment_type: AssessmentType
+  answers: Record<string, string | string[] | number>
+  computed_levels: ComputedLevels
+  max_difficulty: number
+  triggered_program_id: string | null
+  created_at: string
+}
+
+export interface ComputedLevels {
+  overall: AbilityLevel
+  squat: AbilityLevel
+  push: AbilityLevel
+  pull: AbilityLevel
+  hinge: AbilityLevel
 }
 
 export interface Database {

@@ -15,6 +15,7 @@ import {
   Star,
   Settings,
   LogOut,
+  Activity,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Exercises", href: "/admin/exercises", icon: Dumbbell },
   { label: "Programs", href: "/admin/programs", icon: ClipboardList },
+  { label: "Assessments", href: "/admin/assessments", icon: Activity },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "AI Usage", href: "/admin/ai-usage", icon: Brain },
