@@ -269,6 +269,8 @@ export interface AiGenerationLog {
   duration_ms: number | null
   current_step: number
   total_steps: number
+  generation_trigger?: string | null
+  assessment_result_id?: string | null
   created_at: string
   completed_at: string | null
 }
