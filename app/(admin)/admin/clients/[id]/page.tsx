@@ -14,6 +14,7 @@ import {
   Weight,
   Heart,
   ClipboardList,
+  ClipboardCheck,
   Clock,
   ThumbsUp,
   Moon,
@@ -716,6 +717,17 @@ export default async function ClientDetailPage({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mb-6">
+        <Link
+          href={`/admin/clients/${id}/assessments`}
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface/50 transition-colors"
+        >
+          <ClipboardCheck className="size-4 text-primary" strokeWidth={1.5} />
+          View Assessment History
+        </Link>
       </div>
 
       {/* Sections */}
