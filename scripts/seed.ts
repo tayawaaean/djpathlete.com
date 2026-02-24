@@ -126,6 +126,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["hamstrings", "core", "erector_spinae"],
     equipment_required: ["barbell", "squat_rack"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 5,
   },
   {
     id: EX.bench_press, name: "Bench Press",
@@ -136,6 +137,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest", "anterior_deltoid"], secondary_muscles: ["triceps"],
     equipment_required: ["barbell", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 7,
   },
   {
     id: EX.deadlift, name: "Deadlift",
@@ -146,6 +148,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["hamstrings", "glutes", "erector_spinae"], secondary_muscles: ["quadriceps", "forearms", "core"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 9, progression_order: 9,
   },
   {
     id: EX.pull_up, name: "Pull-Up",
@@ -156,6 +159,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi", "biceps"], secondary_muscles: ["rear_deltoid", "forearms", "core"],
     equipment_required: ["pull_up_bar"], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 8,
   },
   {
     id: EX.overhead_press, name: "Overhead Press",
@@ -166,6 +170,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["anterior_deltoid", "lateral_deltoid"], secondary_muscles: ["triceps", "core", "upper_chest"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 8,
   },
   {
     id: EX.rdl, name: "Romanian Deadlift",
@@ -176,6 +181,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["hamstrings", "glutes"], secondary_muscles: ["erector_spinae", "forearms"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 5,
   },
   {
     id: EX.bulgarian_split, name: "Bulgarian Split Squat",
@@ -186,6 +192,7 @@ const exercises = [
     movement_pattern: "lunge", force_type: "push", laterality: "unilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["hamstrings", "core"],
     equipment_required: ["dumbbells", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 4,
   },
   {
     id: EX.barbell_row, name: "Barbell Row",
@@ -196,6 +203,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi", "rhomboids"], secondary_muscles: ["biceps", "rear_deltoid", "erector_spinae"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 9,
   },
   {
     id: EX.box_jump, name: "Box Jump",
@@ -206,6 +214,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes", "calves"], secondary_muscles: ["hamstrings", "core"],
     equipment_required: ["plyo_box"], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 6,
   },
   {
     id: EX.med_ball_slam, name: "Medicine Ball Slam",
@@ -216,6 +225,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "push", laterality: "bilateral",
     primary_muscles: ["core", "latissimus_dorsi"], secondary_muscles: ["shoulders", "triceps", "quadriceps"],
     equipment_required: ["medicine_ball"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.sprint_intervals, name: "Sprint Intervals",
@@ -226,6 +236,7 @@ const exercises = [
     movement_pattern: "locomotion", force_type: "dynamic", laterality: "alternating",
     primary_muscles: ["quadriceps", "hamstrings", "glutes", "calves"], secondary_muscles: ["core", "hip_flexors"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 9, progression_order: 5,
   },
   {
     id: EX.battle_ropes, name: "Battle Ropes",
@@ -236,6 +247,7 @@ const exercises = [
     movement_pattern: "push", force_type: "dynamic", laterality: "alternating",
     primary_muscles: ["shoulders", "forearms"], secondary_muscles: ["core", "biceps", "triceps"],
     equipment_required: ["battle_ropes"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 9,
   },
   {
     id: EX.kb_swing, name: "Kettlebell Swing",
@@ -246,6 +258,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "dynamic", laterality: "bilateral",
     primary_muscles: ["glutes", "hamstrings"], secondary_muscles: ["core", "shoulders", "erector_spinae"],
     equipment_required: ["kettlebell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 4,
   },
   {
     id: EX.plank, name: "Plank Hold",
@@ -256,6 +269,7 @@ const exercises = [
     movement_pattern: "isometric", force_type: "static", laterality: "bilateral",
     primary_muscles: ["core", "rectus_abdominis"], secondary_muscles: ["shoulders", "glutes"],
     equipment_required: [], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.hip_flexor, name: "Hip Flexor Stretch",
@@ -266,6 +280,7 @@ const exercises = [
     movement_pattern: "lunge", force_type: "static", laterality: "unilateral",
     primary_muscles: ["hip_flexors"], secondary_muscles: ["quadriceps"],
     equipment_required: [], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.foam_roll_it, name: "Foam Rolling - IT Band",
@@ -276,6 +291,7 @@ const exercises = [
     movement_pattern: null, force_type: null, laterality: "unilateral",
     primary_muscles: ["it_band", "quadriceps"], secondary_muscles: [],
     equipment_required: ["foam_roller"], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: null,
   },
   {
     id: EX.agility_ladder, name: "Agility Ladder Drill",
@@ -286,6 +302,7 @@ const exercises = [
     movement_pattern: "locomotion", force_type: "dynamic", laterality: "alternating",
     primary_muscles: ["calves", "quadriceps"], secondary_muscles: ["hip_flexors", "core"],
     equipment_required: ["agility_ladder"], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 2,
   },
   {
     id: EX.cone_drill, name: "Cone Drill - 5-10-5",
@@ -296,6 +313,7 @@ const exercises = [
     movement_pattern: "locomotion", force_type: "dynamic", laterality: "alternating",
     primary_muscles: ["quadriceps", "glutes", "calves"], secondary_muscles: ["hamstrings", "core"],
     equipment_required: ["cones"], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 3,
   },
   {
     id: EX.sled_push, name: "Sled Push",
@@ -306,6 +324,7 @@ const exercises = [
     movement_pattern: "locomotion", force_type: "push", laterality: "alternating",
     primary_muscles: ["quadriceps", "glutes", "calves"], secondary_muscles: ["core", "shoulders"],
     equipment_required: ["sled"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 9, progression_order: 6,
   },
   {
     id: EX.yoga_flow, name: "Yoga Flow - Recovery",
@@ -316,6 +335,7 @@ const exercises = [
     movement_pattern: null, force_type: "static", laterality: "bilateral",
     primary_muscles: ["hamstrings", "hip_flexors", "shoulders"], secondary_muscles: ["core", "calves"],
     equipment_required: ["yoga_mat"], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: null,
   },
   {
     id: EX.lat_pulldown, name: "Lat Pulldown",
@@ -326,6 +346,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi"], secondary_muscles: ["biceps", "rear_deltoid"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.db_curl, name: "Dumbbell Bicep Curl",
@@ -336,6 +357,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["biceps"], secondary_muscles: ["forearms"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 2,
   },
   {
     id: EX.tricep_pushdown, name: "Tricep Pushdown",
@@ -346,6 +368,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["triceps"], secondary_muscles: [],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.leg_press, name: "Leg Press",
@@ -356,6 +379,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["hamstrings"],
     equipment_required: ["leg_press"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 2,
   },
   {
     id: EX.leg_curl, name: "Lying Leg Curl",
@@ -366,6 +390,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["hamstrings"], secondary_muscles: ["calves"],
     equipment_required: ["leg_curl_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 3,
   },
   {
     id: EX.face_pull, name: "Face Pull",
@@ -376,6 +401,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["rear_deltoid", "rhomboids"], secondary_muscles: ["rotator_cuff", "biceps"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 4,
   },
   {
     id: EX.db_lateral_raise, name: "Dumbbell Lateral Raise",
@@ -386,6 +412,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["lateral_deltoid"], secondary_muscles: ["anterior_deltoid", "traps"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 2,
   },
   {
     id: EX.push_up, name: "Push-Up",
@@ -396,6 +423,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest", "triceps"], secondary_muscles: ["anterior_deltoid", "core"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 3, progression_order: 3,
   },
   {
     id: EX.hip_thrust, name: "Barbell Hip Thrust",
@@ -406,6 +434,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "push", laterality: "bilateral",
     primary_muscles: ["glutes"], secondary_muscles: ["hamstrings", "core"],
     equipment_required: ["barbell", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 6,
   },
   {
     id: EX.farmers_carry, name: "Farmer's Carry",
@@ -416,6 +445,7 @@ const exercises = [
     movement_pattern: "carry", force_type: "static", laterality: "bilateral",
     primary_muscles: ["forearms", "traps", "core"], secondary_muscles: ["glutes", "calves", "shoulders"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 1,
   },
 
   // ── Dumbbell Compounds ────────────────────────────────────────────────────
@@ -428,6 +458,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest", "anterior_deltoid"], secondary_muscles: ["triceps", "core"],
     equipment_required: ["dumbbells", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 10,
   },
   {
     id: EX.db_ohp, name: "Dumbbell Overhead Press",
@@ -438,6 +469,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["anterior_deltoid", "lateral_deltoid"], secondary_muscles: ["triceps", "core", "upper_chest"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 11,
   },
   {
     id: EX.db_row, name: "Dumbbell Row",
@@ -448,6 +480,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "unilateral",
     primary_muscles: ["latissimus_dorsi", "rhomboids"], secondary_muscles: ["biceps", "rear_deltoid", "core"],
     equipment_required: ["dumbbells", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 5,
   },
   {
     id: EX.db_lunge, name: "Dumbbell Lunge",
@@ -458,6 +491,7 @@ const exercises = [
     movement_pattern: "lunge", force_type: "push", laterality: "unilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["hamstrings", "core", "calves"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 3,
   },
   {
     id: EX.db_rdl, name: "Dumbbell Romanian Deadlift",
@@ -468,6 +502,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["hamstrings", "glutes"], secondary_muscles: ["erector_spinae", "forearms", "core"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 3,
   },
   {
     id: EX.goblet_squat, name: "Goblet Squat",
@@ -478,6 +513,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["core", "upper_back"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 3,
   },
 
   // ── Machine Isolation ─────────────────────────────────────────────────────
@@ -490,6 +526,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps"], secondary_muscles: [],
     equipment_required: ["leg_press"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.pec_fly_machine, name: "Pec Fly Machine",
@@ -500,6 +537,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest"], secondary_muscles: ["anterior_deltoid"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 4,
   },
   {
     id: EX.seated_calf_raise, name: "Seated Calf Raise",
@@ -510,6 +548,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["calves"], secondary_muscles: [],
     equipment_required: ["bench", "dumbbells"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 5,
   },
   {
     id: EX.cable_lat_raise, name: "Cable Lateral Raise",
@@ -520,6 +559,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "unilateral",
     primary_muscles: ["lateral_deltoid"], secondary_muscles: ["anterior_deltoid", "traps"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 6,
   },
   {
     id: EX.cable_row, name: "Cable Row",
@@ -530,6 +570,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi", "rhomboids"], secondary_muscles: ["biceps", "rear_deltoid", "erector_spinae"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 6,
   },
   {
     id: EX.cable_crunch, name: "Cable Crunch",
@@ -540,6 +581,7 @@ const exercises = [
     movement_pattern: "isometric", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["rectus_abdominis", "core"], secondary_muscles: ["obliques"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 6, progression_order: 2,
   },
   {
     id: EX.cable_crossover, name: "Cable Crossover",
@@ -550,6 +592,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest"], secondary_muscles: ["anterior_deltoid", "biceps"],
     equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 6, progression_order: 12,
   },
   {
     id: EX.lat_pulldown_cg, name: "Lat Pulldown Close Grip",
@@ -560,6 +603,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi", "biceps"], secondary_muscles: ["rear_deltoid", "forearms"],
     equipment_required: ["lat_pulldown_machine"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 3, progression_order: 7,
   },
   {
     id: EX.seated_leg_curl, name: "Seated Leg Curl",
@@ -570,6 +614,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["hamstrings"], secondary_muscles: ["calves"],
     equipment_required: ["leg_curl_machine"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 10,
   },
 
   // ── Bodyweight ─────────────────────────────────────────────────────────────
@@ -582,6 +627,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest", "triceps"], secondary_muscles: ["anterior_deltoid", "core"],
     equipment_required: ["pull_up_bar"], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 13,
   },
   {
     id: EX.inverted_row, name: "Inverted Row",
@@ -592,6 +638,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi", "rhomboids"], secondary_muscles: ["biceps", "rear_deltoid", "core"],
     equipment_required: ["barbell", "squat_rack"], is_bodyweight: true, is_compound: true,
+    difficulty_score: 3, progression_order: 11,
   },
   {
     id: EX.glute_bridge, name: "Glute Bridge",
@@ -602,6 +649,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "push", laterality: "bilateral",
     primary_muscles: ["glutes"], secondary_muscles: ["hamstrings", "core"],
     equipment_required: [], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: 2,
   },
   {
     id: EX.mountain_climbers, name: "Mountain Climbers",
@@ -612,6 +660,7 @@ const exercises = [
     movement_pattern: "locomotion", force_type: "dynamic", laterality: "alternating",
     primary_muscles: ["core", "hip_flexors"], secondary_muscles: ["shoulders", "quadriceps", "calves"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 3, progression_order: 1,
   },
   {
     id: EX.burpees, name: "Burpees",
@@ -622,6 +671,7 @@ const exercises = [
     movement_pattern: "locomotion", force_type: "dynamic", laterality: "bilateral",
     primary_muscles: ["quadriceps", "chest", "core"], secondary_muscles: ["shoulders", "triceps", "hamstrings", "glutes"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 4,
   },
   {
     id: EX.pike_push_up, name: "Pike Push-up",
@@ -632,6 +682,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["anterior_deltoid", "lateral_deltoid"], secondary_muscles: ["triceps", "upper_chest", "core"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 14,
   },
   {
     id: EX.bw_squat, name: "Bodyweight Squat",
@@ -642,6 +693,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["hamstrings", "core", "calves"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 3, progression_order: 4,
   },
   {
     id: EX.jumping_lunges, name: "Jumping Lunges",
@@ -652,6 +704,7 @@ const exercises = [
     movement_pattern: "lunge", force_type: "push", laterality: "alternating",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["hamstrings", "calves", "core"],
     equipment_required: [], is_bodyweight: true, is_compound: true,
+    difficulty_score: 6, progression_order: 5,
   },
 
   // ── Metabolic / Short-session Friendly ─────────────────────────────────────
@@ -664,6 +717,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes", "anterior_deltoid"], secondary_muscles: ["triceps", "core", "upper_chest"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 7,
   },
   {
     id: EX.kb_clean_press, name: "Kettlebell Clean & Press",
@@ -674,6 +728,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "push", laterality: "unilateral",
     primary_muscles: ["glutes", "hamstrings", "anterior_deltoid"], secondary_muscles: ["core", "triceps", "forearms", "upper_back"],
     equipment_required: ["kettlebell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 9, progression_order: 8,
   },
   {
     id: EX.devil_press, name: "Devil Press",
@@ -684,6 +739,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "push", laterality: "bilateral",
     primary_muscles: ["glutes", "hamstrings", "shoulders"], secondary_muscles: ["core", "chest", "triceps", "quadriceps"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 9, progression_order: 10,
   },
   {
     id: EX.man_maker, name: "Man Maker",
@@ -694,6 +750,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["chest", "latissimus_dorsi", "quadriceps", "anterior_deltoid"], secondary_muscles: ["triceps", "biceps", "core", "glutes"],
     equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 9, progression_order: 17,
   },
 
   // ── More Barbell / Strength Variety ────────────────────────────────────────
@@ -706,6 +763,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["upper_chest", "anterior_deltoid"], secondary_muscles: ["triceps", "lateral_deltoid"],
     equipment_required: ["barbell", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 15,
   },
   {
     id: EX.front_squat, name: "Front Squat",
@@ -716,6 +774,7 @@ const exercises = [
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["core", "upper_back", "erector_spinae"],
     equipment_required: ["barbell", "squat_rack"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 9, progression_order: 8,
   },
   {
     id: EX.sumo_deadlift, name: "Sumo Deadlift",
@@ -726,6 +785,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["glutes", "hamstrings", "quadriceps"], secondary_muscles: ["erector_spinae", "adductors", "forearms"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 7,
   },
   {
     id: EX.bb_hip_thrust, name: "Barbell Hip Thrust",
@@ -736,6 +796,7 @@ const exercises = [
     movement_pattern: "hinge", force_type: "push", laterality: "bilateral",
     primary_muscles: ["glutes"], secondary_muscles: ["hamstrings", "core"],
     equipment_required: ["barbell", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 6,
   },
   {
     id: EX.pendlay_row, name: "Pendlay Row",
@@ -746,6 +807,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["latissimus_dorsi", "rhomboids"], secondary_muscles: ["biceps", "rear_deltoid", "erector_spinae"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 12,
   },
   {
     id: EX.cg_bench_press, name: "Close Grip Bench Press",
@@ -756,6 +818,7 @@ const exercises = [
     movement_pattern: "push", force_type: "push", laterality: "bilateral",
     primary_muscles: ["triceps", "chest"], secondary_muscles: ["anterior_deltoid"],
     equipment_required: ["barbell", "bench"], is_bodyweight: false, is_compound: true,
+    difficulty_score: 6, progression_order: 16,
   },
   {
     id: EX.barbell_curl, name: "Barbell Curl",
@@ -766,6 +829,7 @@ const exercises = [
     movement_pattern: "pull", force_type: "pull", laterality: "bilateral",
     primary_muscles: ["biceps"], secondary_muscles: ["forearms", "anterior_deltoid"],
     equipment_required: ["barbell"], is_bodyweight: false, is_compound: false,
+    difficulty_score: 3, progression_order: 13,
   },
 
   // ── Flexibility / Recovery ─────────────────────────────────────────────────
@@ -778,6 +842,7 @@ const exercises = [
     movement_pattern: "isometric", force_type: "static", laterality: "bilateral",
     primary_muscles: ["erector_spinae", "core"], secondary_muscles: ["shoulders", "hip_flexors"],
     equipment_required: ["yoga_mat"], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: 3,
   },
   {
     id: EX.worlds_greatest, name: "World's Greatest Stretch",
@@ -788,6 +853,7 @@ const exercises = [
     movement_pattern: "lunge", force_type: "static", laterality: "alternating",
     primary_muscles: ["hip_flexors", "hamstrings", "thoracic_spine"], secondary_muscles: ["glutes", "shoulders", "core"],
     equipment_required: ["yoga_mat"], is_bodyweight: true, is_compound: false,
+    difficulty_score: 3, progression_order: 2,
   },
   {
     id: EX.ninety_ninety, name: "90/90 Hip Stretch",
@@ -797,6 +863,7 @@ const exercises = [
     instructions: "Sit on floor with front leg bent 90 degrees in front, rear leg bent 90 degrees behind. Keep torso tall and lean gently over front shin. Hold, then switch sides.",
     movement_pattern: "isometric", force_type: "static", laterality: "unilateral",
     primary_muscles: ["glutes", "hip_flexors"], secondary_muscles: ["adductors", "piriformis"],
+    difficulty_score: 3, progression_order: 4,
     equipment_required: ["yoga_mat"], is_bodyweight: true, is_compound: false,
   },
 ]

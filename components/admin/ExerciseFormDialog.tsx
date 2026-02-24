@@ -160,6 +160,7 @@ export function ExerciseFormDialog({
   const [primaryMuscles, setPrimaryMuscles] = useState<string[]>(exercise?.primary_muscles ?? [])
   const [secondaryMuscles, setSecondaryMuscles] = useState<string[]>(exercise?.secondary_muscles ?? [])
   const [equipmentRequired, setEquipmentRequired] = useState<string[]>(exercise?.equipment_required ?? [])
+  const [difficultyScore, setDifficultyScore] = useState<number>(exercise?.difficulty_score ?? 5)
 
   const tour = useFormTour({
     steps: getExerciseTourSteps(() => setAiOpen(true)),
@@ -198,6 +199,8 @@ export function ExerciseFormDialog({
       equipment_required: equipmentRequired,
       is_bodyweight: formData.get("is_bodyweight") === "on",
       is_compound: formData.get("is_compound") !== "off",
+      difficulty_score: (formData.get("difficulty_score") as string) || null,
+      progression_order: (formData.get("progression_order") as string) || null,
     }
 
     const result = exerciseFormSchema.safeParse(data)
@@ -580,6 +583,49 @@ export function ExerciseFormDialog({
                   </label>
                   {/* Hidden field to send "off" when unchecked */}
                   <input type="hidden" name="is_compound_default" value="true" />
+                </div>
+
+                {/* Difficulty Score Slider */}
+                <div className="space-y-2">
+                  <Label htmlFor="difficulty_score">Difficulty Score (1-10)</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      id="difficulty_score"
+                      name="difficulty_score"
+                      min={1}
+                      max={10}
+                      value={difficultyScore}
+                      onChange={(e) => setDifficultyScore(Number(e.target.value))}
+                      disabled={isSubmitting}
+                      className="flex-1 accent-primary"
+                    />
+                    <span className="text-sm font-medium w-6 text-center">{difficultyScore}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    1-2: Foundational &middot; 3-4: Beginner &middot; 5-6: Intermediate &middot; 7-8: Advanced &middot; 9-10: Elite
+                  </p>
+                </div>
+
+                {/* Progression Order */}
+                <div className="space-y-2">
+                  <Label htmlFor="progression_order">Progression Order</Label>
+                  <Input
+                    id="progression_order"
+                    name="progression_order"
+                    type="number"
+                    min={1}
+                    defaultValue={exercise?.progression_order ?? ""}
+                    placeholder="e.g. 1, 2, 3 within same movement pattern"
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-xs text-muted-foreground">Order within the same movement pattern (lower = easier progression)</p>
+                </div>
+
+                {/* Prerequisite Exercises */}
+                <div className="space-y-2">
+                  <Label>Prerequisite Exercises</Label>
+                  <p className="text-xs text-muted-foreground">Set via exercise relationships. Use the alternatives section below to link progression and regression exercises.</p>
                 </div>
               </div>
             )}

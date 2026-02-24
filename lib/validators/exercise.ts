@@ -136,6 +136,9 @@ export const exerciseFormSchema = z.object({
   equipment_required: z.array(z.string()).optional().default([]),
   is_bodyweight: z.boolean().optional().default(false),
   is_compound: z.boolean().optional().default(true),
+  difficulty_score: z.coerce.number().int().min(1).max(10).nullable().optional().transform((v) => v ?? null),
+  prerequisite_exercises: z.array(z.string().uuid()).optional().default([]),
+  progression_order: z.coerce.number().int().nullable().optional().transform((v) => v ?? null),
 })
 
 export type ExerciseFormData = z.infer<typeof exerciseFormSchema>

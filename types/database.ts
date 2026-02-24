@@ -116,6 +116,9 @@ export interface Exercise {
   equipment_required: string[]
   is_bodyweight: boolean
   is_compound: boolean
+  difficulty_score: number | null
+  prerequisite_exercises: string[]
+  progression_order: number | null
   embedding?: number[] | null
   created_at: string
   updated_at: string
