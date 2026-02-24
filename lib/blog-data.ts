@@ -11,6 +11,8 @@ export interface Post {
     subheading: string
     text: string
   }[]
+  /** Raw HTML content from GHL — rendered directly on the detail page */
+  htmlContent?: string
 }
 
 export const posts: Post[] = [

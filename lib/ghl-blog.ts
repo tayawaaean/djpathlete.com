@@ -42,8 +42,10 @@ interface GHLBlogPost {
 
 interface GHLBlogResponse {
   posts?: GHLBlogPost[]
+  blogs?: GHLBlogPost[]
   data?: GHLBlogPost[]
   total?: number
+  count?: number
   [key: string]: unknown
 }
 
@@ -160,6 +162,7 @@ function transformPost(ghlPost: GHLBlogPost, index: number): Post {
       bodySections.length > 0
         ? bodySections
         : [{ subheading: "Content", text: ghlPost.description ?? "" }],
+    htmlContent: bodyContent || undefined,
   }
 }
 
@@ -175,7 +178,7 @@ function transformPost(ghlPost: GHLBlogPost, index: number): Post {
  */
 export async function getBlogPosts(): Promise<Post[]> {
   if (!isGHLBlogConfigured()) {
-    return staticPosts
+    return []
   }
 
   try {
@@ -183,7 +186,8 @@ export async function getBlogPosts(): Promise<Post[]> {
     url.searchParams.set("blogId", GHL_BLOG_ID)
     url.searchParams.set("locationId", GHL_LOCATION_ID)
     url.searchParams.set("status", "published")
-    url.searchParams.set("limit", "50")
+    url.searchParams.set("limit", "10")
+    url.searchParams.set("offset", "0")
 
     const response = await fetch(url.toString(), {
       method: "GET",
@@ -200,14 +204,14 @@ export async function getBlogPosts(): Promise<Post[]> {
         `[GHL Blog] API error ${response.status}:`,
         await response.text().catch(() => "unknown")
       )
-      return staticPosts
+      return []
     }
 
     const json = (await response.json()) as GHLBlogResponse
-    const ghlPosts = json.posts ?? json.data ?? []
+    const ghlPosts = json.posts ?? json.blogs ?? json.data ?? []
 
     if (ghlPosts.length === 0) {
-      return staticPosts
+      return []
     }
 
     const transformed = ghlPosts
@@ -218,7 +222,7 @@ export async function getBlogPosts(): Promise<Post[]> {
     return transformed
   } catch (error) {
     console.error("[GHL Blog] Failed to fetch posts:", error)
-    return staticPosts
+    return []
   }
 }
 

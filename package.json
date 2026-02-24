@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "postinstall": "node scripts/patch-lucide.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.46",
@@ -21,6 +22,7 @@
     "@huggingface/transformers": "^3.8.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "@tailwindcss/typography": "^0.5.19",
     "ai": "^6.0.97",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",

@@ -128,18 +128,27 @@ export default async function BlogPostPage({ params }: Props) {
       {/* Article Body */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
-          {post.body.map((section, i) => (
-            <FadeIn key={i} delay={i * 0.08}>
-              <div className={i > 0 ? "mt-10" : ""}>
-                <h2 className="text-xl font-heading font-semibold text-primary mb-4">
-                  {section.subheading}
-                </h2>
-                <p className="text-base text-muted-foreground leading-relaxed">
-                  {section.text}
-                </p>
-              </div>
+          {post.htmlContent ? (
+            <FadeIn>
+              <div
+                className="prose prose-lg max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
+                dangerouslySetInnerHTML={{ __html: post.htmlContent }}
+              />
             </FadeIn>
-          ))}
+          ) : (
+            post.body.map((section, i) => (
+              <FadeIn key={i} delay={i * 0.08}>
+                <div className={i > 0 ? "mt-10" : ""}>
+                  <h2 className="text-xl font-heading font-semibold text-primary mb-4">
+                    {section.subheading}
+                  </h2>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    {section.text}
+                  </p>
+                </div>
+              </FadeIn>
+            ))
+          )}
         </div>
       </section>
 
