@@ -3,7 +3,8 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
-import { posts, type Category } from "@/lib/blog-data"
+import { getBlogPosts } from "@/lib/ghl-blog"
+import type { Category } from "@/lib/blog-data"
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -53,7 +54,8 @@ function formatDate(dateString: string): string {
   })
 }
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getBlogPosts()
   return (
     <>
       <JsonLd data={blogSchema} />

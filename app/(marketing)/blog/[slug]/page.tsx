@@ -4,7 +4,8 @@ import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
-import { posts, type Category } from "@/lib/blog-data"
+import { getBlogPosts, getBlogPostBySlug } from "@/lib/ghl-blog"
+import type { Category } from "@/lib/blog-data"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -28,7 +29,7 @@ function formatDate(dateString: string): string {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const post = posts.find((p) => p.slug === slug)
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) {
     return { title: "Post Not Found" }
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
-  const post = posts.find((p) => p.slug === slug)
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) {
     notFound()

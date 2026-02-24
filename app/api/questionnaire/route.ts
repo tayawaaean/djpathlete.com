@@ -6,6 +6,7 @@ import {
   createProfile,
 } from "@/lib/db/client-profiles"
 import { questionnaireSchema } from "@/lib/validators/questionnaire"
+import { ghlCreateContact, ghlTriggerWorkflow } from "@/lib/ghl"
 
 export async function GET() {
   try {
@@ -110,10 +111,43 @@ export async function POST(request: Request) {
         additional_notes: profileUpdates.additional_notes,
         weight_unit: "kg",
       })
+      // Sync to GoHighLevel (non-blocking)
+      try {
+        const contact = await ghlCreateContact({
+          email: session.user.email ?? "",
+          firstName: session.user.name?.split(" ")[0],
+          lastName: session.user.name?.split(" ").slice(1).join(" "),
+          tags: ["questionnaire-completed"],
+          source: "questionnaire",
+        })
+        if (contact?.id && process.env.GHL_WORKFLOW_QUESTIONNAIRE_COMPLETE) {
+          await ghlTriggerWorkflow(contact.id, process.env.GHL_WORKFLOW_QUESTIONNAIRE_COMPLETE)
+        }
+      } catch {
+        // GHL sync failure should not affect questionnaire submission
+      }
+
       return NextResponse.json({ profile: newProfile })
     }
 
     const updated = await updateProfile(userId, profileUpdates)
+
+    // Sync to GoHighLevel (non-blocking)
+    try {
+      const contact = await ghlCreateContact({
+        email: session.user.email ?? "",
+        firstName: session.user.name?.split(" ")[0],
+        lastName: session.user.name?.split(" ").slice(1).join(" "),
+        tags: ["questionnaire-completed"],
+        source: "questionnaire",
+      })
+      if (contact?.id && process.env.GHL_WORKFLOW_QUESTIONNAIRE_COMPLETE) {
+        await ghlTriggerWorkflow(contact.id, process.env.GHL_WORKFLOW_QUESTIONNAIRE_COMPLETE)
+      }
+    } catch {
+      // GHL sync failure should not affect questionnaire submission
+    }
+
     return NextResponse.json({ profile: updated })
   } catch (error) {
     console.error("Questionnaire POST error:", error)

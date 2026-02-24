@@ -10,10 +10,10 @@ import {
   HeartPulse,
   MessageCircle,
 } from "lucide-react"
-import Link from "next/link"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
 import { FAQSection } from "@/components/FAQSection"
+import { InquiryForm } from "@/components/public/InquiryForm"
 
 export const metadata: Metadata = {
   title: "Online Coaching",
@@ -307,33 +307,45 @@ export default function OnlinePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
-        <FadeIn>
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                Book a Call
-              </p>
-              <div className="h-px w-8 bg-accent" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              Book a Call
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              The Online Performance System is not open enrollment. Begin with a
-              conversation to determine if this is the right fit.
-            </p>
-            <Link
-              href="/contact"
-              className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
-            >
-              Book a Call
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+      {/* Apply — Inquiry Form */}
+      <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface" id="apply">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-12">
+            <FadeIn direction="left" className="lg:col-span-2">
+              <div className="lg:sticky lg:top-32">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-8 bg-accent" />
+                  <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                    Get Started
+                  </p>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                  Apply for Online Coaching
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  The Online Performance System is not open enrollment. Begin
+                  with an application to determine if this is the right fit.
+                </p>
+                <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
+                  <p className="text-sm font-medium mb-1">Selective Entry</p>
+                  <p className="text-xs text-primary-foreground/80 leading-relaxed">
+                    We only take on athletes we can genuinely help. Every application
+                    is reviewed personally within 48 hours.
+                  </p>
+                </div>
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.15} className="lg:col-span-3">
+              <div className="bg-white rounded-2xl border border-border p-6 sm:p-8">
+                <InquiryForm
+                  defaultService="online"
+                  heading="Apply for Online Coaching"
+                  description="Tell us about your goals and training background."
+                />
+              </div>
+            </FadeIn>
           </div>
-        </FadeIn>
+        </div>
       </section>
 
       {/* FAQ */}

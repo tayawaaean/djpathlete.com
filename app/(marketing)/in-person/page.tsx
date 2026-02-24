@@ -15,6 +15,7 @@ import Image from "next/image"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
 import { LocalVideoBackground } from "@/components/public/LocalVideoBackground"
+import { InquiryForm } from "@/components/public/InquiryForm"
 
 export const metadata: Metadata = {
   title: "In-Person Coaching",
@@ -139,13 +140,13 @@ export default function InPersonPage() {
             demand more than effort. This is structured performance development
             — built on science, guided by experience, and measured by results.
           </p>
-          <Link
-            href="/contact"
+          <a
+            href="#apply"
             className="group inline-flex items-center gap-2 bg-accent text-primary px-8 py-4 rounded-full text-sm font-semibold hover:bg-accent/90 transition-all hover:shadow-md"
           >
             Apply Now
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -356,33 +357,45 @@ export default function InPersonPage() {
         </div>
       </section>
 
-      {/* Apply CTA */}
-      <section className="py-16 lg:py-24 px-4 sm:px-8">
-        <FadeIn>
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-8 bg-accent" />
-            <p className="text-sm font-medium text-accent uppercase tracking-widest">
-              Get Started
-            </p>
-            <div className="h-px w-8 bg-accent" />
+      {/* Apply — Inquiry Form */}
+      <section className="py-16 lg:py-24 px-4 sm:px-8" id="apply">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-12">
+            <FadeIn direction="left" className="lg:col-span-2">
+              <div className="lg:sticky lg:top-32">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-8 bg-accent" />
+                  <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                    Get Started
+                  </p>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                  Ready to Start?
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  In-person coaching is limited by design. If you are serious about
+                  performance development, apply to begin the process.
+                </p>
+                <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
+                  <p className="text-sm font-medium mb-1">Limited Availability</p>
+                  <p className="text-xs text-primary-foreground/80 leading-relaxed">
+                    Capacity is capped to protect coaching quality. We review every
+                    application and only accept athletes we can genuinely help.
+                  </p>
+                </div>
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.15} className="lg:col-span-3">
+              <div className="bg-white rounded-2xl border border-border p-6 sm:p-8">
+                <InquiryForm
+                  defaultService="in_person"
+                  heading="Apply for In-Person Coaching"
+                  description="Tell us about yourself. We review every application and respond within 48 hours."
+                />
+              </div>
+            </FadeIn>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-            Ready to Start?
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            In-person coaching is limited by design. If you are serious about
-            performance development, apply to begin the process.
-          </p>
-          <Link
-            href="/contact"
-            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
-          >
-            Apply Now
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-          </Link>
         </div>
-        </FadeIn>
       </section>
     </>
   )

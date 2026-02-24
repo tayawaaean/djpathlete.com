@@ -13,9 +13,9 @@ import {
   Brain,
   Footprints,
 } from "lucide-react"
-import Link from "next/link"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
+import { InquiryForm } from "@/components/public/InquiryForm"
 
 export const metadata: Metadata = {
   title: "Assessment & Return to Performance",
@@ -388,32 +388,45 @@ export default function AssessmentPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 lg:py-24 px-4 sm:px-8">
-        <div className="max-w-3xl mx-auto text-center">
-          <FadeIn>
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-accent" />
-              <p className="text-sm font-medium text-accent uppercase tracking-widest">
-                Get Started
-              </p>
-              <div className="h-px w-8 bg-accent" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
-              Ready for a real assessment?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Book an appointment and find out where you truly stand — beyond
-              clearance, beyond guesswork.
-            </p>
-            <Link
-              href="/contact"
-              className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md"
-            >
-              Book an Appointment
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </FadeIn>
+      {/* Apply — Inquiry Form */}
+      <section className="py-16 lg:py-24 px-4 sm:px-8" id="apply">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-12">
+            <FadeIn direction="left" className="lg:col-span-2">
+              <div className="lg:sticky lg:top-32">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-8 bg-accent" />
+                  <p className="text-sm font-medium text-accent uppercase tracking-widest">
+                    Get Started
+                  </p>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-heading font-semibold text-primary tracking-tight mb-4">
+                  Ready for a real assessment?
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  Find out where you truly stand — beyond clearance, beyond
+                  guesswork. Book an assessment to begin the process.
+                </p>
+                <div className="bg-primary rounded-2xl p-5 text-primary-foreground">
+                  <p className="text-sm font-medium mb-1">For Cleared Athletes</p>
+                  <p className="text-xs text-primary-foreground/80 leading-relaxed">
+                    This assessment is for athletes who have completed clinical
+                    rehab and are medically cleared to train. If you are still in
+                    rehab, speak with your medical team first.
+                  </p>
+                </div>
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.15} className="lg:col-span-3">
+              <div className="bg-white rounded-2xl border border-border p-6 sm:p-8">
+                <InquiryForm
+                  defaultService="assessment"
+                  heading="Book an Assessment"
+                  description="Tell us about yourself, your injury history, and your return-to-performance goals."
+                />
+              </div>
+            </FadeIn>
+          </div>
         </div>
       </section>
     </>
