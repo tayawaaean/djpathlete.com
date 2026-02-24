@@ -1,5 +1,20 @@
 import { z } from "zod"
 
+export const TRAINING_TECHNIQUE_OPTIONS = [
+  "straight_set",
+  "superset",
+  "dropset",
+  "giant_set",
+  "circuit",
+  "rest_pause",
+  "amrap",
+] as const
+
+export type TrainingTechniqueOption = (typeof TRAINING_TECHNIQUE_OPTIONS)[number]
+
+/** Techniques that require a group_tag to pair exercises together */
+export const GROUPED_TECHNIQUES: TrainingTechniqueOption[] = ["superset", "giant_set", "circuit"]
+
 export const programExerciseSchema = z.object({
   exercise_id: z.string().regex(
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
@@ -8,6 +23,7 @@ export const programExerciseSchema = z.object({
   day_of_week: z.coerce.number().int().min(1).max(7),
   week_number: z.coerce.number().int().min(1),
   order_index: z.coerce.number().int().min(0),
+  technique: z.enum(TRAINING_TECHNIQUE_OPTIONS).optional().default("straight_set"),
   sets: z.coerce.number().int().positive().nullable().optional().transform((v) => v ?? null),
   reps: z.string().max(50).nullable().optional().transform((v) => v || null),
   rest_seconds: z.coerce.number().int().min(0).nullable().optional().transform((v) => v ?? null),

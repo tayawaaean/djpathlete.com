@@ -161,6 +161,7 @@ export function ProgramBuilder({
             intensity_pct: pe.intensity_pct,
             tempo: pe.tempo,
             group_tag: pe.group_tag,
+            technique: pe.technique,
           }),
         }
       )
@@ -327,6 +328,7 @@ export function ProgramBuilder({
         dayOfWeek={addDialogDay}
         exercises={exercises}
         existingCount={getExercisesForDay(addDialogDay).length}
+        dayExercises={getExercisesForDay(addDialogDay)}
       />
 
       {/* Edit Exercise Dialog */}
@@ -335,6 +337,7 @@ export function ProgramBuilder({
         onOpenChange={(open) => !open && setEditTarget(null)}
         programId={programId}
         programExercise={editTarget}
+        dayExercises={editTarget ? getExercisesForDay(editTarget.day_of_week) : []}
       />
 
       {/* Delete Confirmation Dialog */}

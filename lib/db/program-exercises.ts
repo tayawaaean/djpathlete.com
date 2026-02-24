@@ -95,6 +95,7 @@ export async function duplicateWeekExercises(
     intensity_pct: ex.intensity_pct,
     tempo: ex.tempo,
     group_tag: ex.group_tag,
+    technique: ex.technique,
   }))
 
   const { data, error } = await supabase
@@ -132,6 +133,7 @@ export async function duplicateProgramExercises(
     intensity_pct: ex.intensity_pct,
     tempo: ex.tempo,
     group_tag: ex.group_tag,
+    technique: ex.technique,
   }))
 
   const { data, error } = await supabase

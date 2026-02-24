@@ -22,8 +22,13 @@ import { useFormTour } from "@/hooks/use-form-tour"
 import { FormTour } from "@/components/admin/FormTour"
 import { TourButton } from "@/components/admin/TourButton"
 import { ADD_EXERCISE_TOUR_STEPS } from "@/lib/tour-steps"
-import type { Exercise, ExerciseCategory } from "@/types/database"
+import type { Exercise, ExerciseCategory, ProgramExercise } from "@/types/database"
 import { getCategoryFields } from "@/lib/exercise-fields"
+import {
+  TRAINING_TECHNIQUE_OPTIONS,
+  GROUPED_TECHNIQUES,
+  type TrainingTechniqueOption,
+} from "@/lib/validators/program-exercise"
 
 const FIELD_LABELS: Record<string, string> = {
   sets: "Sets",
@@ -41,6 +46,32 @@ const FIELD_LABELS: Record<string, string> = {
   order_index: "Order",
 }
 
+const TECHNIQUE_CONFIG: Record<TrainingTechniqueOption, { label: string; description: string }> = {
+  straight_set: { label: "Straight Sets", description: "Standard sets with rest between" },
+  superset: { label: "Superset", description: "Two exercises back-to-back, no rest" },
+  dropset: { label: "Drop Set", description: "Reduce weight, continue to failure" },
+  giant_set: { label: "Giant Set", description: "3+ exercises back-to-back" },
+  circuit: { label: "Circuit", description: "4+ exercises with minimal rest" },
+  rest_pause: { label: "Rest-Pause", description: "Set to failure, rest 10-15s, continue" },
+  amrap: { label: "AMRAP", description: "As many reps as possible" },
+}
+
+/** Find the next available group letter (A, B, C...) for the given day's exercises */
+function getNextGroupTag(dayExercises: (ProgramExercise & { exercises: Exercise })[]) {
+  const usedLetters = new Set<string>()
+  for (const pe of dayExercises) {
+    if (pe.group_tag) {
+      const letter = pe.group_tag.charAt(0).toUpperCase()
+      usedLetters.add(letter)
+    }
+  }
+  for (let code = 65; code <= 90; code++) {
+    const letter = String.fromCharCode(code)
+    if (!usedLetters.has(letter)) return `${letter}1`
+  }
+  return "A1"
+}
+
 interface AddExerciseDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -49,6 +80,8 @@ interface AddExerciseDialogProps {
   dayOfWeek: number
   exercises: Exercise[]
   existingCount: number
+  /** All exercises on the same day, used for auto group tag */
+  dayExercises?: (ProgramExercise & { exercises: Exercise })[]
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -120,6 +153,7 @@ export function AddExerciseDialog({
   dayOfWeek,
   exercises,
   existingCount,
+  dayExercises = [],
 }: AddExerciseDialogProps) {
   const router = useRouter()
   const [step, setStep] = useState<1 | 2>(1)
@@ -127,8 +161,19 @@ export function AddExerciseDialog({
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [technique, setTechnique] = useState<TrainingTechniqueOption>("straight_set")
+  const [groupTag, setGroupTag] = useState("")
   const dialogRef = useRef<HTMLDivElement>(null)
   const tour = useFormTour({ steps: ADD_EXERCISE_TOUR_STEPS, scrollContainerRef: dialogRef })
+
+  const needsGroupTag = GROUPED_TECHNIQUES.includes(technique)
+
+  // Find exercises already in the same group for the helper text
+  const groupPeers = groupTag
+    ? dayExercises.filter(
+        (pe) => pe.group_tag && pe.group_tag.charAt(0).toUpperCase() === groupTag.charAt(0).toUpperCase()
+      )
+    : []
 
   function resetAndClose(openState: boolean) {
     if (!openState) {
@@ -137,6 +182,8 @@ export function AddExerciseDialog({
       setSelectedExercise(null)
       setSearch("")
       setCategoryFilter("all")
+      setTechnique("straight_set")
+      setGroupTag("")
     }
     onOpenChange(openState)
   }
@@ -179,6 +226,7 @@ export function AddExerciseDialog({
       week_number: weekNumber,
       day_of_week: dayOfWeek,
       order_index: existingCount,
+      technique,
       sets: setsVal || null,
       reps: repsVal || null,
       rest_seconds: formData.get("rest_seconds") || null,
@@ -187,7 +235,7 @@ export function AddExerciseDialog({
       rpe_target: formData.get("rpe_target") || null,
       intensity_pct: formData.get("intensity_pct") || null,
       tempo: formData.get("tempo") || null,
-      group_tag: formData.get("group_tag") || null,
+      group_tag: needsGroupTag ? (groupTag || null) : null,
     }
 
     try {
@@ -372,19 +420,69 @@ export function AddExerciseDialog({
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    {catFields.showTempo && (
-                      <div className="space-y-2">
-                        <Label htmlFor="tempo">Tempo</Label>
-                        <Input id="tempo" name="tempo" placeholder="e.g. 3-1-2-0" />
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label htmlFor="group_tag">Group Tag (Supersets)</Label>
-                      <Input id="group_tag" name="group_tag" placeholder="e.g. A1" />
-                      <p className="text-xs text-muted-foreground">Same letter = done together (A1 + A2 = superset, B1 + B2 + B3 = tri-set). Leave blank for straight sets.</p>
+                  {/* Technique picker */}
+                  <div className="space-y-2" id="technique-picker">
+                    <Label>Method</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {TRAINING_TECHNIQUE_OPTIONS.map((t) => {
+                        const config = TECHNIQUE_CONFIG[t]
+                        const isSelected = technique === t
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => {
+                              setTechnique(t)
+                              if (GROUPED_TECHNIQUES.includes(t) && !groupTag) {
+                                setGroupTag(getNextGroupTag(dayExercises))
+                              }
+                              if (!GROUPED_TECHNIQUES.includes(t)) {
+                                setGroupTag("")
+                              }
+                            }}
+                            className={`flex flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors ${
+                              isSelected
+                                ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                : "border-border hover:bg-surface/50"
+                            }`}
+                          >
+                            <span className="text-sm font-medium">{config.label}</span>
+                            <span className="text-[11px] text-muted-foreground leading-tight">{config.description}</span>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
+
+                  {/* Group tag — only shown for grouped techniques */}
+                  {needsGroupTag && (
+                    <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                      <Label htmlFor="group_tag">Group Tag</Label>
+                      <Input
+                        id="group_tag"
+                        value={groupTag}
+                        onChange={(e) => setGroupTag(e.target.value.toUpperCase())}
+                        placeholder="e.g. A1"
+                        className="max-w-[100px]"
+                      />
+                      {groupPeers.length > 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          Grouped with: {groupPeers.map((pe) => `${pe.exercises.name} (${pe.group_tag})`).join(", ")}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Use the same letter for exercises done together (A1 + A2 = {TECHNIQUE_CONFIG[technique].label.toLowerCase()}).
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {catFields.showTempo && (
+                    <div className="space-y-2">
+                      <Label htmlFor="tempo">Tempo</Label>
+                      <Input id="tempo" name="tempo" placeholder="e.g. 3-1-2-0" />
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notes</Label>

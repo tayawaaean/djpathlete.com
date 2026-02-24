@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -20,6 +20,11 @@ import { TourButton } from "@/components/admin/TourButton"
 import { EDIT_EXERCISE_TOUR_STEPS } from "@/lib/tour-steps"
 import type { Exercise, ExerciseCategory, ProgramExercise } from "@/types/database"
 import { getCategoryFields } from "@/lib/exercise-fields"
+import {
+  TRAINING_TECHNIQUE_OPTIONS,
+  GROUPED_TECHNIQUES,
+  type TrainingTechniqueOption,
+} from "@/lib/validators/program-exercise"
 
 const FIELD_LABELS: Record<string, string> = {
   sets: "Sets",
@@ -33,11 +38,23 @@ const FIELD_LABELS: Record<string, string> = {
   notes: "Notes",
 }
 
+const TECHNIQUE_CONFIG: Record<TrainingTechniqueOption, { label: string; description: string }> = {
+  straight_set: { label: "Straight Sets", description: "Standard sets with rest between" },
+  superset: { label: "Superset", description: "Two exercises back-to-back, no rest" },
+  dropset: { label: "Drop Set", description: "Reduce weight, continue to failure" },
+  giant_set: { label: "Giant Set", description: "3+ exercises back-to-back" },
+  circuit: { label: "Circuit", description: "4+ exercises with minimal rest" },
+  rest_pause: { label: "Rest-Pause", description: "Set to failure, rest 10-15s, continue" },
+  amrap: { label: "AMRAP", description: "As many reps as possible" },
+}
+
 interface EditExerciseDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   programId: string
   programExercise: (ProgramExercise & { exercises: Exercise }) | null
+  /** All exercises on the same day, used for group tag helper */
+  dayExercises?: (ProgramExercise & { exercises: Exercise })[]
 }
 
 export function EditExerciseDialog({
@@ -45,11 +62,34 @@ export function EditExerciseDialog({
   onOpenChange,
   programId,
   programExercise,
+  dayExercises = [],
 }: EditExerciseDialogProps) {
   const router = useRouter()
   const dialogRef = useRef<HTMLDivElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [technique, setTechnique] = useState<TrainingTechniqueOption>("straight_set")
+  const [groupTag, setGroupTag] = useState("")
   const tour = useFormTour({ steps: EDIT_EXERCISE_TOUR_STEPS, scrollContainerRef: dialogRef })
+
+  const needsGroupTag = GROUPED_TECHNIQUES.includes(technique)
+
+  // Sync state when dialog opens with a new exercise
+  useEffect(() => {
+    if (programExercise) {
+      setTechnique((programExercise.technique as TrainingTechniqueOption) || "straight_set")
+      setGroupTag(programExercise.group_tag || "")
+    }
+  }, [programExercise])
+
+  // Find exercises already in the same group (excluding current exercise)
+  const groupPeers = groupTag
+    ? dayExercises.filter(
+        (pe) =>
+          pe.id !== programExercise?.id &&
+          pe.group_tag &&
+          pe.group_tag.charAt(0).toUpperCase() === groupTag.charAt(0).toUpperCase()
+      )
+    : []
 
   if (!programExercise) return null
 
@@ -59,7 +99,8 @@ export function EditExerciseDialog({
     setIsSubmitting(true)
 
     const formData = new FormData(e.currentTarget)
-    const raw: Record<string, unknown> = {
+    const body: Record<string, unknown> = {
+      technique,
       sets: formData.get("sets") || null,
       reps: formData.get("reps") || null,
       rest_seconds: formData.get("rest_seconds") || null,
@@ -68,12 +109,8 @@ export function EditExerciseDialog({
       rpe_target: formData.get("rpe_target") || null,
       intensity_pct: formData.get("intensity_pct") || null,
       tempo: formData.get("tempo") || null,
-      group_tag: formData.get("group_tag") || null,
+      group_tag: needsGroupTag ? (groupTag || null) : null,
     }
-    // Only send fields that have a value — omit nulls so existing DB values aren't overwritten
-    const body = Object.fromEntries(
-      Object.entries(raw).filter(([, v]) => v !== null)
-    )
 
     try {
       const response = await fetch(
@@ -217,29 +254,74 @@ export function EditExerciseDialog({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                {catFields.showTempo && (
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-tempo">Tempo</Label>
-                    <Input
-                      id="edit-tempo"
-                      name="tempo"
-                      defaultValue={programExercise.tempo ?? ""}
-                      placeholder="e.g. 3-1-2-0"
-                    />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="edit-group-tag">Group Tag (Supersets)</Label>
-                  <Input
-                    id="edit-group-tag"
-                    name="group_tag"
-                    defaultValue={programExercise.group_tag ?? ""}
-                    placeholder="e.g. A1"
-                  />
-                  <p className="text-xs text-muted-foreground">Same letter = done together (A1 + A2 = superset, B1 + B2 + B3 = tri-set). Leave blank for straight sets.</p>
+              {/* Technique picker */}
+              <div className="space-y-2">
+                <Label>Method</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {TRAINING_TECHNIQUE_OPTIONS.map((t) => {
+                    const config = TECHNIQUE_CONFIG[t]
+                    const isSelected = technique === t
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => {
+                          setTechnique(t)
+                          if (GROUPED_TECHNIQUES.includes(t) && !groupTag) {
+                            setGroupTag(programExercise.group_tag || "A1")
+                          }
+                          if (!GROUPED_TECHNIQUES.includes(t)) {
+                            setGroupTag("")
+                          }
+                        }}
+                        className={`flex flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "border-border hover:bg-surface/50"
+                        }`}
+                      >
+                        <span className="text-sm font-medium">{config.label}</span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">{config.description}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
+
+              {/* Group tag — only shown for grouped techniques */}
+              {needsGroupTag && (
+                <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <Label htmlFor="edit-group-tag">Group Tag</Label>
+                  <Input
+                    id="edit-group-tag"
+                    value={groupTag}
+                    onChange={(e) => setGroupTag(e.target.value.toUpperCase())}
+                    placeholder="e.g. A1"
+                    className="max-w-[100px]"
+                  />
+                  {groupPeers.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Grouped with: {groupPeers.map((pe) => `${pe.exercises.name} (${pe.group_tag})`).join(", ")}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Use the same letter for exercises done together (A1 + A2 = {TECHNIQUE_CONFIG[technique].label.toLowerCase()}).
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {catFields.showTempo && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tempo">Tempo</Label>
+                  <Input
+                    id="edit-tempo"
+                    name="tempo"
+                    defaultValue={programExercise.tempo ?? ""}
+                    placeholder="e.g. 3-1-2-0"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="edit-notes">Notes</Label>

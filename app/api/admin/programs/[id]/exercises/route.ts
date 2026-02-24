@@ -21,7 +21,6 @@ export async function POST(
 
     const programExercise = await addExerciseToProgram({
       program_id: id,
-      technique: "straight_set",
       ...result.data,
     })
 

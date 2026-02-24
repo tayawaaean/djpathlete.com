@@ -4,7 +4,13 @@ import Image from "next/image"
 import { ChevronUp, ChevronDown, Pencil, Trash2, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { extractYouTubeId, getYouTubeThumbnailUrl } from "@/lib/youtube"
-import type { Exercise, ProgramExercise } from "@/types/database"
+import type { Exercise, ProgramExercise, TrainingTechnique } from "@/types/database"
+
+const TECHNIQUE_BADGE_LABELS: Partial<Record<TrainingTechnique, string>> = {
+  dropset: "Drop Set",
+  rest_pause: "Rest-Pause",
+  amrap: "AMRAP",
+}
 
 interface ExerciseCardProps {
   programExercise: ProgramExercise & { exercises: Exercise }
@@ -78,6 +84,13 @@ export function ExerciseCard({
             {programExercise.group_tag && (
               <span className="shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary">
                 {programExercise.group_tag}
+              </span>
+            )}
+            {programExercise.technique &&
+              programExercise.technique !== "straight_set" &&
+              TECHNIQUE_BADGE_LABELS[programExercise.technique as TrainingTechnique] && (
+              <span className="shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-accent/20 text-accent-foreground">
+                {TECHNIQUE_BADGE_LABELS[programExercise.technique as TrainingTechnique]}
               </span>
             )}
           </div>
