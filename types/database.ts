@@ -28,6 +28,12 @@ export type AchievementType = "pr" | "streak" | "milestone" | "completion"
 export type PrType = "weight" | "reps" | "volume" | "estimated_1rm"
 export type TargetMetric = "weight" | "reps" | "time"
 
+// Assessment engine types
+export type AssessmentSection = "movement_screen" | "background" | "context" | "preferences"
+export type AssessmentQuestionType = "yes_no" | "single_select" | "multi_select" | "number" | "text"
+export type AssessmentType = "initial" | "reassessment"
+export type AbilityLevel = "beginner" | "intermediate" | "advanced" | "elite"
+
 export interface SetDetail {
   set_number: number
   weight_kg: number | null
@@ -310,6 +316,43 @@ export interface NotificationPreferences {
   updated_at: string
 }
 
+export interface AssessmentQuestion {
+  id: string
+  section: AssessmentSection
+  movement_pattern: string | null
+  question_text: string
+  question_type: AssessmentQuestionType
+  options: { value: string; label: string }[] | null
+  parent_question_id: string | null
+  parent_answer: string | null
+  level_impact: Record<string, number> | null
+  order_index: number
+  is_active: boolean
+  created_at: string
+}
+
+export interface ComputedLevels {
+  overall: AbilityLevel
+  squat: AbilityLevel
+  push: AbilityLevel
+  pull: AbilityLevel
+  hinge: AbilityLevel
+}
+
+export interface AssessmentResult {
+  id: string
+  user_id: string
+  assessment_type: AssessmentType
+  answers: Record<string, string>
+  computed_levels: ComputedLevels
+  max_difficulty_score: number
+  triggered_program_id: string | null
+  previous_assessment_id: string | null
+  feedback: Record<string, unknown> | null
+  completed_at: string
+  created_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -387,6 +430,16 @@ export interface Database {
         Row: Achievement
         Insert: Omit<Achievement, "id" | "created_at">
         Update: Partial<Omit<Achievement, "id" | "created_at">>
+      }
+      assessment_questions: {
+        Row: AssessmentQuestion
+        Insert: Omit<AssessmentQuestion, "id" | "created_at">
+        Update: Partial<Omit<AssessmentQuestion, "id" | "created_at">>
+      }
+      assessment_results: {
+        Row: AssessmentResult
+        Insert: Omit<AssessmentResult, "id" | "created_at">
+        Update: Partial<Omit<AssessmentResult, "id" | "created_at">>
       }
     }
   }
