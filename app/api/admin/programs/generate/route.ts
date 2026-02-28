@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     // Dev mode: run synchronously (existing behavior)
     if (process.env.NODE_ENV === "development") {
-      console.log("[generate] Dev mode: running synchronous pipeline for client:", result.data.client_id)
+      console.log("[generate] Dev mode: running synchronous pipeline for client:", result.data.client_id ?? "none (generic)")
       const startTime = Date.now()
 
       const orchestrationResult = await generateProgramSync(
@@ -60,11 +60,11 @@ export async function POST(request: Request) {
     }
 
     // Production: create log and enqueue background job
-    console.log("[generate] Creating generation log and enqueueing Cloud Task for client:", result.data.client_id)
+    console.log("[generate] Creating generation log and enqueueing Cloud Task for client:", result.data.client_id ?? "none (generic)")
 
     const log = await createGenerationLog({
       program_id: null,
-      client_id: result.data.client_id,
+      client_id: result.data.client_id ?? null,
       requested_by: session.user.id,
       status: "pending",
       input_params: result.data as unknown as Record<string, unknown>,

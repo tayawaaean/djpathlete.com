@@ -1,8 +1,23 @@
 import { requireAdmin } from "@/lib/auth-helpers"
+import { getUserById } from "@/lib/db/users"
 import { AdminLayout } from "@/components/admin/AdminLayout"
 
 export default async function AdminRootLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin()
+  const session = await requireAdmin()
 
-  return <AdminLayout>{children}</AdminLayout>
+  let avatarUrl: string | null = null
+  let initials = "A"
+  try {
+    const user = await getUserById(session.user.id)
+    avatarUrl = user.avatar_url ?? null
+    initials = `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+  } catch {
+    // Fall through with defaults
+  }
+
+  return (
+    <AdminLayout avatarUrl={avatarUrl} initials={initials}>
+      {children}
+    </AdminLayout>
+  )
 }

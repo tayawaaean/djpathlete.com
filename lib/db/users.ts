@@ -67,6 +67,12 @@ export async function updateUser(id: string, updates: Partial<User>) {
   return data as User
 }
 
+export async function deleteUser(id: string) {
+  const supabase = getClient()
+  const { error } = await supabase.from("users").delete().eq("id", id)
+  if (error) throw error
+}
+
 export async function getClients() {
   const supabase = getClient()
   const { data, error } = await supabase

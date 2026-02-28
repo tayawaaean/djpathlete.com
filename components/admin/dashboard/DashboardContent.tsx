@@ -8,6 +8,7 @@ import { RevenueChart } from "./RevenueChart"
 import { EngagementSnapshot } from "./EngagementSnapshot"
 import { ActivityFeed, type ActivityItem } from "./ActivityFeed"
 import { HorizontalBar } from "@/components/admin/analytics/HorizontalBar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   Users,
   Dumbbell,
@@ -22,6 +23,7 @@ interface RecentClient {
   email: string
   createdAt: string
   status: string
+  avatarUrl: string | null
 }
 
 interface ProgramPopularity {
@@ -175,9 +177,14 @@ export function DashboardContent({
                   key={client.id}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-surface/30 transition-colors"
                 >
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                    {getInitials(client.firstName, client.lastName)}
-                  </div>
+                  <Avatar>
+                    {client.avatarUrl && (
+                      <AvatarImage src={client.avatarUrl} alt={`${client.firstName} ${client.lastName}`} />
+                    )}
+                    <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
+                      {getInitials(client.firstName, client.lastName)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
                       {client.firstName} {client.lastName}

@@ -1,8 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
-
 export default function Error({
   error,
   reset,
@@ -45,12 +43,12 @@ export default function Error({
           >
             Try Again
           </button>
-          <Link
-            href="/"
+          <button
+            onClick={() => window.location.replace("/?_r=" + Date.now())}
             className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
           >
             Go Home
-          </Link>
+          </button>
         </div>
       </div>
     </div>

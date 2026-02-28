@@ -214,7 +214,7 @@ export function AiUsageDashboard() {
         <div className="bg-white rounded-xl border border-border p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="flex size-9 items-center justify-center rounded-lg bg-accent/20">
-              <DollarSign className="size-4 text-accent-foreground" />
+              <DollarSign className="size-4 text-accent" />
             </div>
             <p className="text-sm text-muted-foreground" title="Estimated total cost based on Claude API token pricing">Est. Cost</p>
           </div>

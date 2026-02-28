@@ -1,15 +1,29 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { getUserById } from "@/lib/db/users"
 import { Button } from "@/components/ui/button"
-import { Mail, Lock, Trash2, Scale } from "lucide-react"
+import { Lock, Trash2, Scale } from "lucide-react"
+import { ChangePasswordButton } from "@/components/shared/ChangePasswordButton"
+import { AccountInfoForm } from "@/components/shared/AccountInfoForm"
 import { WeightUnitToggle } from "@/components/client/WeightUnitToggle"
 import { NotificationToggles } from "@/components/client/NotificationToggles"
+import { AvatarUpload } from "@/components/shared/AvatarUpload"
 
 export const metadata = { title: "Settings | DJP Athlete" }
 
 export default async function ClientSettingsPage() {
   const session = await auth()
   if (!session?.user) redirect("/login")
+
+  const userId = session.user.id
+  const dbUser = await getUserById(userId)
+  const name = `${dbUser.first_name} ${dbUser.last_name}`.trim()
+  const initials = name
+    .split(" ")
+    .map((n) => n.charAt(0))
+    .join("")
+    .toUpperCase() || "U"
+  const avatarUrl = dbUser.avatar_url ?? null
 
   return (
     <div>
@@ -23,20 +37,28 @@ export default async function ClientSettingsPage() {
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center size-9 rounded-full bg-primary/10">
-                <Mail className="size-4 text-primary" strokeWidth={1.5} />
-              </div>
+            <div className="flex items-center gap-4">
+              <AvatarUpload
+                currentUrl={avatarUrl}
+                userId={userId}
+                initials={initials}
+              />
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Email Address
+                  Profile Photo
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {session.user.email}
+                  JPEG, PNG, WebP, or GIF. Max 2 MB.
                 </p>
               </div>
             </div>
           </div>
+
+          <AccountInfoForm
+            initialFirstName={dbUser.first_name}
+            initialLastName={dbUser.last_name}
+            initialEmail={dbUser.email}
+          />
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -46,13 +68,11 @@ export default async function ClientSettingsPage() {
               <div>
                 <p className="text-sm font-medium text-foreground">Password</p>
                 <p className="text-xs text-muted-foreground">
-                  Change your account password
+                  A password reset link will be sent to your email.
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" disabled>
-              Change Password
-            </Button>
+            <ChangePasswordButton email={dbUser.email} />
           </div>
         </div>
       </div>

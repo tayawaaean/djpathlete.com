@@ -21,41 +21,49 @@ export async function POST(
       )
     }
 
-    const existing = await getAssignmentByUserAndProgram(result.data.user_id, id)
-    if (existing && existing.status === "active") {
-      return NextResponse.json(
-        { error: "This client already has an active assignment for this program." },
-        { status: 409 }
-      )
-    }
-
-    // Fetch program to get duration_weeks for total_weeks tracking
     const programData = await getProgramById(id)
+    const { user_ids, start_date, notes } = result.data
 
-    const assignment = await createAssignment({
-      program_id: id,
-      user_id: result.data.user_id,
-      start_date: result.data.start_date,
-      notes: result.data.notes ?? null,
-      assigned_by: null,
-      end_date: null,
-      status: "active",
-      current_week: 1,
-      total_weeks: programData.duration_weeks ?? null,
-    })
+    let assigned = 0
+    let skipped = 0
+    const errors: string[] = []
 
-    // Send email notification
-    try {
-      const [client, program] = await Promise.all([
-        getUserById(result.data.user_id),
-        getProgramById(id),
-      ])
-      await sendProgramReadyEmail(client.email, client.first_name, program.name)
-    } catch (emailError) {
-      console.error("[assign] Failed to send email:", emailError)
+    for (const userId of user_ids) {
+      try {
+        const existing = await getAssignmentByUserAndProgram(userId, id)
+        if (existing && existing.status === "active") {
+          skipped++
+          continue
+        }
+
+        await createAssignment({
+          program_id: id,
+          user_id: userId,
+          start_date,
+          notes: notes ?? null,
+          assigned_by: null,
+          end_date: null,
+          status: "active",
+          current_week: 1,
+          total_weeks: programData.duration_weeks ?? null,
+        })
+
+        assigned++
+
+        // Send email notification (non-blocking per client)
+        try {
+          const client = await getUserById(userId)
+          await sendProgramReadyEmail(client.email, client.first_name, programData.name, userId)
+        } catch (emailError) {
+          console.error(`[assign] Failed to send email to ${userId}:`, emailError)
+        }
+      } catch (err) {
+        errors.push(`Failed to assign to user ${userId}`)
+        console.error(`[assign] Error for user ${userId}:`, err)
+      }
     }
 
-    return NextResponse.json(assignment, { status: 201 })
+    return NextResponse.json({ assigned, skipped, errors }, { status: 201 })
   } catch {
     return NextResponse.json(
       { error: "Failed to assign program. Please try again." },

@@ -65,7 +65,7 @@ const MOVEMENT_PATTERNS = [
 const TYPE_COLORS: Record<string, string> = {
   yes_no: "bg-success/10 text-success",
   single_select: "bg-primary/10 text-primary",
-  multi_select: "bg-accent/10 text-accent-foreground",
+  multi_select: "bg-accent/15 text-accent",
   number: "bg-warning/10 text-warning",
   text: "bg-muted text-muted-foreground",
 }

@@ -31,12 +31,14 @@ export async function getPaymentByStripeId(stripePaymentId: string) {
   return data as Payment | null
 }
 
-export async function getPaymentsWithDetails() {
+export async function getPaymentsWithDetails(limit?: number) {
   const supabase = getClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("payments")
     .select("*, users(first_name, last_name, email)")
     .order("created_at", { ascending: false })
+  if (limit) query = query.limit(limit)
+  const { data, error } = await query
   if (error) throw error
   return data as (Payment & {
     users: { first_name: string; last_name: string; email: string } | null

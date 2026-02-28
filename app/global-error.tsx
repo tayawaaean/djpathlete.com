@@ -92,8 +92,8 @@ export default function GlobalError({
             >
               Try Again
             </button>
-            <a
-              href="/"
+            <button
+              onClick={() => window.location.replace("/?_r=" + Date.now())}
               style={{
                 background: "transparent",
                 color: "#1A1A1A",
@@ -102,13 +102,13 @@ export default function GlobalError({
                 borderRadius: "9999px",
                 fontSize: "0.875rem",
                 fontWeight: 500,
-                textDecoration: "none",
+                cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
               }}
             >
               Go Home
-            </a>
+            </button>
           </div>
         </div>
       </body>

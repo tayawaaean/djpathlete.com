@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Sparkles,
   Loader2,
@@ -17,10 +18,13 @@ import {
   Lock,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Dumbbell,
   Target,
   ClipboardList,
   Info,
+  UserPlus,
 } from "lucide-react"
 import {
   Dialog,
@@ -40,6 +44,7 @@ import { cn } from "@/lib/utils"
 import {
   SPLIT_TYPES,
   PERIODIZATION_TYPES,
+  PROGRAM_TIERS,
 } from "@/lib/validators/program"
 import {
   FITNESS_GOALS,
@@ -64,7 +69,8 @@ import {
 import { useFormTour } from "@/hooks/use-form-tour"
 import { FormTour } from "@/components/admin/FormTour"
 import { TourButton } from "@/components/admin/TourButton"
-import { AI_GENERATE_TOUR_STEPS } from "@/lib/tour-steps"
+import { getAiGenerateTourSteps } from "@/lib/tour-steps"
+import { AssignProgramDialog } from "@/components/admin/AssignProgramDialog"
 import type { User, ClientProfile } from "@/types/database"
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -87,8 +93,18 @@ const PERIODIZATION_LABELS: Record<string, string> = {
   none: "None",
 }
 
+const TIER_LABELS: Record<string, string> = {
+  generalize: "Generalize",
+  premium: "Premium",
+}
+
+const TIER_DESCRIPTIONS: Record<string, string> = {
+  generalize: "Workout logging only, no coach interaction",
+  premium: "Includes AI coaching feedback from DJP",
+}
+
 const PROGRESS_MESSAGES = [
-  { stage: 0, message: "Analyzing client profile...", icon: Brain },
+  { stage: 0, message: "Analyzing training parameters...", icon: Brain },
   { stage: 1, message: "Designing program structure...", icon: Sparkles },
   { stage: 2, message: "Selecting exercises...", icon: Zap },
   { stage: 3, message: "Validating program...", icon: CheckCircle2 },
@@ -97,18 +113,28 @@ const PROGRESS_MESSAGES = [
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 
+const STEPS = [
+  { label: "Client", number: 1 },
+  { label: "Goals", number: 2 },
+  { label: "Settings", number: 3 },
+] as const
+
+const stepVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
+}
+
 /**
  * Make validation issue messages more human-readable:
  * - "w3d2s4" → "Week 3, Day 2, Exercise 4"
  * - "leg_curl_machine" → "Leg Curl Machine"
  */
 function formatIssueMessage(message: string): string {
-  // Replace slot references like "w3d2s4" or "slot w3d2s4"
   let formatted = message.replace(
     /\b(?:slot\s+)?w(\d+)d(\d+)s(\d+)\b/gi,
     (_match, week, day, slot) => `Week ${week}, Day ${day}, Exercise ${slot}`
   )
-  // Replace snake_case equipment/exercise names (only sequences of word_word)
   formatted = formatted.replace(
     /\b(?:requires\s+)(\w+(?:_\w+)+)\b/g,
     (_match, name: string) =>
@@ -158,8 +184,13 @@ interface GenerationResult {
 
 export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) {
   const router = useRouter()
+  const dialogRef = useRef<HTMLDivElement>(null)
   const [clients, setClients] = useState<User[]>([])
   const [loadingClients, setLoadingClients] = useState(false)
+
+  // Wizard state
+  const [step, setStep] = useState(0)
+  const [direction, setDirection] = useState(1)
 
   // Form state
   const [clientId, setClientId] = useState("")
@@ -170,10 +201,8 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   const [splitType, setSplitType] = useState("")
   const [periodization, setPeriodization] = useState("")
   const [additionalInstructions, setAdditionalInstructions] = useState("")
+  const [selectedTier, setSelectedTier] = useState<string>("generalize")
   const [isPublic, setIsPublic] = useState(false)
-
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const tour = useFormTour({ steps: AI_GENERATE_TOUR_STEPS, scrollContainerRef: dialogRef })
 
   // Profile state
   const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(null)
@@ -185,29 +214,41 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   const [progressStage, setProgressStage] = useState(0)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showAssign, setShowAssign] = useState(false)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Fetch clients when dialog opens
+  // Tour
+  const stepRef = useRef(step)
+  stepRef.current = step
+
+  const tourGoToStep = useCallback((target: number) => {
+    setDirection(target > stepRef.current ? 1 : -1)
+    setStep(target)
+  }, [])
+
+  const tourSteps = useMemo(() => getAiGenerateTourSteps(tourGoToStep), [tourGoToStep])
+
+  const tour = useFormTour({ steps: tourSteps, scrollContainerRef: dialogRef })
+
+  // ─── Data fetching ────────────────────────────────────────────────────────
+
   const fetchClients = useCallback(async () => {
     setLoadingClients(true)
     try {
-      // Use the existing server-rendered data approach - fetch users with client role
       const response = await fetch("/api/admin/users?role=client")
       if (response.ok) {
         const data = await response.json()
         setClients(data.users ?? data ?? [])
       }
     } catch {
-      // Silently fail — clients list will be empty
+      // Silently fail
     } finally {
       setLoadingClients(false)
     }
   }, [])
 
   useEffect(() => {
-    if (open) {
-      fetchClients()
-    }
+    if (open) fetchClients()
   }, [open, fetchClients])
 
   // Fetch profile when client is selected
@@ -237,8 +278,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         if (cancelled) return
 
         const summary = parseProfileSummary(data.profile)
-
-        // Check if there's meaningful questionnaire data
         const hasData =
           summary.goals.length > 0 ||
           summary.preferredTrainingDays !== null ||
@@ -254,20 +293,11 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         setProfileStatus("found")
         setSummaryExpanded(true)
 
-        // Auto-populate form fields from questionnaire
-        if (summary.goals.length > 0) {
-          setGoals(summary.goals)
-        }
-        if (summary.preferredTrainingDays !== null) {
-          setSessionsPerWeek(summary.preferredTrainingDays)
-        }
-        if (summary.preferredSessionMinutes !== null) {
-          setSessionMinutes(summary.preferredSessionMinutes)
-        }
+        if (summary.goals.length > 0) setGoals(summary.goals)
+        if (summary.preferredTrainingDays !== null) setSessionsPerWeek(summary.preferredTrainingDays)
+        if (summary.preferredSessionMinutes !== null) setSessionMinutes(summary.preferredSessionMinutes)
       } catch {
-        if (!cancelled) {
-          setProfileStatus("not_found")
-        }
+        if (!cancelled) setProfileStatus("not_found")
       }
     }
 
@@ -275,13 +305,54 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     return () => { cancelled = true }
   }, [clientId])
 
-  // Clean up polling on unmount
   useEffect(() => {
     return () => stopPolling()
   }, [])
 
+  // ─── Navigation ───────────────────────────────────────────────────────────
+
+  function validateStep(s: number): boolean {
+    if (s === 0) {
+      if (clientId && profileStatus === "loading") { toast.error("Still loading questionnaire..."); return false }
+    }
+    if (s === 1) {
+      if (goals.length === 0) { toast.error("Please select at least one goal"); return false }
+      if (!durationWeeks || durationWeeks < 1) { toast.error("Duration must be at least 1 week"); return false }
+      if (!sessionsPerWeek || sessionsPerWeek < 1) { toast.error("Sessions per week must be at least 1"); return false }
+    }
+    return true
+  }
+
+  function scrollToTop() {
+    dialogRef.current?.scrollTo({ top: 0 })
+  }
+
+  function handleNext() {
+    if (!validateStep(step)) return
+    setDirection(1)
+    setStep((s) => Math.min(s + 1, 2))
+    scrollToTop()
+  }
+
+  function handleBack() {
+    setDirection(-1)
+    setStep((s) => Math.max(s - 1, 0))
+    scrollToTop()
+  }
+
+  function goToStep(target: number) {
+    if (target >= step) return
+    setDirection(-1)
+    setStep(target)
+    scrollToTop()
+  }
+
+  // ─── Form helpers ─────────────────────────────────────────────────────────
+
   function resetForm() {
     stopPolling()
+    setStep(0)
+    setDirection(1)
     setClientId("")
     setGoals([])
     setDurationWeeks(4)
@@ -290,24 +361,22 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     setSplitType("")
     setPeriodization("")
     setAdditionalInstructions("")
+    setSelectedTier("generalize")
     setIsPublic(false)
     setProfileSummary(null)
     setProfileStatus("idle")
     setSummaryExpanded(false)
     setResult(null)
     setError(null)
+    setShowAssign(false)
     setIsGenerating(false)
     setProgressStage(0)
+    tour.close()
   }
 
   function handleOpenChange(newOpen: boolean) {
-    if (!newOpen && !isGenerating) {
-      tour.close()
-      resetForm()
-    }
-    if (!isGenerating) {
-      onOpenChange(newOpen)
-    }
+    if (!newOpen && !isGenerating) resetForm()
+    if (!isGenerating) onOpenChange(newOpen)
   }
 
   function toggleGoal(goal: string) {
@@ -324,8 +393,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   }
 
   function mapStepToStage(status: string, currentStep: number): number {
-    // Map backend steps to progress stages:
-    // pending → 0, step_1 → 0-1, step_2 → 2, step_3 → 3, completed → 3
     if (status === "pending") return 0
     if (status === "step_1") return currentStep >= 1 ? 1 : 0
     if (status === "step_2") return 2
@@ -361,21 +428,14 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         toast.error("Program generation failed")
       }
     } catch {
-      // Silently retry on network errors — polling will continue
+      // Silently retry
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  // ─── Submit ───────────────────────────────────────────────────────────────
 
-    if (!clientId) {
-      toast.error("Please select a client")
-      return
-    }
-    if (goals.length === 0) {
-      toast.error("Please select at least one goal")
-      return
-    }
+  async function handleSubmit() {
+    if (goals.length === 0) { toast.error("Please select at least one goal"); return }
 
     setIsGenerating(true)
     setError(null)
@@ -384,7 +444,7 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
 
     try {
       const body: Record<string, unknown> = {
-        client_id: clientId,
+        client_id: clientId || null,
         goals,
         duration_weeks: durationWeeks,
         sessions_per_week: sessionsPerWeek,
@@ -392,6 +452,7 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
       }
 
       body.is_public = isPublic
+      body.tier = selectedTier
       if (splitType) body.split_type = splitType
       if (periodization) body.periodization = periodization
       if (additionalInstructions.trim()) {
@@ -413,22 +474,17 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         throw new Error(data.error || "Failed to generate program")
       }
 
-      // Check if this is a synchronous response (dev mode, status 201)
-      // or an async response (production, status 202)
       if (response.status === 201) {
-        // Dev mode: synchronous result
         setResult(data as GenerationResult)
         setIsGenerating(false)
         toast.success("Program generated successfully!")
         router.refresh()
       } else if (response.status === 202 && data.log_id) {
-        // Production: start polling
         const logId = data.log_id as string
         pollingRef.current = setInterval(() => pollStatus(logId), 3000)
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred"
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
       setError(message)
       setIsGenerating(false)
       toast.error("Program generation failed")
@@ -436,16 +492,30 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     }
   }
 
-  // ─── Rendering ─────────────────────────────────────────────────────────────
+  // ─── Rendering ────────────────────────────────────────────────────────────
+
+  // Success — assign step
+  if (result && showAssign) {
+    return (
+      <AssignProgramDialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowAssign(false)
+            handleOpenChange(false)
+          }
+        }}
+        programId={result.program_id}
+        clients={clients as User[]}
+        assignedUserIds={[]}
+      />
+    )
+  }
 
   // Success result view
   if (result) {
-    const warningCount = result.validation.issues.filter(
-      (i) => i.type === "warning"
-    ).length
-    const errorCount = result.validation.issues.filter(
-      (i) => i.type === "error"
-    ).length
+    const warningCount = result.validation.issues.filter((i) => i.type === "warning").length
+    const errorCount = result.validation.issues.filter((i) => i.type === "error").length
 
     return (
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -459,7 +529,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Validation status */}
             <div className="flex items-center gap-2 flex-wrap">
               {result.validation.pass ? (
                 <Badge className="bg-success/10 text-success border-success/20">
@@ -482,7 +551,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               )}
             </div>
 
-            {/* Warnings list */}
             {result.validation.issues.length > 0 && (
               <div className="rounded-lg border border-border p-3 space-y-2 max-h-40 overflow-y-auto">
                 {result.validation.issues.map((issue, idx) => (
@@ -498,7 +566,6 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               </div>
             )}
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="rounded-lg bg-surface/50 border border-border p-3">
                 <div className="text-xs text-muted-foreground">Tokens Used</div>
@@ -525,10 +592,12 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Close
             </Button>
+            <Button variant="outline" onClick={() => setShowAssign(true)}>
+              <UserPlus className="size-4" />
+              Assign to Clients
+            </Button>
             <Link href={`/admin/programs/${result.program_id}`}>
-              <Button>
-                View Program
-              </Button>
+              <Button>View Program</Button>
             </Link>
           </DialogFooter>
         </DialogContent>
@@ -561,15 +630,12 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               </p>
             </div>
 
-            {/* Progress indicators */}
             <div className="flex items-center gap-2">
               {PROGRESS_MESSAGES.map((msg, idx) => (
                 <div
                   key={idx}
                   className={`size-2 rounded-full transition-colors ${
-                    idx <= progressStage
-                      ? "bg-primary"
-                      : "bg-muted"
+                    idx <= progressStage ? "bg-primary" : "bg-muted"
                   }`}
                 />
               ))}
@@ -585,492 +651,675 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     )
   }
 
-  // Form view
+  // ─── Wizard form ──────────────────────────────────────────────────────────
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent ref={dialogRef} className="sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <DialogTitle className="flex items-center gap-2">
+      <DialogContent
+        ref={dialogRef}
+        className={cn(
+          "sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden",
+          tour.isActive && "pb-48"
+        )}
+      >
+        {/* Header */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-1.5">
+            <DialogTitle className="flex items-center gap-2 text-lg font-heading font-semibold text-foreground">
               <Sparkles className="size-5 text-accent" />
               AI Program Generator
             </DialogTitle>
             <TourButton onClick={tour.start} />
           </div>
-          <DialogDescription>
-            Generate a complete training program using AI. Select a client and
-            configure the program parameters below.
-          </DialogDescription>
-        </DialogHeader>
 
-        {/* Error banner */}
-        {error && (
-          <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2">
-            <XCircle className="size-4 text-destructive shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-destructive">
-                Generation Failed
-              </p>
-              <p className="text-xs text-destructive/80">{error}</p>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Client select */}
-          <div className="space-y-2">
-            <Label htmlFor="ai-client">Client *</Label>
-            <select
-              id="ai-client"
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              required
-              disabled={loadingClients}
-              className={selectClass}
-            >
-              <option value="" disabled>
-                {loadingClients ? "Loading clients..." : "Select a client"}
-              </option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.first_name} {client.last_name} ({client.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Profile status banners */}
-          {profileStatus === "loading" && (
-            <div className="rounded-lg bg-surface/50 border border-border p-3 flex items-center gap-2">
-              <Loader2 className="size-4 text-muted-foreground animate-spin" />
-              <p className="text-sm text-muted-foreground">
-                Loading questionnaire data...
-              </p>
-            </div>
-          )}
-
-          {profileStatus === "not_found" && (
-            <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
-              <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-warning">
-                  No questionnaire data
-                </p>
-                <p className="text-xs text-warning/80">
-                  This client hasn&apos;t completed their questionnaire. You&apos;ll need to configure all fields manually.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Questionnaire summary panel */}
-          {profileStatus === "found" && profileSummary && (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 overflow-hidden">
+          {/* Step indicator */}
+          <div className="flex items-center gap-2">
+            {STEPS.map((s, idx) => (
               <button
+                key={s.label}
                 type="button"
-                onClick={() => setSummaryExpanded((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+                onClick={() => goToStep(idx)}
+                disabled={idx > step}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                  idx === step
+                    ? "bg-primary text-primary-foreground"
+                    : idx < step
+                      ? "bg-primary/10 text-primary cursor-pointer hover:bg-primary/20"
+                      : "bg-muted text-muted-foreground cursor-default"
+                )}
               >
-                <span className="flex items-center gap-2">
-                  <ClipboardList className="size-4" />
-                  Questionnaire Summary
-                  <Badge variant="outline" className="text-xs px-1.5 py-0 border-primary/30 text-primary">
-                    Auto-filled
-                  </Badge>
+                <span className={cn(
+                  "flex items-center justify-center size-4 rounded-full text-[10px] font-bold",
+                  idx === step
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : idx < step
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted-foreground/20 text-muted-foreground"
+                )}>
+                  {idx < step ? "\u2713" : s.number}
                 </span>
-                {summaryExpanded ? (
-                  <ChevronUp className="size-4" />
-                ) : (
-                  <ChevronDown className="size-4" />
-                )}
+                {s.label}
               </button>
-
-              {summaryExpanded && (
-                <div className="px-3 pb-3 border-t border-primary/10">
-                  <Tabs defaultValue="profile" className="pt-2">
-                    <TabsList className="w-full">
-                      <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
-                      <TabsTrigger value="training" className="text-xs">Training</TabsTrigger>
-                      <TabsTrigger value="schedule" className="text-xs">Schedule</TabsTrigger>
-                      <TabsTrigger value="preferences" className="text-xs">Preferences</TabsTrigger>
-                    </TabsList>
-
-                    {/* Profile tab: About You + Recovery & Lifestyle */}
-                    <TabsContent value="profile" className="space-y-2 pt-2">
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                        {profileSummary.dateOfBirth && (
-                          <SummaryField label="Birth Year" value={profileSummary.dateOfBirth.slice(0, 4)} />
-                        )}
-                        {profileSummary.gender && (
-                          <SummaryField label="Gender" value={GENDER_LABELS[profileSummary.gender] ?? profileSummary.gender} />
-                        )}
-                        {profileSummary.sport && (
-                          <SummaryField label="Sport" value={profileSummary.sport} />
-                        )}
-                        {profileSummary.position && (
-                          <SummaryField label="Position" value={profileSummary.position} />
-                        )}
-                      </div>
-
-                      {/* Recovery & lifestyle */}
-                      {(profileSummary.sleepHours || profileSummary.stressLevel || profileSummary.occupationActivityLevel) && (
-                        <>
-                          <p className="text-xs font-medium text-muted-foreground pt-1">Recovery & Lifestyle</p>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            {profileSummary.sleepHours && (
-                              <SummaryField label="Sleep" value={SLEEP_LABELS[profileSummary.sleepHours] ?? profileSummary.sleepHours} />
-                            )}
-                            {profileSummary.stressLevel && (
-                              <SummaryField label="Stress" value={STRESS_LABELS[profileSummary.stressLevel] ?? profileSummary.stressLevel} />
-                            )}
-                            {profileSummary.occupationActivityLevel && (
-                              <SummaryField label="Occupation" value={OCCUPATION_LABELS[profileSummary.occupationActivityLevel] ?? profileSummary.occupationActivityLevel} />
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </TabsContent>
-
-                    {/* Training tab: Level, History, Injuries, Equipment */}
-                    <TabsContent value="training" className="space-y-2 pt-2">
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                        {profileSummary.experienceLevel && (
-                          <SummaryField label="Experience" value={LEVEL_LABELS[profileSummary.experienceLevel] ?? profileSummary.experienceLevel} />
-                        )}
-                        {profileSummary.movementConfidence && (
-                          <SummaryField label="Movement Confidence" value={MOVEMENT_CONFIDENCE_LABELS[profileSummary.movementConfidence] ?? profileSummary.movementConfidence} />
-                        )}
-                        {profileSummary.trainingYears !== null && (
-                          <SummaryField label="Training Years" value={`${profileSummary.trainingYears} year${profileSummary.trainingYears !== 1 ? "s" : ""}`} />
-                        )}
-                      </div>
-
-                      {profileSummary.trainingBackground && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Training Background</p>
-                          <p className="text-sm">{profileSummary.trainingBackground}</p>
-                        </div>
-                      )}
-
-                      {/* Injuries */}
-                      {(profileSummary.injuries || profileSummary.injuryDetails.length > 0) && (
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                            <AlertTriangle className="size-3" />
-                            Injuries & Limitations
-                          </p>
-                          {profileSummary.injuries && (
-                            <p className="text-sm">{profileSummary.injuries}</p>
-                          )}
-                          {profileSummary.injuryDetails.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {profileSummary.injuryDetails.map((injury, i) => (
-                                <Badge key={i} variant="outline" className="text-xs gap-1 border-warning/30 text-warning">
-                                  {injury.area}
-                                  {injury.side ? ` (${injury.side})` : ""}
-                                  {injury.severity ? ` - ${injury.severity}` : ""}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Equipment */}
-                      {profileSummary.availableEquipment.length > 0 && (
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                            <Dumbbell className="size-3" />
-                            Available Equipment
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {profileSummary.availableEquipment.map((eq) => (
-                              <Badge key={eq} variant="outline" className="text-xs border-border">
-                                {EQUIPMENT_LABELS[eq] ?? eq}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    {/* Schedule tab */}
-                    <TabsContent value="schedule" className="space-y-2 pt-2">
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                        {profileSummary.preferredTrainingDays !== null && (
-                          <SummaryField label="Sessions/Week" value={String(profileSummary.preferredTrainingDays)} />
-                        )}
-                        {profileSummary.preferredSessionMinutes !== null && (
-                          <SummaryField label="Session Length" value={`${profileSummary.preferredSessionMinutes} min`} />
-                        )}
-                      </div>
-
-                      {profileSummary.preferredDayNames.length > 0 && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Preferred Days</p>
-                          <div className="flex flex-wrap gap-1">
-                            {profileSummary.preferredDayNames.map((dayNum) => (
-                              <Badge key={dayNum} variant="outline" className="text-xs border-border">
-                                {DAY_NAMES[dayNum - 1] ?? `Day ${dayNum}`}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {profileSummary.timeEfficiencyPreference && (
-                        <SummaryField label="Time Efficiency" value={TIME_EFFICIENCY_LABELS[profileSummary.timeEfficiencyPreference] ?? profileSummary.timeEfficiencyPreference} />
-                      )}
-                    </TabsContent>
-
-                    {/* Preferences tab: Techniques, Likes/Dislikes, Notes */}
-                    <TabsContent value="preferences" className="space-y-2 pt-2">
-                      {profileSummary.preferredTechniques.length > 0 && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Preferred Techniques</p>
-                          <div className="flex flex-wrap gap-1">
-                            {profileSummary.preferredTechniques.map((t) => (
-                              <Badge key={t} variant="outline" className="text-xs border-border">
-                                {TECHNIQUE_LABELS[t] ?? t}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {profileSummary.likes && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Likes</p>
-                          <p className="text-sm">{profileSummary.likes}</p>
-                        </div>
-                      )}
-                      {profileSummary.dislikes && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Dislikes</p>
-                          <p className="text-sm">{profileSummary.dislikes}</p>
-                        </div>
-                      )}
-                      {profileSummary.notes && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Additional Notes</p>
-                          <p className="text-sm">{profileSummary.notes}</p>
-                        </div>
-                      )}
-
-                      {!profileSummary.preferredTechniques.length && !profileSummary.likes && !profileSummary.dislikes && !profileSummary.notes && (
-                        <p className="text-xs text-muted-foreground italic">No preferences provided.</p>
-                      )}
-                    </TabsContent>
-                  </Tabs>
-
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 pt-2 mt-2 border-t border-primary/10">
-                    <Info className="size-3" />
-                    Goals, sessions/week, and session length were auto-filled. You can override any value below.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Goals */}
-          <div className="space-y-2">
-            <Label>
-              Goals *
-              {profileStatus === "found" && profileSummary && profileSummary.goals.length > 0 && (
-                <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0 border-primary/30 text-primary font-normal">
-                  from questionnaire
-                </Badge>
-              )}
-            </Label>
-            <div id="ai-goals" className="grid grid-cols-2 gap-2">
-              {FITNESS_GOALS.map((goalValue) => (
-                <label
-                  key={goalValue}
-                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm cursor-pointer hover:bg-surface/50 transition-colors has-[:checked]:bg-primary/5 has-[:checked]:border-primary/30"
-                >
-                  <Checkbox
-                    checked={goals.includes(goalValue)}
-                    onCheckedChange={() => toggleGoal(goalValue)}
-                  />
-                  <span>{GOAL_LABELS[goalValue] ?? goalValue}</span>
-                </label>
-              ))}
-            </div>
-            {goals.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                Select at least one goal
-              </p>
-            )}
+            ))}
           </div>
+        </div>
 
-          {/* Duration & Sessions */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="ai-duration">Duration (weeks) *</Label>
-              <Input
-                id="ai-duration"
-                type="number"
-                min={1}
-                max={52}
-                value={durationWeeks}
-                onChange={(e) => setDurationWeeks(Number(e.target.value))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ai-sessions">
-                Sessions/Week *
-                {profileStatus === "found" && profileSummary?.preferredTrainingDays !== null && (
-                  <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0 border-primary/30 text-primary font-normal">
-                    from questionnaire
-                  </Badge>
-                )}
-              </Label>
-              <Input
-                id="ai-sessions"
-                type="number"
-                min={1}
-                max={7}
-                value={sessionsPerWeek}
-                onChange={(e) => setSessionsPerWeek(Number(e.target.value))}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Session minutes */}
-          <div className="space-y-2">
-            <Label htmlFor="ai-minutes">
-              Session Length
-              {profileStatus === "found" && profileSummary?.preferredSessionMinutes !== null && (
-                <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0 border-primary/30 text-primary font-normal">
-                  from questionnaire
-                </Badge>
-              )}
-            </Label>
-            <select
-              id="ai-minutes"
-              value={sessionMinutes}
-              onChange={(e) => setSessionMinutes(Number(e.target.value))}
-              className={selectClass}
+        {/* Step content */}
+        <div className="min-h-[360px]">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-              {SESSION_DURATIONS.map((mins) => (
-                <option key={mins} value={mins}>
-                  {mins} minutes
-                </option>
-              ))}
-            </select>
-          </div>
+              {step === 0 && (
+                <Step1Client
+                  clients={clients}
+                  loadingClients={loadingClients}
+                  clientId={clientId}
+                  setClientId={setClientId}
+                  profileStatus={profileStatus}
+                  profileSummary={profileSummary}
+                  summaryExpanded={summaryExpanded}
+                  setSummaryExpanded={setSummaryExpanded}
+                />
+              )}
+              {step === 1 && (
+                <Step2GoalsSchedule
+                  goals={goals}
+                  toggleGoal={toggleGoal}
+                  profileStatus={profileStatus}
+                  profileSummary={profileSummary}
+                  durationWeeks={durationWeeks}
+                  setDurationWeeks={setDurationWeeks}
+                  sessionsPerWeek={sessionsPerWeek}
+                  setSessionsPerWeek={setSessionsPerWeek}
+                  sessionMinutes={sessionMinutes}
+                  setSessionMinutes={setSessionMinutes}
+                />
+              )}
+              {step === 2 && (
+                <Step3Settings
+                  splitType={splitType}
+                  setSplitType={setSplitType}
+                  periodization={periodization}
+                  setPeriodization={setPeriodization}
+                  selectedTier={selectedTier}
+                  setSelectedTier={setSelectedTier}
+                  isPublic={isPublic}
+                  setIsPublic={setIsPublic}
+                  additionalInstructions={additionalInstructions}
+                  setAdditionalInstructions={setAdditionalInstructions}
+                  error={error}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-          {/* Split Type & Periodization */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="ai-split">Split Type</Label>
-              <select
-                id="ai-split"
-                value={splitType}
-                onChange={(e) => setSplitType(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Auto (AI decides)</option>
-                {SPLIT_TYPES.map((st) => (
-                  <option key={st} value={st}>
-                    {SPLIT_TYPE_LABELS[st]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ai-periodization">Periodization</Label>
-              <select
-                id="ai-periodization"
-                value={periodization}
-                onChange={(e) => setPeriodization(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Auto (AI decides)</option>
-                {PERIODIZATION_TYPES.map((p) => (
-                  <option key={p} value={p}>
-                    {PERIODIZATION_LABELS[p]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+        {/* Field guide tour */}
+        <FormTour {...tour} />
 
-          {/* Visibility */}
-          <div className="space-y-2">
-            <Label>Visibility</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setIsPublic(false)}
-                className={cn(
-                  "flex items-start gap-2.5 rounded-lg border-2 px-3 py-2.5 text-left transition-colors",
-                  !isPublic
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground/30"
-                )}
-              >
-                <Lock className={cn("size-4 shrink-0 mt-0.5", !isPublic ? "text-primary" : "text-muted-foreground")} />
-                <div>
-                  <p className={cn("text-sm font-medium", !isPublic ? "text-primary" : "text-foreground")}>Private</p>
-                  <p className="text-[11px] text-muted-foreground leading-snug">Assigned client only</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPublic(true)}
-                className={cn(
-                  "flex items-start gap-2.5 rounded-lg border-2 px-3 py-2.5 text-left transition-colors",
-                  isPublic
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground/30"
-                )}
-              >
-                <Globe className={cn("size-4 shrink-0 mt-0.5", isPublic ? "text-primary" : "text-muted-foreground")} />
-                <div>
-                  <p className={cn("text-sm font-medium", isPublic ? "text-primary" : "text-foreground")}>Public</p>
-                  <p className="text-[11px] text-muted-foreground leading-snug">Visible in program store</p>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Additional Instructions */}
-          <div className="space-y-2">
-            <Label htmlFor="ai-instructions">
-              Additional Instructions
-              <span className="text-muted-foreground font-normal ml-1">
-                (optional)
-              </span>
-            </Label>
-            <Textarea
-              id="ai-instructions"
-              value={additionalInstructions}
-              onChange={(e) => setAdditionalInstructions(e.target.value)}
-              placeholder="e.g. Focus on posterior chain, include sprint work on lower body days..."
-              rows={3}
-              maxLength={2000}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-            >
+        {/* Footer */}
+        <DialogFooter>
+          {step > 0 ? (
+            <Button type="button" variant="outline" onClick={handleBack}>
+              <ChevronLeft className="size-4" />
+              Back
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={goals.length === 0 || !clientId}>
+          )}
+
+          {step < 2 ? (
+            <Button type="button" onClick={handleNext}>
+              Next
+              <ChevronRight className="size-4" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={goals.length === 0}
+            >
               <Sparkles className="size-4" />
               Generate Program
             </Button>
-          </DialogFooter>
-        </form>
-        <FormTour {...tour} />
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// ─── Step 1: Client ──────────────────────────────────────────────────────────
+
+function Step1Client({
+  clients,
+  loadingClients,
+  clientId,
+  setClientId,
+  profileStatus,
+  profileSummary,
+  summaryExpanded,
+  setSummaryExpanded,
+}: {
+  clients: User[]
+  loadingClients: boolean
+  clientId: string
+  setClientId: (v: string) => void
+  profileStatus: "idle" | "loading" | "found" | "not_found"
+  profileSummary: ProfileSummary | null
+  summaryExpanded: boolean
+  setSummaryExpanded: React.Dispatch<React.SetStateAction<boolean>>
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Optionally select a client to personalize the program with their questionnaire data, or skip to create a generic program.
+      </p>
+
+      {/* Client select */}
+      <div className="space-y-2">
+        <Label htmlFor="ai-client">Client (optional)</Label>
+        <select
+          id="ai-client"
+          value={clientId}
+          onChange={(e) => setClientId(e.target.value)}
+          disabled={loadingClients}
+          className={selectClass}
+        >
+          <option value="">
+            {loadingClients ? "Loading clients..." : "No client (generic program)"}
+          </option>
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.first_name} {client.last_name} ({client.email})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Profile status banners */}
+      {profileStatus === "loading" && (
+        <div className="rounded-lg bg-surface/50 border border-border p-3 flex items-center gap-2">
+          <Loader2 className="size-4 text-muted-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground">
+            Loading questionnaire data...
+          </p>
+        </div>
+      )}
+
+      {profileStatus === "not_found" && (
+        <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
+          <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-warning">No questionnaire data</p>
+            <p className="text-xs text-warning/80">
+              This client hasn&apos;t completed their questionnaire. You&apos;ll need to configure all fields manually.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Questionnaire summary panel */}
+      {profileStatus === "found" && profileSummary && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setSummaryExpanded((prev) => !prev)}
+            className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <ClipboardList className="size-4" />
+              Questionnaire Summary
+              <Badge variant="outline" className="text-xs px-1.5 py-0 border-primary/30 text-primary">
+                Auto-filled
+              </Badge>
+            </span>
+            {summaryExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          </button>
+
+          {summaryExpanded && (
+            <div className="px-3 pb-3 border-t border-primary/10">
+              <Tabs defaultValue="profile" className="pt-2">
+                <TabsList className="w-full">
+                  <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
+                  <TabsTrigger value="training" className="text-xs">Training</TabsTrigger>
+                  <TabsTrigger value="schedule" className="text-xs">Schedule</TabsTrigger>
+                  <TabsTrigger value="preferences" className="text-xs">Preferences</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="profile" className="space-y-2 pt-2">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {profileSummary.dateOfBirth && (
+                      <SummaryField label="Birth Year" value={profileSummary.dateOfBirth.slice(0, 4)} />
+                    )}
+                    {profileSummary.gender && (
+                      <SummaryField label="Gender" value={GENDER_LABELS[profileSummary.gender] ?? profileSummary.gender} />
+                    )}
+                    {profileSummary.sport && (
+                      <SummaryField label="Sport" value={profileSummary.sport} />
+                    )}
+                    {profileSummary.position && (
+                      <SummaryField label="Position" value={profileSummary.position} />
+                    )}
+                  </div>
+                  {(profileSummary.sleepHours || profileSummary.stressLevel || profileSummary.occupationActivityLevel) && (
+                    <>
+                      <p className="text-xs font-medium text-muted-foreground pt-1">Recovery & Lifestyle</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        {profileSummary.sleepHours && (
+                          <SummaryField label="Sleep" value={SLEEP_LABELS[profileSummary.sleepHours] ?? profileSummary.sleepHours} />
+                        )}
+                        {profileSummary.stressLevel && (
+                          <SummaryField label="Stress" value={STRESS_LABELS[profileSummary.stressLevel] ?? profileSummary.stressLevel} />
+                        )}
+                        {profileSummary.occupationActivityLevel && (
+                          <SummaryField label="Occupation" value={OCCUPATION_LABELS[profileSummary.occupationActivityLevel] ?? profileSummary.occupationActivityLevel} />
+                        )}
+                      </div>
+                    </>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="training" className="space-y-2 pt-2">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {profileSummary.experienceLevel && (
+                      <SummaryField label="Experience" value={LEVEL_LABELS[profileSummary.experienceLevel] ?? profileSummary.experienceLevel} />
+                    )}
+                    {profileSummary.movementConfidence && (
+                      <SummaryField label="Movement Confidence" value={MOVEMENT_CONFIDENCE_LABELS[profileSummary.movementConfidence] ?? profileSummary.movementConfidence} />
+                    )}
+                    {profileSummary.trainingYears !== null && (
+                      <SummaryField label="Training Years" value={`${profileSummary.trainingYears} year${profileSummary.trainingYears !== 1 ? "s" : ""}`} />
+                    )}
+                  </div>
+                  {profileSummary.trainingBackground && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Training Background</p>
+                      <p className="text-sm">{profileSummary.trainingBackground}</p>
+                    </div>
+                  )}
+                  {(profileSummary.injuries || profileSummary.injuryDetails.length > 0) && (
+                    <div>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                        <AlertTriangle className="size-3" />
+                        Injuries & Limitations
+                      </p>
+                      {profileSummary.injuries && <p className="text-sm">{profileSummary.injuries}</p>}
+                      {profileSummary.injuryDetails.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {profileSummary.injuryDetails.map((injury, i) => (
+                            <Badge key={i} variant="outline" className="text-xs gap-1 border-warning/30 text-warning">
+                              {injury.area}
+                              {injury.side ? ` (${injury.side})` : ""}
+                              {injury.severity ? ` - ${injury.severity}` : ""}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {profileSummary.availableEquipment.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                        <Dumbbell className="size-3" />
+                        Available Equipment
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {profileSummary.availableEquipment.map((eq) => (
+                          <Badge key={eq} variant="outline" className="text-xs border-border">
+                            {EQUIPMENT_LABELS[eq] ?? eq}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="schedule" className="space-y-2 pt-2">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {profileSummary.preferredTrainingDays !== null && (
+                      <SummaryField label="Sessions/Week" value={String(profileSummary.preferredTrainingDays)} />
+                    )}
+                    {profileSummary.preferredSessionMinutes !== null && (
+                      <SummaryField label="Session Length" value={`${profileSummary.preferredSessionMinutes} min`} />
+                    )}
+                  </div>
+                  {profileSummary.preferredDayNames.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Preferred Days</p>
+                      <div className="flex flex-wrap gap-1">
+                        {profileSummary.preferredDayNames.map((dayNum) => (
+                          <Badge key={dayNum} variant="outline" className="text-xs border-border">
+                            {DAY_NAMES[dayNum - 1] ?? `Day ${dayNum}`}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profileSummary.timeEfficiencyPreference && (
+                    <SummaryField label="Time Efficiency" value={TIME_EFFICIENCY_LABELS[profileSummary.timeEfficiencyPreference] ?? profileSummary.timeEfficiencyPreference} />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="preferences" className="space-y-2 pt-2">
+                  {profileSummary.preferredTechniques.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Preferred Techniques</p>
+                      <div className="flex flex-wrap gap-1">
+                        {profileSummary.preferredTechniques.map((t) => (
+                          <Badge key={t} variant="outline" className="text-xs border-border">
+                            {TECHNIQUE_LABELS[t] ?? t}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profileSummary.likes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Likes</p>
+                      <p className="text-sm">{profileSummary.likes}</p>
+                    </div>
+                  )}
+                  {profileSummary.dislikes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Dislikes</p>
+                      <p className="text-sm">{profileSummary.dislikes}</p>
+                    </div>
+                  )}
+                  {profileSummary.notes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Additional Notes</p>
+                      <p className="text-sm">{profileSummary.notes}</p>
+                    </div>
+                  )}
+                  {!profileSummary.preferredTechniques.length && !profileSummary.likes && !profileSummary.dislikes && !profileSummary.notes && (
+                    <p className="text-xs text-muted-foreground italic">No preferences provided.</p>
+                  )}
+                </TabsContent>
+              </Tabs>
+
+              <p className="text-xs text-muted-foreground flex items-center gap-1 pt-2 mt-2 border-t border-primary/10">
+                <Info className="size-3" />
+                Goals, sessions/week, and session length were auto-filled. You can override them in the next step.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Step 2: Goals & Schedule ────────────────────────────────────────────────
+
+function Step2GoalsSchedule({
+  goals,
+  toggleGoal,
+  profileStatus,
+  profileSummary,
+  durationWeeks,
+  setDurationWeeks,
+  sessionsPerWeek,
+  setSessionsPerWeek,
+  sessionMinutes,
+  setSessionMinutes,
+}: {
+  goals: string[]
+  toggleGoal: (goal: string) => void
+  profileStatus: "idle" | "loading" | "found" | "not_found"
+  profileSummary: ProfileSummary | null
+  durationWeeks: number
+  setDurationWeeks: (v: number) => void
+  sessionsPerWeek: number
+  setSessionsPerWeek: (v: number) => void
+  sessionMinutes: number
+  setSessionMinutes: (v: number) => void
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Goals */}
+      <div className="space-y-2">
+        <Label>
+          Goals *
+          {profileStatus === "found" && profileSummary && profileSummary.goals.length > 0 && (
+            <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0 border-primary/30 text-primary font-normal">
+              from questionnaire
+            </Badge>
+          )}
+        </Label>
+        <div id="ai-goals" className="grid grid-cols-2 gap-2">
+          {FITNESS_GOALS.map((goalValue) => (
+            <label
+              key={goalValue}
+              className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm cursor-pointer hover:bg-surface/50 transition-colors has-[:checked]:bg-primary/5 has-[:checked]:border-primary/30"
+            >
+              <Checkbox
+                checked={goals.includes(goalValue)}
+                onCheckedChange={() => toggleGoal(goalValue)}
+              />
+              <span>{GOAL_LABELS[goalValue] ?? goalValue}</span>
+            </label>
+          ))}
+        </div>
+        {goals.length === 0 && (
+          <p className="text-xs text-muted-foreground">Select at least one goal</p>
+        )}
+      </div>
+
+      {/* Duration & Sessions */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="ai-duration">Duration (weeks) *</Label>
+          <Input
+            id="ai-duration"
+            type="number"
+            min={1}
+            max={52}
+            value={durationWeeks}
+            onChange={(e) => setDurationWeeks(Number(e.target.value))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ai-sessions">
+            Sessions/Week *
+            {profileStatus === "found" && profileSummary?.preferredTrainingDays !== null && (
+              <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0 border-primary/30 text-primary font-normal">
+                from questionnaire
+              </Badge>
+            )}
+          </Label>
+          <Input
+            id="ai-sessions"
+            type="number"
+            min={1}
+            max={7}
+            value={sessionsPerWeek}
+            onChange={(e) => setSessionsPerWeek(Number(e.target.value))}
+          />
+        </div>
+      </div>
+
+      {/* Session minutes */}
+      <div className="space-y-2">
+        <Label htmlFor="ai-minutes">
+          Session Length
+          {profileStatus === "found" && profileSummary?.preferredSessionMinutes !== null && (
+            <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0 border-primary/30 text-primary font-normal">
+              from questionnaire
+            </Badge>
+          )}
+        </Label>
+        <select
+          id="ai-minutes"
+          value={sessionMinutes}
+          onChange={(e) => setSessionMinutes(Number(e.target.value))}
+          className={selectClass}
+        >
+          {SESSION_DURATIONS.map((mins) => (
+            <option key={mins} value={mins}>
+              {mins} minutes
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
+// ─── Step 3: Settings ────────────────────────────────────────────────────────
+
+function Step3Settings({
+  splitType,
+  setSplitType,
+  periodization,
+  setPeriodization,
+  selectedTier,
+  setSelectedTier,
+  isPublic,
+  setIsPublic,
+  additionalInstructions,
+  setAdditionalInstructions,
+  error,
+}: {
+  splitType: string
+  setSplitType: (v: string) => void
+  periodization: string
+  setPeriodization: (v: string) => void
+  selectedTier: string
+  setSelectedTier: (v: string) => void
+  isPublic: boolean
+  setIsPublic: (v: boolean) => void
+  additionalInstructions: string
+  setAdditionalInstructions: (v: string) => void
+  error: string | null
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Error banner */}
+      {error && (
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2">
+          <XCircle className="size-4 text-destructive shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-destructive">Generation Failed</p>
+            <p className="text-xs text-destructive/80">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Split Type & Periodization */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="ai-split">Split Type</Label>
+          <select
+            id="ai-split"
+            value={splitType}
+            onChange={(e) => setSplitType(e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Auto (AI decides)</option>
+            {SPLIT_TYPES.map((st) => (
+              <option key={st} value={st}>{SPLIT_TYPE_LABELS[st]}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ai-periodization">Periodization</Label>
+          <select
+            id="ai-periodization"
+            value={periodization}
+            onChange={(e) => setPeriodization(e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Auto (AI decides)</option>
+            {PERIODIZATION_TYPES.map((p) => (
+              <option key={p} value={p}>{PERIODIZATION_LABELS[p]}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Tier */}
+      <div className="space-y-2">
+        <Label htmlFor="ai-tier">Tier</Label>
+        <select
+          id="ai-tier"
+          value={selectedTier}
+          onChange={(e) => setSelectedTier(e.target.value)}
+          className={selectClass}
+        >
+          {PROGRAM_TIERS.map((t) => (
+            <option key={t} value={t}>{TIER_LABELS[t]}</option>
+          ))}
+        </select>
+        <p className="text-[11px] text-muted-foreground">
+          {TIER_DESCRIPTIONS[selectedTier]}
+        </p>
+      </div>
+
+      {/* Visibility */}
+      <div className="space-y-2">
+        <Label>Visibility</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setIsPublic(false)}
+            className={cn(
+              "flex items-start gap-2.5 rounded-lg border-2 px-3 py-2.5 text-left transition-colors",
+              !isPublic
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-muted-foreground/30"
+            )}
+          >
+            <Lock className={cn("size-4 shrink-0 mt-0.5", !isPublic ? "text-primary" : "text-muted-foreground")} />
+            <div>
+              <p className={cn("text-sm font-medium", !isPublic ? "text-primary" : "text-foreground")}>Private</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">Assigned client only</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsPublic(true)}
+            className={cn(
+              "flex items-start gap-2.5 rounded-lg border-2 px-3 py-2.5 text-left transition-colors",
+              isPublic
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-muted-foreground/30"
+            )}
+          >
+            <Globe className={cn("size-4 shrink-0 mt-0.5", isPublic ? "text-primary" : "text-muted-foreground")} />
+            <div>
+              <p className={cn("text-sm font-medium", isPublic ? "text-primary" : "text-foreground")}>Public</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">Visible in program store</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Additional Instructions */}
+      <div className="space-y-2">
+        <Label htmlFor="ai-instructions">
+          Additional Instructions
+          <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+        </Label>
+        <Textarea
+          id="ai-instructions"
+          value={additionalInstructions}
+          onChange={(e) => setAdditionalInstructions(e.target.value)}
+          placeholder="e.g. Focus on posterior chain, include sprint work on lower body days..."
+          rows={3}
+          maxLength={2000}
+        />
+      </div>
+    </div>
   )
 }

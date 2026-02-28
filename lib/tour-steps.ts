@@ -2,190 +2,223 @@ import type { TourStep } from "@/types/tour"
 
 // ─── ExerciseFormDialog ──────────────────────────────────────────────────────
 
-export function getExerciseTourSteps(expandAiSection: () => void): TourStep[] {
+export function getExerciseTourSteps(goToStep: (step: number) => void): TourStep[] {
   return [
+    // Step 0: Basics
     {
       target: "name",
       title: "Exercise Name",
       description:
         "The display name clients see in their program. Use a clear, recognizable name like \"Barbell Back Squat\" or \"Dumbbell Lateral Raise\".",
+      beforeShow: () => goToStep(0),
     },
     {
       target: "category",
       title: "Category",
       description:
         "Tag the exercise with one or more categories. Tap a chip to toggle it. This affects which exercises appear when filtering by type (Strength, Cardio, etc.).",
+      beforeShow: () => goToStep(0),
     },
     {
       target: "difficulty",
       title: "Difficulty Level",
       description:
         "Helps the AI pick age- and experience-appropriate exercises when building programs. Beginner = basic movements, Advanced = complex/heavy lifts.",
+      beforeShow: () => goToStep(0),
     },
     {
       target: "muscle_group",
       title: "Muscle Group (Display)",
       description:
         "A short label shown on exercise cards and lists (e.g. \"Chest & Triceps\"). This is just for quick visual reference — the AI uses Primary Muscles below for matching.",
+      beforeShow: () => goToStep(0),
     },
     {
       target: "equipment",
       title: "Equipment (Display)",
       description:
         "Quick label for the equipment needed (e.g. \"Barbell, Squat Rack\"). Shown on exercise cards. For AI-powered equipment matching, use the Equipment Required chips in the AI section.",
+      beforeShow: () => goToStep(0),
     },
+    // Step 1: Details
     {
       target: "description",
       title: "Description",
       description:
         "A brief summary of what the exercise is and what it targets. Clients see this when they tap on an exercise for details.",
+      beforeShow: () => goToStep(1),
     },
     {
       target: "instructions",
       title: "Instructions",
       description:
         "Step-by-step coaching cues. Clients see these during their workout. Be specific — e.g. \"Brace your core, lower until thighs are parallel, drive through your heels.\"",
+      beforeShow: () => goToStep(1),
     },
     {
       target: "video_url",
       title: "Video URL",
       description:
         "Paste a YouTube link to show clients a demo video. The preview thumbnail appears on exercise cards and the full video plays in the exercise detail view.",
+      beforeShow: () => goToStep(1),
+    },
+    // Step 2: AI Metadata
+    {
+      target: "ai-autofill-btn",
+      title: "AI Auto-fill",
+      description:
+        "Click to have AI predict all metadata fields based on the exercise name and category. Review and adjust predictions before saving.",
+      beforeShow: () => goToStep(2),
     },
     {
       target: "movement_pattern",
       title: "Movement Pattern (AI)",
       description:
         "Tells the AI what type of movement this is (push, pull, squat, hinge, etc.). Used to ensure programs are balanced — e.g. not all push with no pull.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
     {
       target: "force_type",
       title: "Force Type (AI)",
       description:
         "Whether the exercise primarily involves pushing, pulling, or holding (static/dynamic). Helps the AI balance program structure.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
     {
       target: "laterality",
       title: "Laterality (AI)",
       description:
         "Bilateral = both sides at once (back squat), Unilateral = one side (single-leg RDL), Alternating = switching sides. The AI uses this to add variety and address imbalances.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
     {
       target: "primary_muscles",
       title: "Primary Muscles (AI)",
       description:
         "The main muscles this exercise works. Tap to select — e.g. Quadriceps and Glutes for a squat. The AI uses these to balance muscle groups across a program and find suitable alternatives.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
     {
       target: "secondary_muscles",
       title: "Secondary Muscles (AI)",
       description:
         "Muscles that assist during the movement but aren't the primary target — e.g. Core and Calves during a squat. Helps the AI understand total training volume per muscle.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
     {
       target: "equipment_required",
       title: "Equipment Required (AI)",
       description:
         "Select all equipment needed for this exercise. The AI uses this to only pick exercises the client has access to, based on their questionnaire answers.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
     {
       target: "bodyweight_compound",
       title: "Bodyweight & Compound (AI)",
       description:
         "Bodyweight = no equipment needed (push-ups, lunges). Compound = uses multiple joints (squats, deadlifts) vs. Isolation = single joint (bicep curls). Helps the AI structure workout order.",
-      beforeShow: expandAiSection,
+      beforeShow: () => goToStep(2),
     },
+    // Step 3: Relationships
     {
-      target: "exercise-relationships",
+      target: "exercise-alternatives",
       title: "Relationships",
       description:
         "Link related exercises together. Progressions = harder variants, Regressions = easier variants, Alternatives = similar exercises, Variations = different forms. The AI uses these to suggest swaps and build progression paths.",
+      beforeShow: () => goToStep(3),
     },
   ]
 }
 
-// ─── ProgramFormDialog ───────────────────────────────────────────────────────
+// ─── ProgramFormDialog (3-step wizard) ───────────────────────────────────────
 
-export const PROGRAM_TOUR_STEPS: TourStep[] = [
-  {
-    target: "name",
-    title: "Program Name",
-    description:
-      "The name clients see when they view their assigned program. Make it descriptive — e.g. \"12-Week Strength Builder\" or \"Off-Season Rugby Conditioning\".",
-  },
-  {
-    target: "category",
-    title: "Category",
-    description:
-      "What type of program this is. Strength = lifting-focused, Conditioning = cardio/endurance, Hybrid = mix of both. Used for filtering and analytics.",
-  },
-  {
-    target: "difficulty",
-    title: "Difficulty",
-    description:
-      "The intended skill level. Helps you filter programs and ensures clients are matched to appropriate difficulty. Elite = competitive athletes.",
-  },
-  {
-    target: "split_type",
-    title: "Split Type",
-    description:
-      "How training days are organized. Full Body = every muscle each session, Upper/Lower = alternating, Push/Pull/Legs = three-day rotation. Leave as None if unsure.",
-  },
-  {
-    target: "tier",
-    title: "Tier",
-    description:
-      "Generalize = client can log workouts only, no coach interaction. Premium = includes AI coaching feedback from DJP with personalized guidance. This affects what features the client gets.",
-  },
-  {
-    target: "periodization",
-    title: "Periodization",
-    description:
-      "How intensity changes over weeks. Linear = gradually increases, Undulating = varies day-to-day, Block = focused phases. Leave as None for straightforward programs.",
-  },
-  {
-    target: "duration_weeks",
-    title: "Duration (Weeks)",
-    description:
-      "How many weeks the program runs. Common ranges: 4-6 for a training block, 8-12 for a full cycle, 16+ for long-term periodization.",
-  },
-  {
-    target: "sessions_per_week",
-    title: "Sessions per Week",
-    description:
-      "How many training days per week. This determines how many day slots appear in the program builder. Typical range: 2-6 depending on the client.",
-  },
-  {
-    target: "price_dollars",
-    title: "Price",
-    description:
-      "How much to charge for this program (in dollars). Leave blank for programs included in a membership. Stripe integration is coming soon.",
-  },
-  {
-    target: "target_user_id",
-    title: "Target Client",
-    description:
-      "Assign this program to a specific client. When set, the program becomes private and only that client can see it. If a price is set, the client will receive an email to purchase. Leave blank for general programs.",
-  },
-  {
-    target: "visibility",
-    title: "Visibility",
-    description:
-      "Private = only assigned clients can access this program. Public = visible in the program store for anyone to browse and purchase. Automatically set to Private when a target client is selected.",
-  },
-  {
-    target: "description",
-    title: "Description",
-    description:
-      "A summary of the program's goals and approach. Clients see this on the program overview page. Keep it motivating and informative.",
-  },
-]
+export function getProgramTourSteps(goToStep: (step: number) => void): TourStep[] {
+  return [
+    // Step 0: Info
+    {
+      target: "name",
+      title: "Program Name",
+      description:
+        "The name clients see when they view their assigned program. Make it descriptive — e.g. \"12-Week Strength Builder\" or \"Off-Season Rugby Conditioning\".",
+      beforeShow: () => goToStep(0),
+    },
+    {
+      target: "category",
+      title: "Category",
+      description:
+        "Tag the program with one or more categories. Tap a chip to toggle it. You can select multiple — e.g. Strength + Conditioning for a hybrid program.",
+      beforeShow: () => goToStep(0),
+    },
+    {
+      target: "difficulty",
+      title: "Difficulty",
+      description:
+        "The intended skill level. Helps you filter programs and ensures clients are matched to appropriate difficulty. Elite = competitive athletes.",
+      beforeShow: () => goToStep(0),
+    },
+    {
+      target: "split_type",
+      title: "Split Type",
+      description:
+        "How training days are organized. Full Body = every muscle each session, Upper/Lower = alternating, Push/Pull/Legs = three-day rotation. Leave as None if unsure.",
+      beforeShow: () => goToStep(0),
+    },
+    {
+      target: "tier",
+      title: "Tier",
+      description:
+        "Generalize = client can log workouts only, no coach interaction. Premium = includes AI coaching feedback from DJP with personalized guidance. This affects what features the client gets.",
+      beforeShow: () => goToStep(0),
+    },
+    {
+      target: "periodization",
+      title: "Periodization",
+      description:
+        "How intensity changes over weeks. Linear = gradually increases, Undulating = varies day-to-day, Block = focused phases. Leave as None for straightforward programs.",
+      beforeShow: () => goToStep(0),
+    },
+    {
+      target: "description",
+      title: "Description",
+      description:
+        "A summary of the program's goals and approach. Clients see this on the program overview page. Keep it motivating and informative.",
+      beforeShow: () => goToStep(0),
+    },
+    // Step 1: Schedule & Pricing
+    {
+      target: "duration_weeks",
+      title: "Duration (Weeks)",
+      description:
+        "How many weeks the program runs. Common ranges: 4-6 for a training block, 8-12 for a full cycle, 16+ for long-term periodization.",
+      beforeShow: () => goToStep(1),
+    },
+    {
+      target: "sessions_per_week",
+      title: "Sessions per Week",
+      description:
+        "How many training days per week. This determines how many day slots appear in the program builder. Typical range: 2-6 depending on the client.",
+      beforeShow: () => goToStep(1),
+    },
+    {
+      target: "price_dollars",
+      title: "Price",
+      description:
+        "How much to charge for this program (in dollars). Leave blank for free programs or programs you plan to assign directly.",
+      beforeShow: () => goToStep(1),
+    },
+    // Step 2: Audience
+    {
+      target: "audience-options",
+      title: "Audience",
+      description:
+        "\"Sell to All Clients\" = listed in the store for everyone. \"Sell to One Client\" = only one client sees it in their store. \"Assign Directly (Free)\" = not in the store, you assign it manually at no cost.",
+      beforeShow: () => goToStep(2),
+    },
+  ]
+}
+
+/** @deprecated Use getProgramTourSteps() instead — kept for backwards compatibility */
+export const PROGRAM_TOUR_STEPS: TourStep[] = []
 
 // ─── AddExerciseDialog (step 2 — configure) ─────────────────────────────────
 
@@ -421,55 +454,71 @@ export const IMPORT_REVIEW_TOUR_STEPS: TourStep[] = [
   },
 ]
 
-// ─── AiGenerateDialog ────────────────────────────────────────────────────────
+// ─── AiGenerateDialog (3-step wizard) ────────────────────────────────────────
 
-export const AI_GENERATE_TOUR_STEPS: TourStep[] = [
-  {
-    target: "ai-client",
-    title: "Client",
-    description:
-      "Select which client this program is for. If they've completed their questionnaire, their preferences (goals, schedule, equipment) will auto-fill the fields below.",
-  },
-  {
-    target: "ai-goals",
-    title: "Goals",
-    description:
-      "What the client wants to achieve — strength, hypertrophy, fat loss, etc. Select one or more. Auto-filled from their questionnaire if available. The AI tailors exercise selection and rep ranges to match.",
-  },
-  {
-    target: "ai-duration",
-    title: "Duration (Weeks)",
-    description:
-      "How long the AI program should run. 4 weeks is a standard training block. The AI structures progressive overload across this timeframe.",
-  },
-  {
-    target: "ai-sessions",
-    title: "Sessions per Week",
-    description:
-      "How many days per week the client will train. Auto-filled from their questionnaire if available. The AI designs the split based on this number.",
-  },
-  {
-    target: "ai-minutes",
-    title: "Session Length",
-    description:
-      "How long each workout should take. The AI adjusts exercise count and rest periods to fit within this time. Auto-filled from the client's questionnaire.",
-  },
-  {
-    target: "ai-split",
-    title: "Split Type",
-    description:
-      "How training days are organized. Leave as \"Auto\" to let the AI choose the best split based on sessions/week and goals. Override if you have a specific preference.",
-  },
-  {
-    target: "ai-periodization",
-    title: "Periodization",
-    description:
-      "How intensity and volume change over weeks. Linear = gradual increase, Undulating = daily variation, Block = focused phases. Leave as \"Auto\" to let the AI decide.",
-  },
-  {
-    target: "ai-instructions",
-    title: "Additional Instructions",
-    description:
-      "Free-text notes for the AI — e.g. \"Focus on posterior chain\", \"Include sprint work\", or \"Avoid overhead pressing due to shoulder issues.\" This directly influences exercise selection.",
-  },
-]
+export function getAiGenerateTourSteps(goToStep: (step: number) => void): TourStep[] {
+  return [
+    // Step 0: Client
+    {
+      target: "ai-client",
+      title: "Client",
+      description:
+        "Select which client this program is for. If they've completed their questionnaire, their preferences (goals, schedule, equipment) will auto-fill the fields below.",
+      beforeShow: () => goToStep(0),
+    },
+    // Step 1: Goals & Schedule
+    {
+      target: "ai-goals",
+      title: "Goals",
+      description:
+        "What the client wants to achieve — strength, hypertrophy, fat loss, etc. Select one or more. Auto-filled from their questionnaire if available. The AI tailors exercise selection and rep ranges to match.",
+      beforeShow: () => goToStep(1),
+    },
+    {
+      target: "ai-duration",
+      title: "Duration (Weeks)",
+      description:
+        "How long the AI program should run. 4 weeks is a standard training block. The AI structures progressive overload across this timeframe.",
+      beforeShow: () => goToStep(1),
+    },
+    {
+      target: "ai-sessions",
+      title: "Sessions per Week",
+      description:
+        "How many days per week the client will train. Auto-filled from their questionnaire if available. The AI designs the split based on this number.",
+      beforeShow: () => goToStep(1),
+    },
+    {
+      target: "ai-minutes",
+      title: "Session Length",
+      description:
+        "How long each workout should take. The AI adjusts exercise count and rest periods to fit within this time. Auto-filled from the client's questionnaire.",
+      beforeShow: () => goToStep(1),
+    },
+    // Step 2: Settings
+    {
+      target: "ai-split",
+      title: "Split Type",
+      description:
+        "How training days are organized. Leave as \"Auto\" to let the AI choose the best split based on sessions/week and goals. Override if you have a specific preference.",
+      beforeShow: () => goToStep(2),
+    },
+    {
+      target: "ai-periodization",
+      title: "Periodization",
+      description:
+        "How intensity and volume change over weeks. Linear = gradual increase, Undulating = daily variation, Block = focused phases. Leave as \"Auto\" to let the AI decide.",
+      beforeShow: () => goToStep(2),
+    },
+    {
+      target: "ai-instructions",
+      title: "Additional Instructions",
+      description:
+        "Free-text notes for the AI — e.g. \"Focus on posterior chain\", \"Include sprint work\", or \"Avoid overhead pressing due to shoulder issues.\" This directly influences exercise selection.",
+      beforeShow: () => goToStep(2),
+    },
+  ]
+}
+
+/** @deprecated Use getAiGenerateTourSteps() instead */
+export const AI_GENERATE_TOUR_STEPS: TourStep[] = []

@@ -19,12 +19,12 @@ const LEVEL_COLORS: Record<AbilityLevel, string> = {
   beginner: "bg-warning/10 text-warning",
   intermediate: "bg-primary/10 text-primary",
   advanced: "bg-success/10 text-success",
-  elite: "bg-accent/10 text-accent-foreground",
+  elite: "bg-accent/15 text-accent",
 }
 
 const TYPE_COLORS: Record<string, string> = {
   initial: "bg-primary/10 text-primary",
-  reassessment: "bg-accent/10 text-accent-foreground",
+  reassessment: "bg-accent/15 text-accent",
 }
 
 function formatDate(dateString: string): string {

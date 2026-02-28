@@ -34,8 +34,8 @@ export default async function DashboardPage() {
       getPrograms(),
       getPaymentsWithDetails(),
       getAssignments(),
-      getAllProgress(),
-      getAllAchievements(),
+      getAllProgress(500),
+      getAllAchievements(15),
     ])
 
   const now = new Date()
@@ -182,6 +182,7 @@ export default async function DashboardPage() {
     email: c.email,
     createdAt: c.created_at,
     status: c.status,
+    avatarUrl: c.avatar_url ?? null,
   }))
 
   // ---- Program popularity (top 5) ----

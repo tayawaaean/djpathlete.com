@@ -8,7 +8,7 @@ import type {
   ValidationResult,
   OrchestrationResult,
 } from "@/lib/ai/types"
-import type { ProgramCategory, ProgramDifficulty } from "@/types/database"
+import type { AiGenerationLog, ProgramCategory, ProgramDifficulty } from "@/types/database"
 import { callAgent, MODEL_HAIKU } from "@/lib/ai/anthropic"
 import { scoreAndFilterExercises, semanticFilterExercises } from "@/lib/ai/exercise-filter"
 import { estimateTokens } from "@/lib/ai/token-utils"
@@ -99,14 +99,17 @@ export async function runStep1(logId: string): Promise<void> {
   // Reconstruct assessment context from log if this was assessment-triggered
   const logAssessmentContext = (log.input_params as Record<string, unknown>)?._assessmentContext as AssessmentContext | undefined
 
-  // Fetch client profile
-  const profile = await getProfileByUserId(request.client_id)
-  let clientName = "Client"
-  try {
-    const user = await getUserById(request.client_id)
-    clientName = `${user.first_name} ${user.last_name}`.trim()
-  } catch {
-    // Fall back to "Client"
+  // Fetch client profile (skip if no client selected)
+  let profile: Awaited<ReturnType<typeof getProfileByUserId>> = null
+  let clientName = "General Client"
+  if (request.client_id) {
+    profile = await getProfileByUserId(request.client_id)
+    try {
+      const user = await getUserById(request.client_id)
+      clientName = `${user.first_name} ${user.last_name}`.trim()
+    } catch {
+      clientName = "Client"
+    }
   }
 
   let age: number | null = null
@@ -442,11 +445,11 @@ ${exerciseLibrary}${feedbackSection}`
   }
 
   const program = await createProgram({
-    name: `${clientName}'s ${request.duration_weeks}-Week ${goalsLabel} Program`,
+    name: request.client_id ? `${clientName}'s ${request.duration_weeks}-Week ${goalsLabel} Program` : `${request.duration_weeks}-Week ${goalsLabel} Program`,
     description: `A ${request.duration_weeks}-week ${splitLabel.toLowerCase()} program designed for ${goalsLabel.toLowerCase()}, training ${request.sessions_per_week}x per week. ${skeleton.notes}`,
     category: [programCategory],
     difficulty: programDifficulty,
-    tier: "premium",
+    tier: request.tier ?? "premium",
     duration_weeks: request.duration_weeks,
     sessions_per_week: request.sessions_per_week,
     split_type: skeleton.split_type,
@@ -533,22 +536,24 @@ ${exerciseLibrary}${feedbackSection}`
   await Promise.all(insertPromises)
   console.log(`[orchestrator:step3] ${assignment.assignments.length} exercises inserted`)
 
-  // Auto-assign program to client
-  try {
-    await createAssignment({
-      program_id: program.id,
-      user_id: request.client_id,
-      assigned_by: requestedBy,
-      start_date: new Date().toISOString().split("T")[0],
-      end_date: null,
-      status: "active",
-      notes: "Auto-assigned from AI program generation",
-      current_week: 1,
-      total_weeks: program.duration_weeks ?? null,
-    })
-    console.log(`[orchestrator:step3] Program auto-assigned to client ${request.client_id}`)
-  } catch (assignError) {
-    console.error("[orchestrator:step3] Failed to auto-assign:", assignError)
+  // Auto-assign program to client (only when a client was selected)
+  if (request.client_id) {
+    try {
+      await createAssignment({
+        program_id: program.id,
+        user_id: request.client_id,
+        assigned_by: requestedBy,
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: null,
+        status: "active",
+        notes: "Auto-assigned from AI program generation",
+        current_week: 1,
+        total_weeks: program.duration_weeks ?? null,
+      })
+      console.log(`[orchestrator:step3] Program auto-assigned to client ${request.client_id}`)
+    } catch (assignError) {
+      console.error("[orchestrator:step3] Failed to auto-assign:", assignError)
+    }
   }
 
   // Update generation log to completed
@@ -583,13 +588,20 @@ export async function generateProgramSync(
   requestedBy: string,
   assessmentContext?: AssessmentContext
 ): Promise<OrchestrationResult> {
+  console.log("[orchestrator:sync] Starting generateProgramSync", {
+    client_id: request.client_id ?? "none",
+    goals: request.goals,
+    duration_weeks: request.duration_weeks,
+    sessions_per_week: request.sessions_per_week,
+    tier: request.tier,
+  })
   const startTime = Date.now()
   const tokenUsage = { agent1: 0, agent2: 0, agent3: 0, agent4: 0, total: 0 }
   let retries = 0
 
   const log = await createGenerationLog({
     program_id: null,
-    client_id: request.client_id,
+    client_id: request.client_id ?? null,
     requested_by: requestedBy,
     status: "generating",
     input_params: request as unknown as Record<string, unknown>,
@@ -601,19 +613,27 @@ export async function generateProgramSync(
     completed_at: null,
     current_step: 0,
     total_steps: 3,
-    generation_trigger: assessmentContext?.generationTrigger ?? "admin_manual",
-    assessment_result_id: assessmentContext?.assessmentResultId ?? null,
-  })
+    ...(assessmentContext ? {
+      generation_trigger: assessmentContext.generationTrigger,
+      assessment_result_id: assessmentContext.assessmentResultId,
+    } : {}),
+  } as Omit<AiGenerationLog, "id" | "created_at">)
+  console.log("[orchestrator:sync] Generation log created:", log.id)
 
   try {
-    // Fetch client profile
-    const profile = await getProfileByUserId(request.client_id)
-    let clientName = "Client"
-    try {
-      const user = await getUserById(request.client_id)
-      clientName = `${user.first_name} ${user.last_name}`.trim()
-    } catch {
-      // Fall back
+    // Fetch client profile (skip if no client selected)
+    let profile: Awaited<ReturnType<typeof getProfileByUserId>> = null
+    let clientName = "General Client"
+    if (request.client_id) {
+      console.log("[orchestrator:sync] Fetching profile for client:", request.client_id)
+      profile = await getProfileByUserId(request.client_id)
+      console.log("[orchestrator:sync] Profile found:", !!profile)
+      try {
+        const user = await getUserById(request.client_id)
+        clientName = `${user.first_name} ${user.last_name}`.trim()
+      } catch {
+        clientName = "Client"
+      }
     }
 
     let age: number | null = null
@@ -696,6 +716,7 @@ ${profile?.training_background ? `- Training background: ${profile.training_back
 ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}${assessmentSection}`
 
     // Agent 1 + exercise fetch in parallel
+    console.log("[orchestrator:sync] Running Agent 1 (profile analysis) + exercise fetch...")
     const [agent1Result, allExercises] = await Promise.all([
       callAgent<ProfileAnalysis>(
         PROFILE_ANALYZER_PROMPT,
@@ -706,6 +727,7 @@ ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` 
       getExercisesForAI(),
     ])
     tokenUsage.agent1 = agent1Result.tokens_used
+    console.log("[orchestrator:sync] Agent 1 complete. Tokens:", agent1Result.tokens_used, "Exercises fetched:", allExercises.length)
 
     const analysis = agent1Result.content
     // Apply difficulty score filter when assessment context is provided
@@ -731,6 +753,7 @@ Training Parameters:
 - Goals: ${request.goals.join(", ")}
 ${request.additional_instructions ? `- Additional instructions: ${request.additional_instructions}` : ""}`
 
+    console.log("[orchestrator:sync] Running Agent 2 (program architect)...")
     const agent2Result = await callAgent<ProgramSkeleton>(
       PROGRAM_ARCHITECT_PROMPT,
       agent2UserMessage,
@@ -739,6 +762,7 @@ ${request.additional_instructions ? `- Additional instructions: ${request.additi
     )
     tokenUsage.agent2 = agent2Result.tokens_used
     const skeleton = agent2Result.content
+    console.log("[orchestrator:sync] Agent 2 complete. Tokens:", agent2Result.tokens_used, "Weeks:", skeleton.weeks.length)
 
     // Pre-filter exercises
     const availableEquipment = request.equipment_override ?? profile?.available_equipment ?? []
@@ -757,6 +781,7 @@ ${request.additional_instructions ? `- Additional instructions: ${request.additi
     const exerciseLibrary = formatExerciseLibrary(filtered)
 
     // Agent 3 with validation retry loop
+    console.log("[orchestrator:sync] Running Agent 3 (exercise selection) with", filtered.length, "filtered exercises...")
     let assignment: ExerciseAssignment | null = null
     let validation: ValidationResult | null = null
 
@@ -777,6 +802,7 @@ Exercise Library (${filtered.length} exercises, pre-filtered for relevance):
 ${exerciseLibrary}${feedbackSection}`
 
       try {
+        console.log(`[orchestrator:sync] Agent 3 attempt ${attempt + 1}/${MAX_RETRIES + 1}...`)
         const agent3Result: AgentCallResult<ExerciseAssignment> = await callAgent<ExerciseAssignment>(
           EXERCISE_SELECTOR_PROMPT,
           agent3UserMessage,
@@ -785,12 +811,26 @@ ${exerciseLibrary}${feedbackSection}`
         )
         tokenUsage.agent3 += agent3Result.tokens_used
         assignment = agent3Result.content
+        console.log("[orchestrator:sync] Agent 3 returned", assignment.assignments.length, "assignments. Validating...")
 
         validation = validateProgram(skeleton, assignment, analysis, compressed, availableEquipment, profile?.experience_level ?? "beginner", assessmentContext?.maxDifficultyScore)
+        const errors = validation.issues.filter(i => i.type === "error")
+        const warnings = validation.issues.filter(i => i.type === "warning")
+        console.log("[orchestrator:sync] Validation result:", { pass: validation.pass, errors: errors.length, warnings: warnings.length })
+        if (errors.length > 0) {
+          console.log("[orchestrator:sync] Validation ERRORS:")
+          errors.forEach((e, i) => console.log(`  ${i + 1}. ${e.message}`))
+        }
+        if (warnings.length > 0) {
+          console.log("[orchestrator:sync] Validation WARNINGS:")
+          warnings.forEach((w, i) => console.log(`  ${i + 1}. ${w.message}`))
+        }
 
         if (validation.pass || !validation.issues.some((i) => i.type === "error")) break
+        console.log("[orchestrator:sync] Retrying...")
         retries++
       } catch (agentError) {
+        console.error(`[orchestrator:sync] Agent 3 attempt ${attempt + 1} error:`, agentError instanceof Error ? agentError.message : agentError)
         if (attempt === MAX_RETRIES) {
           throw new Error(`Exercise selection failed after ${MAX_RETRIES + 1} attempts: ${agentError instanceof Error ? agentError.message : "Unknown error"}`)
         }
@@ -801,17 +841,18 @@ ${exerciseLibrary}${feedbackSection}`
     if (!assignment || !validation) throw new Error("Failed to generate exercise assignments")
 
     // Create program
+    console.log("[orchestrator:sync] Creating program in database...")
     const programCategory = deriveProgramCategory(request.goals)
     const programDifficulty = mapDifficulty(profile?.experience_level ?? null)
     const goalsLabel = request.goals.map((g) => g.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())).join(" & ")
     const splitLabel = skeleton.split_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 
     const program = await createProgram({
-      name: `${clientName}'s ${request.duration_weeks}-Week ${goalsLabel} Program`,
+      name: request.client_id ? `${clientName}'s ${request.duration_weeks}-Week ${goalsLabel} Program` : `${request.duration_weeks}-Week ${goalsLabel} Program`,
       description: `A ${request.duration_weeks}-week ${splitLabel.toLowerCase()} program designed for ${goalsLabel.toLowerCase()}, training ${request.sessions_per_week}x per week. ${skeleton.notes}`,
       category: [programCategory],
       difficulty: programDifficulty,
-      tier: "premium",
+      tier: request.tier ?? "premium",
       duration_weeks: request.duration_weeks,
       sessions_per_week: request.sessions_per_week,
       split_type: skeleton.split_type,
@@ -847,11 +888,13 @@ ${exerciseLibrary}${feedbackSection}`
 
     await Promise.all(insertPromises)
 
-    // Auto-assign
-    try {
-      await createAssignment({ program_id: program.id, user_id: request.client_id, assigned_by: requestedBy, start_date: new Date().toISOString().split("T")[0], end_date: null, status: "active", notes: "Auto-assigned from AI program generation", current_week: 1, total_weeks: program.duration_weeks ?? null })
-    } catch (assignError) {
-      console.error("[generate] Failed to auto-assign:", assignError)
+    // Auto-assign (only when a client was selected)
+    if (request.client_id) {
+      try {
+        await createAssignment({ program_id: program.id, user_id: request.client_id, assigned_by: requestedBy, start_date: new Date().toISOString().split("T")[0], end_date: null, status: "active", notes: "Auto-assigned from AI program generation", current_week: 1, total_weeks: program.duration_weeks ?? null })
+      } catch (assignError) {
+        console.error("[generate] Failed to auto-assign:", assignError)
+      }
     }
 
     // Update log
@@ -872,6 +915,13 @@ ${exerciseLibrary}${feedbackSection}`
     const durationMs = Date.now() - startTime
     tokenUsage.total = tokenUsage.agent1 + tokenUsage.agent2 + tokenUsage.agent3 + tokenUsage.agent4
     const errorMessage = error instanceof Error ? error.message : "Unknown error during program generation"
+
+    console.error("[orchestrator:sync] PIPELINE FAILED after", Math.round(durationMs / 1000), "s")
+    console.error("[orchestrator:sync] Error:", errorMessage)
+    console.error("[orchestrator:sync] Token usage at failure:", tokenUsage)
+    if (error instanceof Error && error.stack) {
+      console.error("[orchestrator:sync] Stack:", error.stack)
+    }
 
     await updateGenerationLog(log.id, {
       status: "failed",

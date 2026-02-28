@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { useFormTour } from "@/hooks/use-form-tour"
 import { FormTour } from "@/components/admin/FormTour"
 import { TourButton } from "@/components/admin/TourButton"
+import { AvatarUpload } from "@/components/shared/AvatarUpload"
 import { EDIT_CLIENT_TOUR_STEPS } from "@/lib/tour-steps"
 import type { User } from "@/types/database"
 
@@ -84,6 +85,13 @@ export function EditClientDialog({ open, onOpenChange, client }: EditClientDialo
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <AvatarUpload
+            currentUrl={client.avatar_url}
+            userId={client.id}
+            initials={`${client.first_name.charAt(0)}${client.last_name.charAt(0)}`.toUpperCase()}
+            disabled={isSubmitting}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-firstName">First Name *</Label>

@@ -11,6 +11,7 @@ import type { Program, User } from "@/types/database"
 interface ProgramHeaderProps {
   program: Program
   clients: User[]
+  assignedUserIds: string[]
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -69,7 +70,7 @@ function formatPrice(cents: number | null): string {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-export function ProgramHeader({ program, clients }: ProgramHeaderProps) {
+export function ProgramHeader({ program, clients, assignedUserIds }: ProgramHeaderProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
 
@@ -150,6 +151,7 @@ export function ProgramHeader({ program, clients }: ProgramHeaderProps) {
         onOpenChange={setAssignOpen}
         programId={program.id}
         clients={clients}
+        assignedUserIds={assignedUserIds}
       />
     </>
   )

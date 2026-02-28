@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
-import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ClipboardList, LayoutGrid, Sparkles, Globe, Lock, Users, UserCheck } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ClipboardList, LayoutGrid, Sparkles, Globe, Lock, Users, UserCheck, MessageSquare } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state"
 import { ProgramFormDialog } from "@/components/admin/ProgramFormDialog"
 import { AiGenerateDialog } from "@/components/admin/AiGenerateDialog"
+import { AiProgramChatDialog } from "@/components/admin/AiProgramChatDialog"
 import { PROGRAM_CATEGORIES, PROGRAM_DIFFICULTIES, PROGRAM_TIERS } from "@/lib/validators/program"
 import type { Program } from "@/types/database"
 
@@ -78,6 +79,7 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false)
   const [aiDialogOpen, setAiDialogOpen] = useState(false)
+  const [chatDialogOpen, setChatDialogOpen] = useState(false)
   const [editingProgram, setEditingProgram] = useState<Program | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -148,6 +150,10 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
             <Sparkles className="size-4" />
             AI Generate
           </Button>
+          <Button variant="outline" onClick={() => setChatDialogOpen(true)}>
+            <MessageSquare className="size-4" />
+            AI Chat Builder
+          </Button>
         </div>
         <ProgramFormDialog
           open={formOpen}
@@ -157,6 +163,10 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
         <AiGenerateDialog
           open={aiDialogOpen}
           onOpenChange={setAiDialogOpen}
+        />
+        <AiProgramChatDialog
+          open={chatDialogOpen}
+          onOpenChange={setChatDialogOpen}
         />
       </div>
     )
@@ -170,6 +180,10 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
           {programs.length} program{programs.length !== 1 ? "s" : ""} in library
         </p>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setChatDialogOpen(true)}>
+            <MessageSquare className="size-4" />
+            AI Chat Builder
+          </Button>
           <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
             <Sparkles className="size-4" />
             AI Generate
@@ -279,13 +293,13 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {(Array.isArray(program.category) ? program.category : [program.category]).map((cat) => (
-                        <span key={cat} className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary capitalize">
+                        <span key={cat} className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary capitalize whitespace-nowrap">
                           {CATEGORY_LABELS[cat] ?? cat}
                         </span>
                       ))}
-                    </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${DIFFICULTY_COLORS[program.difficulty] ?? "bg-muted text-muted-foreground"}`}>
@@ -433,6 +447,12 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
       <AiGenerateDialog
         open={aiDialogOpen}
         onOpenChange={setAiDialogOpen}
+      />
+
+      {/* AI Chat Builder Dialog */}
+      <AiProgramChatDialog
+        open={chatDialogOpen}
+        onOpenChange={setChatDialogOpen}
       />
     </div>
   )

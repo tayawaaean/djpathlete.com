@@ -48,6 +48,18 @@ export async function createAssignment(
   return data as ProgramAssignment
 }
 
+/** Get user IDs with active assignments for a specific program. */
+export async function getActiveUserIdsForProgram(programId: string): Promise<string[]> {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("program_assignments")
+    .select("user_id")
+    .eq("program_id", programId)
+    .eq("status", "active")
+  if (error) throw error
+  return (data ?? []).map((r) => r.user_id)
+}
+
 export async function getAssignmentCountsByProgram(): Promise<Record<string, number>> {
   const supabase = getClient()
   const { data, error } = await supabase

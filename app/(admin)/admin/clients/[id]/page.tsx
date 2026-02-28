@@ -28,6 +28,7 @@ import { getAssignments } from "@/lib/db/assignments"
 import { getPayments } from "@/lib/db/payments"
 import { getProgress, getWorkoutStreak } from "@/lib/db/progress"
 import { getAchievements } from "@/lib/db/achievements"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { EmptyState } from "@/components/ui/empty-state"
 import { ClientProgressView } from "@/components/admin/ClientProgressView"
 import {
@@ -82,7 +83,7 @@ const PAYMENT_STATUS_COLORS: Record<string, string> = {
 
 const ROLE_COLORS: Record<string, string> = {
   admin: "bg-primary/10 text-primary",
-  client: "bg-accent/10 text-accent-foreground",
+  client: "bg-accent/15 text-accent",
 }
 
 function formatDate(dateString: string): string {
@@ -674,10 +675,14 @@ export default async function ClientDetailPage({
       {/* Client Header */}
       <div className="bg-white rounded-xl border border-border p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Avatar placeholder */}
-          <div className="flex items-center justify-center size-14 rounded-full bg-primary/10 shrink-0">
-            <User className="size-7 text-primary" />
-          </div>
+          <Avatar className="size-14 shrink-0">
+            {user.avatar_url && (
+              <AvatarImage src={user.avatar_url} alt={`${user.first_name} ${user.last_name}`} />
+            )}
+            <AvatarFallback className="bg-primary/10 text-primary text-lg">
+              {user.first_name.charAt(0)}{user.last_name.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h1 className="text-2xl font-semibold text-primary">

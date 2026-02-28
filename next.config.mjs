@@ -1,11 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    resolveAlias: {
-      "lucide-react/dist/esm/icons/twitter.js":
-        "lucide-react/dist/esm/icons/x.js",
-    },
-  },
   experimental: {
     optimizePackageImports: ["lucide-react"],
     staleTimes: {

@@ -156,6 +156,29 @@ async function triggerWebhook(
   return true
 }
 
+/**
+ * Looks up a contact by email address.
+ */
+async function findContactByEmail(
+  email: string
+): Promise<GHLContact | null> {
+  const response = await ghlFetch(
+    `/contacts/lookup?email=${encodeURIComponent(email)}&locationId=${GHL_LOCATION_ID}`,
+    { method: "GET" }
+  )
+
+  const json = (await response.json()) as { contacts?: GHLContact[] }
+  return json.contacts?.[0] ?? null
+}
+
+/**
+ * Deletes a contact by ID.
+ */
+async function deleteContactById(contactId: string): Promise<boolean> {
+  await ghlFetch(`/contacts/${contactId}`, { method: "DELETE" })
+  return true
+}
+
 // ---------------------------------------------------------------------------
 // Public API (never throw — graceful degradation)
 // ---------------------------------------------------------------------------
@@ -213,6 +236,30 @@ export async function ghlTriggerWebhook(
     return await withRetry(() => triggerWebhook(webhookUrl, data))
   } catch (error) {
     console.error("[GHL] Failed to trigger webhook:", error)
+    return false
+  }
+}
+
+/**
+ * Deletes a GHL contact by looking up their email address first.
+ * Returns true on success, false on any failure or if contact not found.
+ */
+export async function ghlDeleteContact(email: string): Promise<boolean> {
+  if (!isGHLConfigured()) {
+    console.warn("[GHL] Not configured — skipping deleteContact")
+    return false
+  }
+
+  try {
+    const contact = await withRetry(() => findContactByEmail(email))
+    if (!contact?.id) {
+      console.warn(`[GHL] No contact found for ${email} — skipping delete`)
+      return false
+    }
+
+    return await withRetry(() => deleteContactById(contact.id))
+  } catch (error) {
+    console.error("[GHL] Failed to delete contact:", error)
     return false
   }
 }

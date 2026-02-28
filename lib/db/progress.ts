@@ -115,12 +115,14 @@ export async function getWorkoutStreak(userId: string): Promise<number> {
   return streak
 }
 
-export async function getAllProgress() {
+export async function getAllProgress(limit?: number) {
   const supabase = getClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("exercise_progress")
     .select("*, exercises(name)")
     .order("completed_at", { ascending: false })
+  if (limit) query = query.limit(limit)
+  const { data, error } = await query
   if (error) throw error
   return data as (ExerciseProgress & { exercises: { name: string } | null })[]
 }

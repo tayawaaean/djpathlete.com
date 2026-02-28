@@ -27,7 +27,6 @@ export function FormTour({
 
   const containerHeight = containerRect?.height ?? 600
   const containerWidth = containerRect?.width ?? 400
-  const scrollTop = containerRect ? 0 : 0 // rect already includes scrollTop from hook
 
   // Highlight bounds with padding
   const hlTop = targetRect.y - 4
@@ -35,15 +34,8 @@ export function FormTour({
   const hlWidth = targetRect.width + 8
   const hlHeight = targetRect.height + 8
 
-  // Determine tooltip placement: above if target is in the lower 60% of visible area
-  // We need the visual position (without scrollTop) to decide placement
-  const visualTop = targetRect.y - (containerRect ? 0 : 0)
-  const placeAbove = (hlTop + hlHeight) > containerHeight * 0.6
-
-  const tooltipTop = placeAbove
-    ? hlTop - 8 // tooltip bottom-anchored above the highlight
-    : hlTop + hlHeight + 8
-
+  // Always place tooltip below the highlight
+  const tooltipTop = hlTop + hlHeight + 8
   const tooltipLeft = Math.max(8, Math.min(hlLeft, containerWidth - 308))
 
   return (
@@ -57,13 +49,13 @@ export function FormTour({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="absolute inset-0 z-[60] pointer-events-auto"
-            style={{ height: "200%" }} // cover full scroll height
+            style={{ height: "200%" }}
             onClick={close}
           >
             <div className="absolute inset-0 bg-black/20 rounded-lg" />
           </motion.div>
 
-          {/* Highlight ring — no key, smoothly animated between positions */}
+          {/* Highlight ring */}
           <motion.div
             animate={{
               top: hlTop,
@@ -75,23 +67,14 @@ export function FormTour({
             className="absolute z-[61] ring-2 ring-primary/60 bg-background rounded-md pointer-events-none"
           />
 
-          {/* Tooltip — smoothly slides to follow the highlight */}
-          <motion.div
-            animate={{
-              top: placeAbove ? undefined : tooltipTop,
-              bottom: placeAbove ? containerHeight - hlTop + 8 : undefined,
-              left: tooltipLeft,
-              opacity: 1,
-            }}
-            initial={{ opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={spring}
+          {/* Tooltip — always below the highlight, scroll container provides room */}
+          <div
             className="absolute z-[62] w-[min(300px,calc(100%-2rem))] pointer-events-auto"
-            style={placeAbove ? { top: "auto" } : { bottom: "auto" }}
+            style={{ top: tooltipTop, left: tooltipLeft }}
           >
             <motion.div
               key={currentIndex}
-              initial={{ opacity: 0, y: placeAbove ? 6 : -6 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: 0.08 }}
               className="rounded-lg border border-border bg-background shadow-lg p-3 space-y-2"
@@ -143,7 +126,7 @@ export function FormTour({
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

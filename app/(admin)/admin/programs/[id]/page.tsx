@@ -5,6 +5,7 @@ import { getProgramById } from "@/lib/db/programs"
 import { getProgramExercises } from "@/lib/db/program-exercises"
 import { getExercises } from "@/lib/db/exercises"
 import { getClients } from "@/lib/db/users"
+import { getActiveUserIdsForProgram } from "@/lib/db/assignments"
 import { Badge } from "@/components/ui/badge"
 import { ProgramHeader } from "@/components/admin/ProgramHeader"
 import { ProgramBuilder } from "@/components/admin/ProgramBuilder"
@@ -33,10 +34,11 @@ export default async function ProgramBuilderPage({
     notFound()
   }
 
-  const [programExercises, exercises, clients] = await Promise.all([
+  const [programExercises, exercises, clients, assignedUserIds] = await Promise.all([
     getProgramExercises(id),
     getExercises(),
     getClients(),
+    getActiveUserIdsForProgram(id),
   ])
 
   return (
@@ -49,7 +51,7 @@ export default async function ProgramBuilderPage({
         Back to Programs
       </Link>
 
-      <ProgramHeader program={program} clients={clients} />
+      <ProgramHeader program={program} clients={clients} assignedUserIds={assignedUserIds} />
 
       {program.is_ai_generated && program.ai_generation_params && (
         <AiGenerationSummary params={program.ai_generation_params} />

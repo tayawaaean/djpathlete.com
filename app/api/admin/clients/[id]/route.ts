@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { updateUser, getUserByEmail } from "@/lib/db/users"
+import { updateUser, getUserByEmail, getUserById, deleteUser } from "@/lib/db/users"
+import { ghlDeleteContact } from "@/lib/ghl"
 import { z } from "zod"
 
 const editClientSchema = z.object({
@@ -62,6 +63,49 @@ export async function PATCH(
     return NextResponse.json(safeUser)
   } catch (error) {
     console.error("Edit client error:", error)
+    return NextResponse.json(
+      { error: "An unexpected error occurred. Please try again." },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id || session.user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access required." },
+        { status: 403 }
+      )
+    }
+
+    const { id } = await params
+
+    // Prevent self-deletion
+    if (id === session.user.id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account." },
+        { status: 400 }
+      )
+    }
+
+    // Fetch user to get email for GHL lookup
+    const user = await getUserById(id)
+
+    // Non-blocking: delete GHL contact by email
+    ghlDeleteContact(user.email).catch(() => {
+      // GHL failure should not block user deletion
+    })
+
+    await deleteUser(id)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Delete client error:", error)
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }

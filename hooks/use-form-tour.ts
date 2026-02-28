@@ -36,12 +36,8 @@ export function useFormTour({ steps, scrollContainerRef }: UseFormTourOptions): 
 
     const targetEl = container.querySelector<HTMLElement>(`#${step.target}`)
     if (!targetEl) {
-      // If target doesn't exist (conditional field), skip forward
-      if (currentIndex < steps.length - 1) {
-        setCurrentIndex((i) => i + 1)
-      } else {
-        setIsActive(false)
-      }
+      // Target may be absent during a wizard step transition — don't skip here.
+      // showStep handles retries and skipping. measure is for re-positioning only.
       return
     }
 
@@ -69,27 +65,44 @@ export function useFormTour({ steps, scrollContainerRef }: UseFormTourOptions): 
     const step = steps[index]
     if (!step) return
 
-    // Run beforeShow (e.g. expand collapsible)
+    const hadBeforeShow = !!step.beforeShow
+
+    // Run beforeShow (e.g. expand collapsible, navigate wizard step)
     step.beforeShow?.()
 
-    // Wait a tick for DOM to update after beforeShow
-    requestAnimationFrame(() => {
-      const targetEl = container.querySelector<HTMLElement>(`#${step.target}`)
-      if (!targetEl) {
-        // Skip to next if target doesn't exist
-        if (index < steps.length - 1) {
-          setCurrentIndex(index + 1)
-        } else {
-          setIsActive(false)
+    // If beforeShow was called (e.g. wizard step change), the DOM needs time
+    // for React re-render + AnimatePresence animation (~200-400ms).
+    // Retry a few times before giving up.
+    function findTarget(retriesLeft: number) {
+      requestAnimationFrame(() => {
+        if (!container) return
+        const targetEl = container.querySelector<HTMLElement>(`#${step.target}`)
+        if (!targetEl) {
+          if (retriesLeft > 0) {
+            // Retry after a short delay to allow animations to complete
+            setTimeout(() => findTarget(retriesLeft - 1), 200)
+            return
+          }
+          // Skip to next if target still doesn't exist
+          if (index < steps.length - 1) {
+            setCurrentIndex(index + 1)
+          } else {
+            setIsActive(false)
+          }
+          return
         }
-        return
-      }
 
-      targetEl.scrollIntoView({ behavior: "smooth", block: "center" })
+        // Scroll target toward the top of the container so the tooltip
+        // (which renders below) has room to display without being clipped.
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" })
 
-      // Measure after scroll settles
-      setTimeout(() => measure(), 300)
-    })
+        // Measure after scroll settles
+        setTimeout(() => measure(), 300)
+      })
+    }
+
+    // Allow retries when beforeShow was called (wizard transitions, collapsibles)
+    findTarget(hadBeforeShow ? 3 : 0)
   }, [steps, scrollContainerRef, measure])
 
   // Re-measure on scroll and resize

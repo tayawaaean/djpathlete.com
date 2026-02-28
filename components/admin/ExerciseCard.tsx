@@ -81,15 +81,10 @@ export function ExerciseCard({
                 {cat.replace("_", " ")}
               </span>
             ))}
-            {programExercise.group_tag && (
-              <span className="shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary">
-                {programExercise.group_tag}
-              </span>
-            )}
             {programExercise.technique &&
               programExercise.technique !== "straight_set" &&
               TECHNIQUE_BADGE_LABELS[programExercise.technique as TrainingTechnique] && (
-              <span className="shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-accent/20 text-accent-foreground">
+              <span className="shrink-0 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-accent/15 text-accent">
                 {TECHNIQUE_BADGE_LABELS[programExercise.technique as TrainingTechnique]}
               </span>
             )}

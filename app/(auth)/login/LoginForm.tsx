@@ -47,10 +47,15 @@ export function LoginForm() {
     const sessionData = await sessionRes.json()
     const role = sessionData?.user?.role
 
-    // If there's a callback URL (e.g., from program purchase), go there
-    // Otherwise redirect based on role
-    if (callbackUrl && !callbackUrl.startsWith("/admin") && !callbackUrl.startsWith("/client")) {
-      router.push(callbackUrl)
+    // If there's a callback URL, honour it (with role guard for admin routes)
+    if (callbackUrl) {
+      const isAdminRoute = callbackUrl.startsWith("/admin")
+      if (isAdminRoute && role !== "admin") {
+        // Non-admin tried to reach an admin route — send to client dashboard
+        router.push("/client/dashboard")
+      } else {
+        router.push(callbackUrl)
+      }
     } else {
       router.push(role === "admin" ? "/admin/dashboard" : "/client/dashboard")
     }

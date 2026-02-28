@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Search, ArrowLeft, Repeat2, Loader2 } from "lucide-react"
+import { Search, ArrowLeft, Repeat2 } from "lucide-react"
 import Image from "next/image"
 import {
   Dialog,
@@ -29,6 +29,7 @@ import {
   GROUPED_TECHNIQUES,
   type TrainingTechniqueOption,
 } from "@/lib/validators/program-exercise"
+import { ExerciseLinker } from "@/components/admin/ExerciseLinker"
 
 const FIELD_LABELS: Record<string, string> = {
   sets: "Sets",
@@ -57,19 +58,18 @@ const TECHNIQUE_CONFIG: Record<TrainingTechniqueOption, { label: string; descrip
 }
 
 /** Find the next available group letter (A, B, C...) for the given day's exercises */
-function getNextGroupTag(dayExercises: (ProgramExercise & { exercises: Exercise })[]) {
+function getNextGroupLetter(dayExercises: (ProgramExercise & { exercises: Exercise })[]) {
   const usedLetters = new Set<string>()
   for (const pe of dayExercises) {
     if (pe.group_tag) {
-      const letter = pe.group_tag.charAt(0).toUpperCase()
-      usedLetters.add(letter)
+      usedLetters.add(pe.group_tag.charAt(0).toUpperCase())
     }
   }
   for (let code = 65; code <= 90; code++) {
     const letter = String.fromCharCode(code)
-    if (!usedLetters.has(letter)) return `${letter}1`
+    if (!usedLetters.has(letter)) return letter
   }
-  return "A1"
+  return "A"
 }
 
 interface AddExerciseDialogProps {
@@ -162,18 +162,11 @@ export function AddExerciseDialog({
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [technique, setTechnique] = useState<TrainingTechniqueOption>("straight_set")
-  const [groupTag, setGroupTag] = useState("")
+  const [linkedExerciseIds, setLinkedExerciseIds] = useState<string[]>([])
   const dialogRef = useRef<HTMLDivElement>(null)
   const tour = useFormTour({ steps: ADD_EXERCISE_TOUR_STEPS, scrollContainerRef: dialogRef })
 
-  const needsGroupTag = GROUPED_TECHNIQUES.includes(technique)
-
-  // Find exercises already in the same group for the helper text
-  const groupPeers = groupTag
-    ? dayExercises.filter(
-        (pe) => pe.group_tag && pe.group_tag.charAt(0).toUpperCase() === groupTag.charAt(0).toUpperCase()
-      )
-    : []
+  const needsGrouping = GROUPED_TECHNIQUES.includes(technique)
 
   function resetAndClose(openState: boolean) {
     if (!openState) {
@@ -183,7 +176,7 @@ export function AddExerciseDialog({
       setSearch("")
       setCategoryFilter("all")
       setTechnique("straight_set")
-      setGroupTag("")
+      setLinkedExerciseIds([])
     }
     onOpenChange(openState)
   }
@@ -221,6 +214,24 @@ export function AddExerciseDialog({
 
     setIsSubmitting(true)
 
+    // Compute group_tag for grouped techniques
+    let groupTag: string | null = null
+    if (needsGrouping && linkedExerciseIds.length > 0) {
+      // Check if any linked exercise already has a group — reuse that letter
+      const linkedPeer = dayExercises.find(
+        (pe) => linkedExerciseIds.includes(pe.id) && pe.group_tag
+      )
+      const letter = linkedPeer
+        ? linkedPeer.group_tag!.charAt(0).toUpperCase()
+        : getNextGroupLetter(dayExercises)
+
+      // Count existing exercises in this group to determine the new number
+      const existingInGroup = dayExercises.filter(
+        (pe) => pe.group_tag && pe.group_tag.charAt(0).toUpperCase() === letter
+      )
+      groupTag = `${letter}${existingInGroup.length + 1}`
+    }
+
     const body = {
       exercise_id: selectedExercise.id,
       week_number: weekNumber,
@@ -235,7 +246,7 @@ export function AddExerciseDialog({
       rpe_target: formData.get("rpe_target") || null,
       intensity_pct: formData.get("intensity_pct") || null,
       tempo: formData.get("tempo") || null,
-      group_tag: needsGroupTag ? (groupTag || null) : null,
+      group_tag: groupTag,
     }
 
     try {
@@ -257,6 +268,33 @@ export function AddExerciseDialog({
           }
         }
         throw new Error(data.error || "Failed to add exercise")
+      }
+
+      // PATCH linked exercises to assign matching group_tag + technique
+      if (needsGrouping && linkedExerciseIds.length > 0 && groupTag) {
+        const letter = groupTag.charAt(0)
+        await Promise.all(
+          linkedExerciseIds.map(async (peId, idx) => {
+            const linkedPe = dayExercises.find((pe) => pe.id === peId)
+            // Only update if the exercise isn't already in this group
+            const alreadyInGroup =
+              linkedPe?.group_tag?.charAt(0).toUpperCase() === letter &&
+              linkedPe?.technique === technique
+            if (alreadyInGroup) return
+
+            await fetch(
+              `/api/admin/programs/${programId}/exercises/${peId}`,
+              {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  group_tag: `${letter}${idx + 1}`,
+                  technique,
+                }),
+              }
+            )
+          })
+        )
       }
 
       toast.success("Exercise added")
@@ -433,11 +471,8 @@ export function AddExerciseDialog({
                             type="button"
                             onClick={() => {
                               setTechnique(t)
-                              if (GROUPED_TECHNIQUES.includes(t) && !groupTag) {
-                                setGroupTag(getNextGroupTag(dayExercises))
-                              }
                               if (!GROUPED_TECHNIQUES.includes(t)) {
-                                setGroupTag("")
+                                setLinkedExerciseIds([])
                               }
                             }}
                             className={`flex flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors ${
@@ -454,27 +489,14 @@ export function AddExerciseDialog({
                     </div>
                   </div>
 
-                  {/* Group tag — only shown for grouped techniques */}
-                  {needsGroupTag && (
-                    <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-                      <Label htmlFor="group_tag">Group Tag</Label>
-                      <Input
-                        id="group_tag"
-                        value={groupTag}
-                        onChange={(e) => setGroupTag(e.target.value.toUpperCase())}
-                        placeholder="e.g. A1"
-                        className="max-w-[100px]"
-                      />
-                      {groupPeers.length > 0 ? (
-                        <p className="text-xs text-muted-foreground">
-                          Grouped with: {groupPeers.map((pe) => `${pe.exercises.name} (${pe.group_tag})`).join(", ")}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          Use the same letter for exercises done together (A1 + A2 = {TECHNIQUE_CONFIG[technique].label.toLowerCase()}).
-                        </p>
-                      )}
-                    </div>
+                  {/* Exercise linker — shown for grouped techniques */}
+                  {needsGrouping && (
+                    <ExerciseLinker
+                      technique={technique as "superset" | "giant_set" | "circuit"}
+                      dayExercises={dayExercises}
+                      selectedIds={linkedExerciseIds}
+                      onSelectionChange={setLinkedExerciseIds}
+                    />
                   )}
 
                   {catFields.showTempo && (

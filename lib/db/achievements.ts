@@ -69,12 +69,14 @@ export async function markCelebrated(id: string) {
   return data as Achievement
 }
 
-export async function getAllAchievements() {
+export async function getAllAchievements(limit?: number) {
   const supabase = getClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from("achievements")
     .select("*")
     .order("earned_at", { ascending: false })
+  if (limit) query = query.limit(limit)
+  const { data, error } = await query
   if (error) throw error
   return data as Achievement[]
 }

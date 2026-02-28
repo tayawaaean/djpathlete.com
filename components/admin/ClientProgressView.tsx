@@ -94,7 +94,7 @@ const STAT_CARDS = [
     key: "totalPRs" as const,
     label: "Personal Records",
     icon: Trophy,
-    color: "text-accent-foreground",
+    color: "text-accent",
     bgColor: "bg-accent/20",
   },
   {
@@ -221,7 +221,7 @@ export function ClientProgressView({
                       className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
                     >
                       <div className="flex items-center justify-center size-8 rounded-full bg-accent/20 shrink-0">
-                        <Icon className="size-4 text-accent-foreground" />
+                        <Icon className="size-4 text-accent" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
@@ -362,7 +362,7 @@ export function ClientProgressView({
                           </TableCell>
                           <TableCell className="text-right">
                             {entry.is_pr && (
-                              <Badge className="bg-accent/20 text-accent-foreground border-accent/30 text-xs">
+                              <Badge className="bg-accent/20 text-accent border-accent/30 text-xs">
                                 PR
                               </Badge>
                             )}

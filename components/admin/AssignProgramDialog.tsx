@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Search, Check, UserCheck } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -14,10 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useFormTour } from "@/hooks/use-form-tour"
-import { FormTour } from "@/components/admin/FormTour"
-import { TourButton } from "@/components/admin/TourButton"
-import { ASSIGN_PROGRAM_TOUR_STEPS } from "@/lib/tour-steps"
+import { Badge } from "@/components/ui/badge"
 import type { User } from "@/types/database"
 
 interface AssignProgramDialogProps {
@@ -25,6 +23,7 @@ interface AssignProgramDialogProps {
   onOpenChange: (open: boolean) => void
   programId: string
   clients: User[]
+  assignedUserIds: string[]
 }
 
 export function AssignProgramDialog({
@@ -32,28 +31,64 @@ export function AssignProgramDialog({
   onOpenChange,
   programId,
   clients,
+  assignedUserIds,
 }: AssignProgramDialogProps) {
   const router = useRouter()
   const dialogRef = useRef<HTMLDivElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const tour = useFormTour({ steps: ASSIGN_PROGRAM_TOUR_STEPS, scrollContainerRef: dialogRef })
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [search, setSearch] = useState("")
+  const [startDate, setStartDate] = useState(
+    () => new Date().toISOString().split("T")[0]
+  )
+  const [notes, setNotes] = useState("")
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const assignedSet = useMemo(() => new Set(assignedUserIds), [assignedUserIds])
 
-    const formData = new FormData(e.currentTarget)
-    const body = {
-      user_id: formData.get("user_id"),
-      start_date: formData.get("start_date"),
-      notes: formData.get("notes") || null,
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    if (!q) return clients
+    return clients.filter(
+      (c) =>
+        c.first_name.toLowerCase().includes(q) ||
+        c.last_name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q)
+    )
+  }, [clients, search])
+
+  function toggleClient(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function handleClose(o: boolean) {
+    if (!o) {
+      setSelectedIds(new Set())
+      setSearch("")
+      setNotes("")
+      setStartDate(new Date().toISOString().split("T")[0])
     }
+    onOpenChange(o)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (selectedIds.size === 0) return
+    setIsSubmitting(true)
 
     try {
       const response = await fetch(`/api/admin/programs/${programId}/assign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          user_ids: Array.from(selectedIds),
+          start_date: startDate,
+          notes: notes || null,
+        }),
       })
 
       if (!response.ok) {
@@ -61,15 +96,22 @@ export function AssignProgramDialog({
         throw new Error(data.error || "Failed to assign program")
       }
 
-      const selectedUserId = formData.get("user_id") as string
-      toast.success("Program assigned!", {
-        description: "Manage tracked exercises on the client detail page.",
-        action: {
-          label: "View Client",
-          onClick: () => router.push(`/admin/clients/${selectedUserId}`),
-        },
-      })
-      onOpenChange(false)
+      const data = await response.json()
+
+      if (data.assigned > 0) {
+        toast.success(
+          `Program assigned to ${data.assigned} client${data.assigned !== 1 ? "s" : ""}!`,
+          {
+            description: data.skipped > 0
+              ? `${data.skipped} already assigned — skipped.`
+              : undefined,
+          }
+        )
+      } else if (data.skipped > 0) {
+        toast.info("All selected clients are already assigned to this program.")
+      }
+
+      handleClose(false)
       router.refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to assign program")
@@ -78,60 +120,120 @@ export function AssignProgramDialog({
     }
   }
 
-  const today = new Date().toISOString().split("T")[0]
+  const selectedCount = selectedIds.size
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) tour.close(); onOpenChange(o) }}>
-      <DialogContent ref={dialogRef} className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent ref={dialogRef} className="sm:max-w-lg">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <DialogTitle>Assign Program</DialogTitle>
-            <TourButton onClick={tour.start} />
-          </div>
+          <DialogTitle>Assign Program</DialogTitle>
           <DialogDescription>
-            Assign this program to a client with a start date.
+            Select one or more clients, then set a shared start date.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="user_id">Client *</Label>
-            <select
-              id="user_id"
-              name="user_id"
-              required
-              disabled={isSubmitting}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="" disabled>
-                Select a client
-              </option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.first_name} {client.last_name} ({client.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="start_date">Start Date *</Label>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
-              id="start_date"
-              name="start_date"
-              type="date"
-              required
-              defaultValue={today}
+              placeholder="Search clients..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
               disabled={isSubmitting}
             />
           </div>
 
+          {/* Client list */}
+          <div className="max-h-[260px] overflow-y-auto rounded-md border border-border divide-y divide-border">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                No clients found.
+              </p>
+            ) : (
+              filtered.map((client) => {
+                const isAssigned = assignedSet.has(client.id)
+                const isSelected = selectedIds.has(client.id)
+
+                return (
+                  <button
+                    key={client.id}
+                    type="button"
+                    disabled={isAssigned || isSubmitting}
+                    onClick={() => toggleClient(client.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+                      isAssigned
+                        ? "opacity-50 cursor-not-allowed bg-muted/30"
+                        : isSelected
+                          ? "bg-primary/5"
+                          : "hover:bg-surface/50"
+                    }`}
+                  >
+                    {/* Checkbox */}
+                    <div
+                      className={`flex items-center justify-center size-5 rounded border shrink-0 transition-colors ${
+                        isAssigned
+                          ? "border-muted-foreground/30 bg-muted"
+                          : isSelected
+                            ? "bg-primary border-primary text-white"
+                            : "border-border bg-white"
+                      }`}
+                    >
+                      {(isSelected || isAssigned) && <Check className="size-3" />}
+                    </div>
+
+                    {/* Client info */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {client.first_name} {client.last_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {client.email}
+                      </p>
+                    </div>
+
+                    {/* Already assigned badge */}
+                    {isAssigned && (
+                      <Badge variant="outline" className="shrink-0 gap-1 text-[11px]">
+                        <UserCheck className="size-3" />
+                        Assigned
+                      </Badge>
+                    )}
+                  </button>
+                )
+              })
+            )}
+          </div>
+
+          {/* Selected count */}
+          {selectedCount > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedCount} client{selectedCount !== 1 ? "s" : ""} selected
+            </p>
+          )}
+
+          {/* Start date */}
+          <div className="space-y-2">
+            <Label htmlFor="start_date">Start Date *</Label>
+            <Input
+              id="start_date"
+              type="date"
+              required
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="assign-notes">Notes</Label>
             <textarea
               id="assign-notes"
-              name="notes"
               rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
               placeholder="Any notes for this assignment..."
               disabled={isSubmitting}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
@@ -142,17 +244,20 @@ export function AssignProgramDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleClose(false)}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Assigning..." : "Assign Program"}
+            <Button type="submit" disabled={isSubmitting || selectedCount === 0}>
+              {isSubmitting
+                ? "Assigning..."
+                : selectedCount === 0
+                  ? "Select Clients"
+                  : `Assign to ${selectedCount} Client${selectedCount !== 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </form>
-        <FormTour {...tour} />
       </DialogContent>
     </Dialog>
   )

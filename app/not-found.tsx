@@ -1,6 +1,10 @@
-import Link from "next/link"
+"use client"
 
 export default function NotFound() {
+  function hardRefreshHome() {
+    window.location.replace("/?_r=" + Date.now())
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-6">
       <div className="text-center max-w-md">
@@ -11,12 +15,12 @@ export default function NotFound() {
         <p className="text-muted-foreground font-body mb-8">
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
-        <Link
-          href="/"
+        <button
+          onClick={hardRefreshHome}
           className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
         >
           Go Home
-        </Link>
+        </button>
       </div>
     </div>
   )

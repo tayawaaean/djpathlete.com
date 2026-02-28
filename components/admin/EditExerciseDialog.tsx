@@ -25,6 +25,22 @@ import {
   GROUPED_TECHNIQUES,
   type TrainingTechniqueOption,
 } from "@/lib/validators/program-exercise"
+import { ExerciseLinker } from "@/components/admin/ExerciseLinker"
+
+/** Find the next available group letter (A, B, C...) for the given day's exercises */
+function getNextGroupLetter(dayExercises: (ProgramExercise & { exercises: Exercise })[]) {
+  const usedLetters = new Set<string>()
+  for (const pe of dayExercises) {
+    if (pe.group_tag) {
+      usedLetters.add(pe.group_tag.charAt(0).toUpperCase())
+    }
+  }
+  for (let code = 65; code <= 90; code++) {
+    const letter = String.fromCharCode(code)
+    if (!usedLetters.has(letter)) return letter
+  }
+  return "A"
+}
 
 const FIELD_LABELS: Record<string, string> = {
   sets: "Sets",
@@ -68,28 +84,32 @@ export function EditExerciseDialog({
   const dialogRef = useRef<HTMLDivElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [technique, setTechnique] = useState<TrainingTechniqueOption>("straight_set")
-  const [groupTag, setGroupTag] = useState("")
+  const [linkedExerciseIds, setLinkedExerciseIds] = useState<string[]>([])
   const tour = useFormTour({ steps: EDIT_EXERCISE_TOUR_STEPS, scrollContainerRef: dialogRef })
 
-  const needsGroupTag = GROUPED_TECHNIQUES.includes(technique)
+  const needsGrouping = GROUPED_TECHNIQUES.includes(technique)
 
   // Sync state when dialog opens with a new exercise
   useEffect(() => {
     if (programExercise) {
       setTechnique((programExercise.technique as TrainingTechniqueOption) || "straight_set")
-      setGroupTag(programExercise.group_tag || "")
+      // Pre-select exercises that share the same group_tag letter
+      if (programExercise.group_tag) {
+        const letter = programExercise.group_tag.charAt(0).toUpperCase()
+        const peers = dayExercises
+          .filter(
+            (pe) =>
+              pe.id !== programExercise.id &&
+              pe.group_tag &&
+              pe.group_tag.charAt(0).toUpperCase() === letter
+          )
+          .map((pe) => pe.id)
+        setLinkedExerciseIds(peers)
+      } else {
+        setLinkedExerciseIds([])
+      }
     }
-  }, [programExercise])
-
-  // Find exercises already in the same group (excluding current exercise)
-  const groupPeers = groupTag
-    ? dayExercises.filter(
-        (pe) =>
-          pe.id !== programExercise?.id &&
-          pe.group_tag &&
-          pe.group_tag.charAt(0).toUpperCase() === groupTag.charAt(0).toUpperCase()
-      )
-    : []
+  }, [programExercise, dayExercises])
 
   if (!programExercise) return null
 
@@ -99,6 +119,21 @@ export function EditExerciseDialog({
     setIsSubmitting(true)
 
     const formData = new FormData(e.currentTarget)
+
+    // Compute group_tag
+    let groupTag: string | null = null
+    const oldLetter = programExercise.group_tag
+      ? programExercise.group_tag.charAt(0).toUpperCase()
+      : null
+
+    if (needsGrouping && linkedExerciseIds.length > 0) {
+      // Reuse existing letter if this exercise already had one, otherwise pick next available
+      const letter = oldLetter || getNextGroupLetter(dayExercises)
+      // This exercise gets number 1 in the group
+      const linkedCount = linkedExerciseIds.length
+      groupTag = `${letter}${linkedCount + 1}`
+    }
+
     const body: Record<string, unknown> = {
       technique,
       sets: formData.get("sets") || null,
@@ -109,7 +144,7 @@ export function EditExerciseDialog({
       rpe_target: formData.get("rpe_target") || null,
       intensity_pct: formData.get("intensity_pct") || null,
       tempo: formData.get("tempo") || null,
-      group_tag: needsGroupTag ? (groupTag || null) : null,
+      group_tag: groupTag,
     }
 
     try {
@@ -134,6 +169,57 @@ export function EditExerciseDialog({
           }
         }
         throw new Error(data.error || "Failed to update")
+      }
+
+      // Sync linked exercises' group_tag + technique
+      if (needsGrouping && groupTag) {
+        const letter = groupTag.charAt(0)
+        // PATCH each linked exercise with matching group_tag
+        await Promise.all(
+          linkedExerciseIds.map(async (peId, idx) => {
+            await fetch(
+              `/api/admin/programs/${programId}/exercises/${peId}`,
+              {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  group_tag: `${letter}${idx + 1}`,
+                  technique,
+                }),
+              }
+            )
+          })
+        )
+      }
+
+      // Clear group_tag from exercises that were previously in this group but are now unlinked
+      if (oldLetter) {
+        const previouslyLinked = dayExercises.filter(
+          (pe) =>
+            pe.id !== programExercise.id &&
+            pe.group_tag &&
+            pe.group_tag.charAt(0).toUpperCase() === oldLetter
+        )
+        const unlinked = previouslyLinked.filter(
+          (pe) => !linkedExerciseIds.includes(pe.id)
+        )
+        if (unlinked.length > 0) {
+          await Promise.all(
+            unlinked.map(async (pe) => {
+              await fetch(
+                `/api/admin/programs/${programId}/exercises/${pe.id}`,
+                {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    group_tag: null,
+                    technique: "straight_set",
+                  }),
+                }
+              )
+            })
+          )
+        }
       }
 
       toast.success("Exercise updated")
@@ -267,11 +353,8 @@ export function EditExerciseDialog({
                         type="button"
                         onClick={() => {
                           setTechnique(t)
-                          if (GROUPED_TECHNIQUES.includes(t) && !groupTag) {
-                            setGroupTag(programExercise.group_tag || "A1")
-                          }
                           if (!GROUPED_TECHNIQUES.includes(t)) {
-                            setGroupTag("")
+                            setLinkedExerciseIds([])
                           }
                         }}
                         className={`flex flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors ${
@@ -288,27 +371,15 @@ export function EditExerciseDialog({
                 </div>
               </div>
 
-              {/* Group tag — only shown for grouped techniques */}
-              {needsGroupTag && (
-                <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-                  <Label htmlFor="edit-group-tag">Group Tag</Label>
-                  <Input
-                    id="edit-group-tag"
-                    value={groupTag}
-                    onChange={(e) => setGroupTag(e.target.value.toUpperCase())}
-                    placeholder="e.g. A1"
-                    className="max-w-[100px]"
-                  />
-                  {groupPeers.length > 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      Grouped with: {groupPeers.map((pe) => `${pe.exercises.name} (${pe.group_tag})`).join(", ")}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Use the same letter for exercises done together (A1 + A2 = {TECHNIQUE_CONFIG[technique].label.toLowerCase()}).
-                    </p>
-                  )}
-                </div>
+              {/* Exercise linker — shown for grouped techniques */}
+              {needsGrouping && (
+                <ExerciseLinker
+                  technique={technique as "superset" | "giant_set" | "circuit"}
+                  dayExercises={dayExercises}
+                  excludeId={programExercise.id}
+                  selectedIds={linkedExerciseIds}
+                  onSelectionChange={setLinkedExerciseIds}
+                />
               )}
 
               {catFields.showTempo && (

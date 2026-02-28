@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { advanceWeek, getAssignmentById } from "@/lib/db/assignments"
+import { getProgramById } from "@/lib/db/programs"
+import { getUserById } from "@/lib/db/users"
+import { sendCoachProgramCompletedNotification } from "@/lib/email"
 import { z } from "zod"
 
 const completeWeekSchema = z.object({
@@ -40,6 +43,29 @@ export async function POST(request: Request) {
     }
 
     const result = await advanceWeek(assignmentId)
+
+    // Notify coach when the program is fully completed
+    if (result.program_completed) {
+      try {
+        const [client, program] = await Promise.all([
+          getUserById(session.user.id),
+          getProgramById(assignment.program_id),
+        ])
+
+        const coachEmail = process.env.COACH_EMAIL ?? "admin@djpathlete.com"
+        const coachFirstName = process.env.COACH_FIRST_NAME ?? "Coach"
+
+        await sendCoachProgramCompletedNotification({
+          coachEmail,
+          coachFirstName,
+          clientName: `${client.first_name} ${client.last_name}`.trim(),
+          clientId: session.user.id,
+          programName: program?.name ?? "Unknown Program",
+        })
+      } catch {
+        // Coach notification failure should not affect the client response
+      }
+    }
 
     return NextResponse.json({
       assignment: result,

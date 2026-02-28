@@ -10,12 +10,15 @@ import {
 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { getUserById } from "@/lib/db/users"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { SettingsNotificationToggles } from "@/components/admin/SettingsNotificationToggles"
+import { ChangePasswordButton } from "@/components/shared/ChangePasswordButton"
+import { AccountInfoForm } from "@/components/shared/AccountInfoForm"
 
 export const metadata = { title: "Settings" }
 
@@ -23,7 +26,8 @@ export default async function SettingsPage() {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
-  const user = session.user
+  const sessionUser = session.user
+  const dbUser = await getUserById(sessionUser.id)
   const stripeSecretConfigured = !!process.env.STRIPE_SECRET_KEY
   const stripeWebhookConfigured = !!process.env.STRIPE_WEBHOOK_SECRET
 
@@ -40,35 +44,19 @@ export default async function SettingsPage() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="account-name">Name</Label>
-            <Input
-              id="account-name"
-              value={user.name ?? ""}
-              disabled
-              className="opacity-60"
-            />
-          </div>
+        <AccountInfoForm
+          initialFirstName={dbUser.first_name}
+          initialLastName={dbUser.last_name}
+          initialEmail={dbUser.email}
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="account-email">Email</Label>
-            <Input
-              id="account-email"
-              value={user.email ?? ""}
-              disabled
-              className="opacity-60"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Role</Label>
-            <div>
-              <Badge variant="default" className="capitalize">
-                <Shield className="size-3" />
-                {user.role}
-              </Badge>
-            </div>
+        <div className="mt-4 space-y-2">
+          <Label>Role</Label>
+          <div>
+            <Badge variant="default" className="capitalize">
+              <Shield className="size-3" />
+              {sessionUser.role}
+            </Badge>
           </div>
         </div>
 
@@ -81,12 +69,10 @@ export default async function SettingsPage() {
               <p className="text-sm font-medium">Change Password</p>
             </div>
             <p className="text-xs text-muted-foreground">
-              Password changes are handled through the authentication flow.
+              A password reset link will be sent to your email.
             </p>
           </div>
-          <Button variant="outline" size="sm" disabled className="opacity-60">
-            Change Password
-          </Button>
+          <ChangePasswordButton email={dbUser.email} />
         </div>
       </div>
 

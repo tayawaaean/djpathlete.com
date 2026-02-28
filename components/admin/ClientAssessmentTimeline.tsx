@@ -22,7 +22,7 @@ const LEVEL_COLORS: Record<AbilityLevel, string> = {
   beginner: "bg-warning/10 text-warning",
   intermediate: "bg-primary/10 text-primary",
   advanced: "bg-success/10 text-success",
-  elite: "bg-accent/10 text-accent-foreground",
+  elite: "bg-accent/15 text-accent",
 }
 
 function formatDate(dateString: string): string {
@@ -180,7 +180,7 @@ export function ClientAssessmentTimeline({
                     <Icon
                       className={cn(
                         "size-4",
-                        isInitial ? "text-primary" : "text-accent-foreground"
+                        isInitial ? "text-primary" : "text-accent"
                       )}
                       strokeWidth={1.5}
                     />
@@ -190,7 +190,7 @@ export function ClientAssessmentTimeline({
                       "text-[10px]",
                       isInitial
                         ? "bg-primary/10 text-primary"
-                        : "bg-accent/10 text-accent-foreground"
+                        : "bg-accent/15 text-accent"
                     )}
                   >
                     {isInitial ? "Initial Assessment" : "Reassessment"}

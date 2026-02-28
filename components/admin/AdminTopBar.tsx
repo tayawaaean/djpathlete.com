@@ -2,12 +2,15 @@
 
 import { Bell, Menu, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 interface AdminTopBarProps {
   onMenuClick?: () => void
+  avatarUrl?: string | null
+  initials?: string
 }
 
-export function AdminTopBar({ onMenuClick }: AdminTopBarProps) {
+export function AdminTopBar({ onMenuClick, avatarUrl, initials = "A" }: AdminTopBarProps) {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-6 bg-white border-b border-border">
       <div className="flex items-center gap-3">
@@ -39,10 +42,13 @@ export function AdminTopBar({ onMenuClick }: AdminTopBarProps) {
           <LogOut className="size-5" />
         </button>
 
-        {/* User avatar placeholder */}
-        <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
-          A
-        </div>
+        {/* User avatar */}
+        <Avatar>
+          {avatarUrl && <AvatarImage src={avatarUrl} alt="Admin avatar" />}
+          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
       </div>
     </header>
   )

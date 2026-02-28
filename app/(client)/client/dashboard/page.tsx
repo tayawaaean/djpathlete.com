@@ -100,7 +100,7 @@ export default async function ClientDashboardPage() {
           className="flex items-center gap-4 rounded-xl border border-accent/30 bg-accent/5 p-4 mb-6 hover:bg-accent/10 transition-colors"
         >
           <div className="flex items-center justify-center size-10 shrink-0 rounded-full bg-accent/20">
-            <ClipboardList className="size-5 text-accent-foreground" strokeWidth={1.5} />
+            <ClipboardList className="size-5 text-accent" strokeWidth={1.5} />
           </div>
           <div className="flex-1">
             <p className="font-semibold text-foreground text-sm">

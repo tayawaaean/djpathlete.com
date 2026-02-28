@@ -865,7 +865,7 @@ export function AdminAiChat() {
             {isNewChat && !isStreaming && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="size-3.5 text-accent-foreground" />
+                  <Sparkles className="size-3.5 text-accent" />
                   <span className="text-xs font-medium text-muted-foreground">Suggested</span>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
