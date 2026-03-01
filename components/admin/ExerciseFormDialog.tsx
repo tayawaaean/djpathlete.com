@@ -234,8 +234,9 @@ export function ExerciseFormDialog({
   }, [initialExercise, open])
 
   // How many steps are visible
+  // Relationships step only shown after creating a new exercise (not when editing)
   const hasExercise = !!(exercise as Exercise | null)?.id
-  const maxStep = (isEditing || hasExercise) ? 3 : 2
+  const maxStep = (!isEditing && hasExercise) ? 3 : 2
   const visibleSteps = STEPS.slice(0, maxStep + 1)
   const submitStep = 2 // Submit happens on AI Metadata step
 
@@ -427,19 +428,22 @@ export function ExerciseFormDialog({
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleDialogClose(); else onOpenChange(o) }}>
       <DialogContent
         ref={dialogRef}
-        className={cn("sm:max-w-lg max-h-[90vh] overflow-y-auto", tour.isActive && "pb-48")}
+        className={cn(
+          "sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 gap-3 sm:gap-4",
+          tour.isActive && "pb-48"
+        )}
       >
         {/* Header */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-1.5">
-            <DialogTitle className="text-lg font-heading font-semibold text-foreground">
+            <DialogTitle className="text-base sm:text-lg font-heading font-semibold text-foreground">
               {isEditing ? "Edit Exercise" : "Add Exercise"}
             </DialogTitle>
             <TourButton onClick={tour.start} />
           </div>
 
           {/* Step indicator */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none -mx-1 px-1">
             {visibleSteps.map((s, idx) => (
               <button
                 key={s.label}
@@ -447,7 +451,7 @@ export function ExerciseFormDialog({
                 onClick={() => goToStep(idx)}
                 disabled={idx > step}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                  "flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-3 py-1.5 text-xs font-medium transition-colors shrink-0",
                   idx === step
                     ? "bg-primary text-primary-foreground"
                     : idx < step
@@ -465,14 +469,15 @@ export function ExerciseFormDialog({
                 )}>
                   {idx < step ? "\u2713" : s.number}
                 </span>
-                {s.label}
+                <span className="hidden sm:inline">{s.label}</span>
+                <span className="sm:hidden">{s.label.split(" ")[0]}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Step content */}
-        <div className="min-h-[280px]">
+        <div className="min-h-0 sm:min-h-[280px]">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -555,31 +560,31 @@ export function ExerciseFormDialog({
         <FormTour {...tour} />
 
         {/* Footer */}
-        <DialogFooter>
+        <DialogFooter className="flex-row gap-2 sm:gap-2">
           {step > 0 ? (
-            <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting}>
+            <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} className="flex-1 sm:flex-none">
               <ChevronLeft className="size-4" />
               Back
             </Button>
           ) : (
-            <Button type="button" variant="outline" onClick={handleDialogClose} disabled={isSubmitting}>
+            <Button type="button" variant="outline" onClick={handleDialogClose} disabled={isSubmitting} className="flex-1 sm:flex-none">
               Cancel
             </Button>
           )}
 
           {step < submitStep ? (
-            <Button type="button" onClick={handleNext} disabled={isSubmitting}>
+            <Button type="button" onClick={handleNext} disabled={isSubmitting} className="flex-1 sm:flex-none">
               Next
               <ChevronRight className="size-4" />
             </Button>
           ) : step === submitStep ? (
-            <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+            <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="flex-1 sm:flex-none">
               {isSubmitting
                 ? isEditing ? "Saving..." : "Creating..."
-                : isEditing ? "Save Changes" : "Create Exercise"}
+                : isEditing ? "Save" : "Create"}
             </Button>
           ) : (
-            <Button type="button" onClick={handleDialogClose}>
+            <Button type="button" onClick={handleDialogClose} className="flex-1 sm:flex-none">
               Done
             </Button>
           )}
@@ -746,7 +751,7 @@ function StepDetails({
         />
         {errors.video_url && <p className="text-xs text-destructive">{errors.video_url[0]}</p>}
         {youtubeId && (
-          <div className="max-w-sm">
+          <div className="sm:max-w-sm">
             <div className="relative rounded-lg overflow-hidden border border-border aspect-video">
               {!iframeLoaded && <Skeleton className="absolute inset-0 rounded-none" />}
               <iframe
@@ -799,12 +804,12 @@ function StepAiMetadata({
     <div className="space-y-4">
       {/* AI Auto-fill banner */}
       <div id="ai-autofill-btn" className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="size-4 text-primary shrink-0" />
             <div className="min-w-0">
               <p className="text-sm font-medium">AI Auto-fill</p>
-              <p className="text-xs text-muted-foreground">Predict metadata from exercise name and category</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">Predict metadata from exercise name and category</p>
             </div>
           </div>
           <Button
@@ -813,7 +818,7 @@ function StepAiMetadata({
             variant="outline"
             onClick={() => onAutoFill(autoFillApplied)}
             disabled={disabled || isAutoFilling}
-            className="shrink-0"
+            className="shrink-0 w-full sm:w-auto"
           >
             {isAutoFilling ? (
               <><Loader2 className="size-3.5 animate-spin" /> Predicting...</>

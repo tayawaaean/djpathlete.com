@@ -27,53 +27,45 @@ export default async function ExercisesPage() {
       <h1 className="text-2xl font-semibold text-primary mb-6">Exercises</h1>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Dumbbell className="size-4 text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Dumbbell className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">Total Exercises</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {totalExercises}
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{totalExercises}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-success/10">
-              <Layers className="size-4 text-success" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-success/10">
+              <Layers className="size-3.5 sm:size-4 text-success" />
             </div>
-            <p className="text-sm text-muted-foreground">Compound</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Compound</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {compoundCount}
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{compoundCount}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Zap className="size-4 text-primary" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Zap className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">Bodyweight</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Bodyweight</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {bodyweightCount}
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{bodyweightCount}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Weight className="size-4 text-primary" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Weight className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">Equipment Types</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Equipment</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {equipmentTypes}
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{equipmentTypes}</p>
         </div>
       </div>
 

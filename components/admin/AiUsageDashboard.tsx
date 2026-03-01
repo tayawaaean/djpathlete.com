@@ -147,83 +147,60 @@ export function AiUsageDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Brain className="size-4 text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Brain className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground" title="Total number of AI requests across all features">Total Generations</p>
+            <p className="text-xs sm:text-sm text-muted-foreground" title="Total number of AI requests across all features">Generations</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {stats.total_generations}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            All AI calls: programs, coach tips, swaps
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{stats.total_generations}</p>
           {stats.generating > 0 && (
-            <p className="text-xs text-warning mt-1">
-              {stats.generating} currently generating
-            </p>
+            <p className="text-xs text-warning mt-0.5">{stats.generating} active</p>
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-success/10">
-              <CheckCircle className="size-4 text-success" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-success/10">
+              <CheckCircle className="size-3.5 sm:size-4 text-success" />
             </div>
-            <p className="text-sm text-muted-foreground" title="Percentage of AI requests that completed without errors">Success Rate</p>
+            <p className="text-xs sm:text-sm text-muted-foreground" title="Percentage of AI requests that completed without errors">Success Rate</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">{successRate}%</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {stats.successful} succeeded, {stats.failed} failed
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{successRate}%</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{stats.successful} ok, {stats.failed} failed</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Coins className="size-4 text-primary" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Coins className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground" title="Average tokens (input + output text units) per AI request">Avg Tokens</p>
+            <p className="text-xs sm:text-sm text-muted-foreground" title="Average tokens per AI request">Avg Tokens</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {formatTokens(stats.avg_tokens_per_generation)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {formatTokens(stats.total_tokens)} total &middot; measures input + output text
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{formatTokens(stats.avg_tokens_per_generation)}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{formatTokens(stats.total_tokens)} total</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Clock className="size-4 text-primary" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Clock className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground" title="Average time for each AI request to complete">Avg Duration</p>
+            <p className="text-xs sm:text-sm text-muted-foreground" title="Average time for each AI request">Avg Duration</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {formatDuration(stats.avg_duration_ms)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Time per AI request from start to finish
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{formatDuration(stats.avg_duration_ms)}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-accent/20">
-              <DollarSign className="size-4 text-accent" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4 col-span-2 lg:col-span-1">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-accent/20">
+              <DollarSign className="size-3.5 sm:size-4 text-accent" />
             </div>
-            <p className="text-sm text-muted-foreground" title="Estimated total cost based on Claude API token pricing">Est. Cost</p>
+            <p className="text-xs sm:text-sm text-muted-foreground" title="Estimated total cost">Est. Cost</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {estimateCost(stats.total_tokens)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            ~$0.009 / 1K tokens (blended input + output)
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{estimateCost(stats.total_tokens)}</p>
         </div>
       </div>
 

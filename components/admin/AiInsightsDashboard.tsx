@@ -60,21 +60,21 @@ function StatCard({
   iconColor?: string
 }) {
   return (
-    <div className="bg-white rounded-xl border border-border p-4">
-      <div className="flex items-center gap-3 mb-2">
+    <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+      <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
         <div
           className={cn(
-            "size-9 rounded-lg flex items-center justify-center",
+            "size-8 sm:size-9 rounded-lg flex items-center justify-center",
             iconColor ?? "bg-primary/10 text-primary"
           )}
         >
           <Icon className="size-4" />
         </div>
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
       </div>
-      <p className="text-2xl font-semibold">{value}</p>
+      <p className="text-xl sm:text-2xl font-semibold">{value}</p>
       {subtitle && (
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{subtitle}</p>
       )}
     </div>
   )

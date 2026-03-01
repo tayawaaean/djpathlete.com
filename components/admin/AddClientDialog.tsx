@@ -54,7 +54,17 @@ export function AddClientDialog({ open, onOpenChange }: AddClientDialogProps) {
         throw new Error(data.error || "Failed to add client")
       }
 
-      toast.success("Client added — welcome email sent")
+      const data = await response.json()
+
+      if (data.emailSent) {
+        toast.success("Client added — welcome email sent")
+      } else {
+        toast.warning(
+          `Client added but email failed to send. Temporary password: ${data.tempPassword}`,
+          { duration: 30000 }
+        )
+      }
+
       onOpenChange(false)
       router.refresh()
     } catch (err) {

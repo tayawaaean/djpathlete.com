@@ -141,18 +141,18 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
           heading="No programs yet"
           description="Build structured training programs by combining exercises into weekly schedules. Assign programs to clients to track their progress."
         />
-        <div className="flex justify-center gap-2">
-          <Button onClick={handleCreate}>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button size="sm" onClick={handleCreate}>
             <Plus className="size-4" />
             Add Program
           </Button>
-          <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setAiDialogOpen(true)}>
             <Sparkles className="size-4" />
-            AI Generate
+            Generate
           </Button>
-          <Button variant="outline" onClick={() => setChatDialogOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setChatDialogOpen(true)}>
             <MessageSquare className="size-4" />
-            AI Chat Builder
+            Chat
           </Button>
         </div>
         <ProgramFormDialog
@@ -175,30 +175,32 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
   return (
     <div>
       {/* Header with Add button */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <p className="text-sm text-muted-foreground">
           {programs.length} program{programs.length !== 1 ? "s" : ""} in library
         </p>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setChatDialogOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setChatDialogOpen(true)}>
             <MessageSquare className="size-4" />
-            AI Chat Builder
+            <span className="hidden sm:inline">AI Chat</span>
+            <span className="sm:hidden">Chat</span>
           </Button>
-          <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setAiDialogOpen(true)}>
             <Sparkles className="size-4" />
-            AI Generate
+            <span className="hidden sm:inline">AI Generate</span>
+            <span className="sm:hidden">Generate</span>
           </Button>
-          <Button onClick={handleCreate}>
+          <Button size="sm" onClick={handleCreate}>
             <Plus className="size-4" />
-            Add Program
+            Add
           </Button>
         </div>
       </div>
 
       <div className="bg-white rounded-xl border border-border shadow-sm">
         {/* Toolbar */}
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="p-3 sm:p-4 border-b border-border space-y-3">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search programs..."
@@ -207,13 +209,13 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
               className="pl-9 h-9"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1">
             <select
               value={categoryFilter}
               onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }}
-              className="h-9 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+              className="h-9 rounded-lg border border-border bg-white px-2 sm:px-3 text-xs sm:text-sm text-foreground shrink-0"
             >
-              <option value="all">All Categories</option>
+              <option value="all">Category</option>
               {PROGRAM_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
               ))}
@@ -221,9 +223,9 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
             <select
               value={difficultyFilter}
               onChange={(e) => { setDifficultyFilter(e.target.value); setPage(1) }}
-              className="h-9 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+              className="h-9 rounded-lg border border-border bg-white px-2 sm:px-3 text-xs sm:text-sm text-foreground shrink-0"
             >
-              <option value="all">All Difficulties</option>
+              <option value="all">Difficulty</option>
               {PROGRAM_DIFFICULTIES.map((diff) => (
                 <option key={diff} value={diff}>{DIFFICULTY_LABELS[diff]}</option>
               ))}
@@ -231,9 +233,9 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
             <select
               value={tierFilter}
               onChange={(e) => { setTierFilter(e.target.value); setPage(1) }}
-              className="h-9 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+              className="h-9 rounded-lg border border-border bg-white px-2 sm:px-3 text-xs sm:text-sm text-foreground shrink-0"
             >
-              <option value="all">All Tiers</option>
+              <option value="all">Tier</option>
               {PROGRAM_TIERS.map((t) => (
                 <option key={t} value={t}>{TIER_LABELS[t]}</option>
               ))}
@@ -370,9 +372,9 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Rows per page:</span>
+        <div className="p-3 sm:p-4 border-t border-border flex items-center justify-between text-sm gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+            <span className="hidden sm:inline">Rows per page:</span>
             <select
               value={perPage}
               onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1) }}
@@ -382,14 +384,14 @@ export function ProgramList({ programs, athleteCounts = {} }: ProgramListProps) 
                 <option key={size} value={size}>{size}</option>
               ))}
             </select>
-            <span className="ml-2">
+            <span className="text-xs sm:text-sm">
               {filtered.length === 0
                 ? "0"
                 : `${(page - 1) * perPage + 1}-${Math.min(page * perPage, filtered.length)}`}{" "}
               of {filtered.length}
             </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}

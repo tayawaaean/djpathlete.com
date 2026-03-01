@@ -93,11 +93,16 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_APP_URL ??
       "http://localhost:3000"
 
-    // Non-blocking: send account-created email with temp password
     const loginUrl = `${baseUrl}/login`
-    sendAccountCreatedEmail(typedUser.email, tempPassword, typedUser.first_name, loginUrl).catch(
-      (err) => console.error("Failed to send account created email:", err)
-    )
+
+    // Send account-created email (blocking — admin must know if it fails)
+    let emailSent = false
+    try {
+      await sendAccountCreatedEmail(typedUser.email, tempPassword, typedUser.first_name, loginUrl)
+      emailSent = true
+    } catch (err) {
+      console.error("Failed to send account created email:", err)
+    }
 
     // Non-blocking: send verification email
     createEmailVerificationToken(typedUser.id)
@@ -128,7 +133,10 @@ export async function POST(request: Request) {
     // Return user without password_hash
     const { password_hash: _, ...safeUser } = typedUser
 
-    return NextResponse.json(safeUser, { status: 201 })
+    return NextResponse.json(
+      { ...safeUser, emailSent, ...(emailSent ? {} : { tempPassword }) },
+      { status: 201 }
+    )
   } catch (error) {
     console.error("Add client error:", error)
     return NextResponse.json(

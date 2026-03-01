@@ -26,21 +26,21 @@ export function DashboardStatCard({
   return (
     <Link
       href={href}
-      className="group bg-white rounded-xl border border-border p-4 transition-all hover:shadow-md hover:border-primary/30"
+      className="group bg-white rounded-xl border border-border p-3 sm:p-4 transition-all hover:shadow-md hover:border-primary/30"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
-            className={`flex size-9 items-center justify-center rounded-lg ${iconBg}`}
+            className={`flex size-8 sm:size-9 items-center justify-center rounded-lg ${iconBg}`}
           >
             {icon}
           </div>
-          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{label}</p>
         </div>
         <ArrowUpRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-      <div className="flex items-baseline gap-2">
-        <p className="text-2xl font-semibold text-primary">{value}</p>
+      <div className="flex items-baseline gap-1.5">
+        <p className="text-xl sm:text-2xl font-semibold text-primary">{value}</p>
         {hasTrend && pct !== 0 && (
           <span
             className={`inline-flex items-center gap-0.5 text-xs font-medium ${

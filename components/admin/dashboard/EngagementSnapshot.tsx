@@ -50,16 +50,16 @@ export function EngagementSnapshot({
       </div>
       <div className="grid grid-cols-2 gap-px bg-border">
         {items.map((item) => (
-          <div key={item.label} className="bg-white p-4">
-            <div className="flex items-center gap-2 mb-2">
+          <div key={item.label} className="bg-white p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-1.5">
               <div
                 className={`flex size-7 items-center justify-center rounded-md ${item.iconBg}`}
               >
                 {item.icon}
               </div>
             </div>
-            <p className="text-2xl font-semibold text-primary">{item.value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xl sm:text-2xl font-semibold text-primary">{item.value}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
               {item.label}
             </p>
           </div>

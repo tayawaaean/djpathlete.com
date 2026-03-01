@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator"
 import { SettingsNotificationToggles } from "@/components/admin/SettingsNotificationToggles"
 import { ChangePasswordButton } from "@/components/shared/ChangePasswordButton"
 import { AccountInfoForm } from "@/components/shared/AccountInfoForm"
+import { ResetDataButton } from "@/components/admin/ResetDataButton"
 
 export const metadata = { title: "Settings" }
 
@@ -224,17 +225,10 @@ export default async function SettingsPage() {
           <div className="space-y-1">
             <p className="text-sm font-medium">Reset Platform Data</p>
             <p className="text-xs text-muted-foreground">
-              This action is irreversible. Contact support for data management.
+              Permanently deletes all client data. Your admin account, exercises, and programs are preserved.
             </p>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled
-            className="opacity-60"
-          >
-            Reset Data
-          </Button>
+          <ResetDataButton />
         </div>
       </div>
     </div>

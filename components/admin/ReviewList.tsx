@@ -209,44 +209,45 @@ export function ReviewList({ reviews }: ReviewListProps) {
   return (
     <div>
       {/* Filter Tabs + Import Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => {
-              setFilterTab(tab.key)
-              setPage(1)
-            }}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filterTab === tab.key
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-surface"
-            }`}
-          >
-            {tab.label}
-            <span
-              className={`ml-1.5 text-xs ${
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none -mx-1 px-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setFilterTab(tab.key)
+                setPage(1)
+              }}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors shrink-0 ${
                 filterTab === tab.key
-                  ? "text-primary-foreground/70"
-                  : "text-muted-foreground/60"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-surface"
               }`}
             >
-              {tab.count}
-            </span>
-          </button>
-        ))}
+              {tab.label}
+              <span
+                className={`ml-1 text-[10px] sm:text-xs ${
+                  filterTab === tab.key
+                    ? "text-primary-foreground/70"
+                    : "text-muted-foreground/60"
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
-        <Button size="sm" onClick={() => setImportOpen(true)}>
-          <Plus className="size-4 mr-1.5" />
-          Import Google Reviews
+        <Button size="sm" onClick={() => setImportOpen(true)} className="shrink-0 self-end sm:self-auto">
+          <Plus className="size-4" />
+          <span className="hidden sm:inline">Import Google Reviews</span>
+          <span className="sm:hidden">Import Reviews</span>
         </Button>
       </div>
 
       <div className="bg-white rounded-xl border border-border shadow-sm">
         {/* Search */}
         <div className="p-4 border-b border-border">
-          <div className="relative max-w-sm">
+          <div className="relative sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search by name or comment..."
@@ -381,16 +382,16 @@ export function ReviewList({ reviews }: ReviewListProps) {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between text-sm">
+        <div className="p-3 sm:p-4 border-t border-border flex items-center justify-between text-xs sm:text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Rows per page:</span>
+            <span className="hidden sm:inline">Rows per page:</span>
             <select
               value={perPage}
               onChange={(e) => {
                 setPerPage(Number(e.target.value))
                 setPage(1)
               }}
-              className="h-8 rounded border border-border bg-white px-2 text-sm"
+              className="h-7 sm:h-8 rounded border border-border bg-white px-1.5 sm:px-2 text-xs sm:text-sm"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -398,7 +399,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
                 </option>
               ))}
             </select>
-            <span className="ml-2">
+            <span className="sm:ml-2">
               {filtered.length === 0
                 ? "0"
                 : `${(page - 1) * perPage + 1}-${Math.min(

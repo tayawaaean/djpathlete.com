@@ -234,7 +234,9 @@ export function AdminAiChat() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [input, setInput] = useState("")
   const [isStreaming, setIsStreaming] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth >= 768
+  )
   const [modelPref, setModelPref] = useState<"auto" | "sonnet" | "haiku">("auto")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -713,11 +715,10 @@ export function AdminAiChat() {
               aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
               {sidebarOpen ? (
-                <PanelLeftClose className="size-4 hidden md:block" />
+                <PanelLeftClose className="size-4" />
               ) : (
                 <PanelLeftOpen className="size-4" />
               )}
-              <PanelLeftOpen className="size-4 md:hidden" />
             </Button>
             <span className="text-sm font-medium text-foreground truncate max-w-[40vw] sm:max-w-none">
               {activeConvo?.title ?? "DJP Assistant"}

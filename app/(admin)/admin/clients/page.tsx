@@ -45,51 +45,45 @@ export default async function ClientsPage() {
       <ClientsPageHeader />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="size-4 text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Users className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">Total Clients</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total Clients</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">{totalClients}</p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{totalClients}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-success/10">
-              <UserPlus className="size-4 text-success" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-success/10">
+              <UserPlus className="size-3.5 sm:size-4 text-success" />
             </div>
-            <p className="text-sm text-muted-foreground">New This Month</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">New This Month</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">{newThisMonth}</p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{newThisMonth}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <UserCheck className="size-4 text-primary" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <UserCheck className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">Active on Program</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">On Program</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {activeOnProgram}
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{activeOnProgram}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-              <ClipboardCheck className="size-4 text-primary" />
+        <div className="bg-white rounded-xl border border-border p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-primary/10">
+              <ClipboardCheck className="size-3.5 sm:size-4 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Profile Completion
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Profile Done</p>
           </div>
-          <p className="text-2xl font-semibold text-primary">
-            {profileCompletion}%
-          </p>
+          <p className="text-xl sm:text-2xl font-semibold text-primary">{profileCompletion}%</p>
         </div>
       </div>
 

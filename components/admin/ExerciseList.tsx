@@ -228,11 +228,11 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
           heading="No exercises yet"
           description="Create your exercise library to build training programs. Add exercises with descriptions, videos, and difficulty levels."
         />
-        <div className="flex justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           <div className="relative" ref={templateMenuRef}>
-            <Button variant="outline" onClick={() => setTemplateMenuOpen(!templateMenuOpen)}>
+            <Button variant="outline" size="sm" onClick={() => setTemplateMenuOpen(!templateMenuOpen)}>
               <Download className="size-4" />
-              Download Template
+              Template
             </Button>
             {templateMenuOpen && (
               <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg border border-border shadow-lg z-50 py-1">
@@ -251,11 +251,11 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
               </div>
             )}
           </div>
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
             <Upload className="size-4" />
-            Import CSV
+            Import
           </Button>
-          <Button onClick={handleCreate}>
+          <Button size="sm" onClick={handleCreate}>
             <Plus className="size-4" />
             Add Exercise
           </Button>
@@ -276,15 +276,16 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
   return (
     <div>
       {/* Header with Add + Import buttons */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <p className="text-sm text-muted-foreground">
           {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} in library
         </p>
         <div className="flex items-center gap-2">
           <div className="relative" ref={templateMenuRef}>
-            <Button variant="outline" onClick={() => setTemplateMenuOpen(!templateMenuOpen)}>
+            <Button variant="outline" size="sm" onClick={() => setTemplateMenuOpen(!templateMenuOpen)}>
               <Download className="size-4" />
-              Download Template
+              <span className="hidden sm:inline">Download Template</span>
+              <span className="sm:hidden">Template</span>
             </Button>
             {templateMenuOpen && (
               <div className="absolute top-full right-0 mt-1 w-64 bg-white rounded-lg border border-border shadow-lg z-50 py-1">
@@ -303,20 +304,22 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
               </div>
             )}
           </div>
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
             <Upload className="size-4" />
-            Import CSV
+            <span className="hidden sm:inline">Import CSV</span>
+            <span className="sm:hidden">Import</span>
           </Button>
-          <Button onClick={handleCreate}>
+          <Button size="sm" onClick={handleCreate}>
             <Plus className="size-4" />
-            Add Exercise
+            <span className="hidden sm:inline">Add Exercise</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       </div>
 
       {/* Bulk Actions Toolbar */}
       {selectedIds.size > 0 && (
-        <div className="mb-3 flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2.5">
+        <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3 bg-primary/5 border border-primary/20 rounded-lg px-3 sm:px-4 py-2.5">
           <span className="text-sm font-medium text-primary">
             {selectedIds.size} selected
           </span>
@@ -336,7 +339,7 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
               disabled={isBulkActing}
             >
               <Trash2 className="size-3.5" />
-              Delete
+              <span className="hidden sm:inline">Delete</span>
             </Button>
             <Button
               size="sm"
@@ -473,9 +476,9 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Rows per page:</span>
+        <div className="p-3 sm:p-4 border-t border-border flex items-center justify-between text-sm gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+            <span className="hidden sm:inline">Rows per page:</span>
             <select
               value={perPage}
               onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1) }}
@@ -485,14 +488,14 @@ export function ExerciseList({ exercises }: ExerciseListProps) {
                 <option key={size} value={size}>{size}</option>
               ))}
             </select>
-            <span className="ml-2">
+            <span className="text-xs sm:text-sm">
               {filtered.length === 0
                 ? "0"
                 : `${(page - 1) * perPage + 1}-${Math.min(page * perPage, filtered.length)}`}{" "}
               of {filtered.length}
             </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
