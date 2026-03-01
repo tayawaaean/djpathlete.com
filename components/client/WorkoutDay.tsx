@@ -322,7 +322,7 @@ function ExerciseCard({
   // Parse prescribed reps for default (use lower end of range like "8" from "8-12")
   const prescribedReps = pe.reps?.match(/(\d+)/)?.[1] ?? ""
   const displayedRec = displayWeight(rec.recommended_kg)
-  const defaultWeight = displayedRec != null ? String(displayedRec) : ""
+  const defaultWeight = ""
   const weightPlaceholder = displayedRec != null ? String(displayedRec) : "0"
   const numSets = pe.sets ?? 3
 
@@ -361,7 +361,13 @@ function ExerciseCard({
   function handleApplyWeight(kg: number) {
     const display = displayWeight(kg)
     setSetRows((prev) =>
-      prev.map((row) => ({ ...row, weight: display != null ? String(display) : "" }))
+      prev.map((row) => {
+        const hasWeight = row.weight && row.weight !== "0"
+        const hasReps = parseInt(row.reps, 10) > 0
+        const hasRpe = row.rpe != null
+        if (hasWeight || hasReps || hasRpe) return row
+        return { ...row, weight: display != null ? String(display) : "" }
+      })
     )
   }
 
@@ -773,7 +779,7 @@ function ExerciseCard({
                                 <td className="pr-1 align-middle">
                                   <input
                                     type="number"
-                                    step={unit === "lbs" ? "1" : "0.5"}
+                                    step="any"
                                     min="0"
                                     placeholder={weightPlaceholder}
                                     value={row.weight}
