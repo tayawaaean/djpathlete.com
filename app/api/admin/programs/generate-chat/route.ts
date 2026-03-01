@@ -7,6 +7,8 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { getProgramChatTools } from "@/lib/ai/program-chat-tools"
 import { getProgramChatSystemPrompt } from "@/lib/ai/program-chat-prompt"
 import { createGenerationLog } from "@/lib/db/ai-generation-log"
+import { saveConversationBatch } from "@/lib/db/ai-conversations"
+import { retrieveSimilarContext, formatRagContext, buildRagAugmentedPrompt, embedConversationMessage } from "@/lib/ai/rag"
 import { MODEL_SONNET } from "@/lib/ai/anthropic"
 
 export const maxDuration = 120
@@ -20,6 +22,7 @@ const messageSchema = z.object({
 
 const requestSchema = z.object({
   messages: z.array(messageSchema).min(1).max(50),
+  session_id: z.string().min(1).optional(),
 })
 
 // ─── Rate limit ──────────────────────────────────────────────────────────────
@@ -79,11 +82,26 @@ export async function POST(request: NextRequest) {
 
     // Trim to last 20 messages
     const recentMessages = parsed.data.messages.slice(-20)
+    const sessionId = parsed.data.session_id ?? `program-chat-${userId}-${Date.now()}`
 
     // Build stream with tools
     const provider = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const tools = getProgramChatTools(userId)
-    const systemPrompt = getProgramChatSystemPrompt()
+    let systemPrompt = getProgramChatSystemPrompt()
+
+    // RAG: retrieve similar past program chat interactions
+    const lastUserMsgForRag = recentMessages.filter((m) => m.role === "user").pop()
+    if (lastUserMsgForRag) {
+      const ragResults = await retrieveSimilarContext(
+        lastUserMsgForRag.content,
+        "program_chat",
+        { excludeSession: sessionId, threshold: 0.5, limit: 2 }
+      )
+      const ragContext = formatRagContext(ragResults)
+      if (ragContext) {
+        systemPrompt = buildRagAugmentedPrompt(systemPrompt, ragContext)
+      }
+    }
 
     const result = streamText({
       model: provider(MODEL_SONNET),
@@ -99,6 +117,7 @@ export async function POST(request: NextRequest) {
 
     // SSE streaming
     const capturedUserId = userId
+    const capturedSessionId = sessionId
     const encoder = new TextEncoder()
 
     const readable = new ReadableStream({
@@ -112,10 +131,14 @@ export async function POST(request: NextRequest) {
           }
         }, 15000)
 
+        let accumulatedText = ""
+        const toolCalls: { tool: string; result: unknown }[] = []
+
         try {
           for await (const part of result.fullStream) {
             switch (part.type) {
               case "text-delta":
+                accumulatedText += part.text
                 controller.enqueue(
                   encoder.encode(
                     `data: ${JSON.stringify({ type: "delta", text: part.text })}\n\n`
@@ -136,6 +159,7 @@ export async function POST(request: NextRequest) {
 
               case "tool-result": {
                 const toolResult = part.output as Record<string, unknown>
+                toolCalls.push({ tool: part.toolName, result: toolResult })
                 if (
                   part.toolName === "generate_program" &&
                   toolResult?.success
@@ -180,16 +204,60 @@ export async function POST(request: NextRequest) {
             }
           }
 
+          // Log usage
+          const usage = await result.usage
+          const tokensInput = usage?.inputTokens ?? 0
+          const tokensOutput = usage?.outputTokens ?? 0
+          const tokensUsed = tokensInput + tokensOutput
+
+          // Save conversation history
+          const lastUserMsg = recentMessages.filter((m) => m.role === "user").pop()
+          try {
+            const saved = await saveConversationBatch([
+              ...(lastUserMsg
+                ? [{
+                    user_id: capturedUserId,
+                    feature: "program_chat" as const,
+                    session_id: capturedSessionId,
+                    role: "user" as const,
+                    content: lastUserMsg.content,
+                    metadata: {},
+                    tokens_input: null,
+                    tokens_output: null,
+                    model_used: null,
+                  }]
+                : []),
+              {
+                user_id: capturedUserId,
+                feature: "program_chat" as const,
+                session_id: capturedSessionId,
+                role: "assistant" as const,
+                content: accumulatedText || "[tool calls only]",
+                metadata: { model: MODEL_SONNET, tool_calls: toolCalls },
+                tokens_input: tokensInput,
+                tokens_output: tokensOutput,
+                model_used: MODEL_SONNET,
+              },
+            ])
+            const assistantMsg = saved.find((m) => m.role === "assistant")
+            if (assistantMsg) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "message_id", id: assistantMsg.id })}\n\n`
+                )
+              )
+              embedConversationMessage(assistantMsg.id).catch(() => {})
+            }
+          } catch {
+            // Conversation save failure is non-fatal
+          }
+
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
           )
           clearInterval(heartbeat)
           controller.close()
 
-          // Log usage (fire-and-forget)
-          const usage = await result.usage
-          const tokensUsed =
-            (usage?.inputTokens ?? 0) + (usage?.outputTokens ?? 0)
           createGenerationLog({
             program_id: null,
             client_id: null,

@@ -4,6 +4,8 @@ import { buildAdminContext } from "@/lib/admin-ai-context"
 import { aiChatSchema } from "@/lib/validators/ai-chat"
 import { streamChat, MODEL_SONNET, MODEL_HAIKU, Anthropic } from "@/lib/ai/anthropic"
 import { createGenerationLog } from "@/lib/db/ai-generation-log"
+import { saveConversationBatch } from "@/lib/db/ai-conversations"
+import { retrieveSimilarContext, formatRagContext, embedConversationMessage } from "@/lib/ai/rag"
 import {
   AI_CHAT_CONTEXT_TIMEOUT_MS,
   AI_CHAT_RATE_LIMIT_MAX,
@@ -69,7 +71,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { messages, model: modelPref } = parsed.data
+    const { messages, model: modelPref, session_id } = parsed.data
+    const sessionId = session_id ?? `admin-chat-${userId}-${Date.now()}`
 
     // ── Build platform context (with timeout) ───────────────────────────
     let platformContext: string
@@ -126,6 +129,24 @@ Current date: ${new Date().toLocaleDateString()}`,
       model = isSimpleQuery ? MODEL_HAIKU : MODEL_SONNET
     }
 
+    // ── RAG: retrieve similar past conversations ─────────────────────────
+    const lastUserMsgForRag = recentMessages.filter((m) => m.role === "user").pop()
+    if (lastUserMsgForRag) {
+      const ragResults = await retrieveSimilarContext(
+        lastUserMsgForRag.content,
+        "admin_chat",
+        { excludeSession: sessionId, threshold: 0.5, limit: 3 }
+      )
+      const ragContext = formatRagContext(ragResults)
+      if (ragContext) {
+        systemBlocks.push({
+          type: "text" as const,
+          text: ragContext,
+          cache_control: undefined as unknown as { type: "ephemeral" },
+        })
+      }
+    }
+
     // ── Stream response via SSE ──────────────────────────────────────────
     const result = streamChat({
       system: systemBlocks,
@@ -137,25 +158,72 @@ Current date: ${new Date().toLocaleDateString()}`,
     })
 
     const capturedUserId = userId
+    const capturedSessionId = sessionId
     const encoder = new TextEncoder()
 
     const readable = new ReadableStream({
       async start(controller) {
+        let accumulatedText = ""
         try {
           for await (const text of result.textStream) {
+            accumulatedText += text
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "delta", text })}\n\n`)
             )
           }
 
+          // Log usage (fire-and-forget)
+          const usage = await result.usage
+          const tokensInput = usage?.inputTokens ?? 0
+          const tokensOutput = usage?.outputTokens ?? 0
+          const tokensUsed = tokensInput + tokensOutput
+
+          // Save conversation history and emit message_id before closing
+          const lastUserMsg = recentMessages.filter((m) => m.role === "user").pop()
+          try {
+            const saved = await saveConversationBatch([
+              ...(lastUserMsg
+                ? [{
+                    user_id: capturedUserId,
+                    feature: "admin_chat" as const,
+                    session_id: capturedSessionId,
+                    role: "user" as const,
+                    content: lastUserMsg.content,
+                    metadata: {},
+                    tokens_input: null,
+                    tokens_output: null,
+                    model_used: null,
+                  }]
+                : []),
+              {
+                user_id: capturedUserId,
+                feature: "admin_chat" as const,
+                session_id: capturedSessionId,
+                role: "assistant" as const,
+                content: accumulatedText,
+                metadata: { model },
+                tokens_input: tokensInput,
+                tokens_output: tokensOutput,
+                model_used: model,
+              },
+            ])
+            const assistantMsg = saved.find((m) => m.role === "assistant")
+            if (assistantMsg) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "message_id", id: assistantMsg.id })}\n\n`
+                )
+              )
+              // Embed for RAG (fire-and-forget)
+              embedConversationMessage(assistantMsg.id).catch(() => {})
+            }
+          } catch {
+            // Conversation save failure is non-fatal
+          }
+
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`))
           controller.close()
 
-          // Log usage (fire-and-forget)
-          const usage = await result.usage
-          const tokensUsed =
-            (usage?.inputTokens ?? 0) +
-            (usage?.outputTokens ?? 0)
           createGenerationLog({
             program_id: null,
             client_id: null,

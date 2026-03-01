@@ -34,6 +34,27 @@ interface CoachMetadata {
   key_observations: string[]
 }
 
+interface ProgramContextWithPrescription {
+  programName: string
+  difficulty: string
+  category: string | string[]
+  periodization: string | null
+  splitType: string | null
+  currentWeek: number
+  totalWeeks: number
+  prescription: {
+    sets: number | null
+    reps: string | null
+    rpe_target: number | null
+    intensity_pct: number | null
+    tempo: string | null
+    rest_seconds: number | null
+    notes: string | null
+    technique: string
+    group_tag: string | null
+  }
+}
+
 interface CoachDjpPanelProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -48,6 +69,7 @@ interface CoachDjpPanelProps {
     reps: number
     rpe: number | null
   }>
+  programContext?: ProgramContextWithPrescription | null
 }
 
 // ─── Loading phase config ───────────────────────────────────────────────────
@@ -305,6 +327,7 @@ export function CoachDjpPanel({
   onApplyWeight,
   totalSets = 0,
   currentSets,
+  programContext,
 }: CoachDjpPanelProps) {
   const [streaming, setStreaming] = useState(false)
   const [streamingText, setStreamingText] = useState("")
@@ -348,6 +371,7 @@ export function CoachDjpPanel({
           ...(currentSets && currentSets.some((s) => s.reps > 0)
             ? { current_session: currentSets.filter((s) => s.reps > 0) }
             : {}),
+          ...(programContext ? { program_context: programContext } : {}),
         }),
         signal: controller.signal,
       })

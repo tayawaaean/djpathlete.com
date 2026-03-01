@@ -173,6 +173,9 @@ export default async function ClientWorkoutsPage() {
       return {
         programName: program.name,
         category: program.category,
+        difficulty: program.difficulty,
+        periodization: program.periodization ?? null,
+        splitType: program.split_type ?? null,
         assignmentId: assignment.id,
         currentWeek,
         totalWeeks,

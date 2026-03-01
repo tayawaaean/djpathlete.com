@@ -19,6 +19,9 @@ import type { WorkoutDayProps } from "@/components/client/WorkoutDay"
 interface ProgramWorkout {
   programName: string
   category: string | string[]
+  difficulty: string
+  periodization: string | null
+  splitType: string | null
   assignmentId: string
   currentWeek: number
   totalWeeks: number
@@ -420,6 +423,15 @@ function ProgramDetail({
                 exercises={dayData.exercises}
                 assignmentId={program.assignmentId}
                 onExerciseLogged={handleExerciseLogged}
+                programContext={{
+                  programName: program.programName,
+                  difficulty: program.difficulty,
+                  category: program.category,
+                  periodization: program.periodization,
+                  splitType: program.splitType,
+                  currentWeek: effectiveCurrentWeek,
+                  totalWeeks: program.totalWeeks,
+                }}
               />
             </motion.div>
           ) : (

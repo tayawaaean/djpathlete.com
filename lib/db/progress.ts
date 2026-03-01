@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from "@/lib/supabase"
 import type { ExerciseProgress } from "@/types/database"
+import { resolveWeightOutcomes } from "@/lib/db/ai-outcomes"
 
 /** Service-role client bypasses RLS — these functions are only called from server-side routes. */
 function getClient() {
@@ -115,6 +116,30 @@ export async function getWorkoutStreak(userId: string): Promise<number> {
   return streak
 }
 
+/**
+ * Get recent progress for exercises with the same movement pattern,
+ * excluding a specific exercise. Used for cross-exercise intelligence
+ * when a client has no history for a particular exercise.
+ */
+export async function getRelatedProgressByPattern(
+  userId: string,
+  movementPattern: string,
+  excludeExerciseId: string,
+  limit = 9
+) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("exercise_progress")
+    .select("*, exercises!inner(name, movement_pattern)")
+    .eq("user_id", userId)
+    .eq("exercises.movement_pattern", movementPattern)
+    .neq("exercise_id", excludeExerciseId)
+    .order("completed_at", { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data as (ExerciseProgress & { exercises: { name: string; movement_pattern: string } })[]
+}
+
 export async function getAllProgress(limit?: number) {
   const supabase = getClient()
   let query = supabase
@@ -137,5 +162,13 @@ export async function logProgress(
     .select()
     .single()
   if (error) throw error
-  return data as ExerciseProgress
+
+  const result = data as ExerciseProgress
+
+  // Resolve any pending AI weight predictions for this exercise (fire-and-forget)
+  if (result.weight_kg != null) {
+    resolveWeightOutcomes(result.user_id, result.exercise_id, result.weight_kg).catch(() => {})
+  }
+
+  return result
 }

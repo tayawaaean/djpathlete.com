@@ -23,6 +23,8 @@ export type SplitType = "full_body" | "upper_lower" | "push_pull_legs" | "push_p
 export type Periodization = "linear" | "undulating" | "block" | "reverse_linear" | "none"
 export type ExerciseRelationshipType = "progression" | "regression" | "alternative" | "variation"
 export type AiGenerationStatus = "pending" | "generating" | "completed" | "failed" | "step_1" | "step_2" | "step_3"
+export type AiFeature = "program_generation" | "program_chat" | "admin_chat" | "ai_coach"
+export type AiMessageRole = "system" | "user" | "assistant" | "tool"
 export type WeightUnit = "kg" | "lbs"
 export type AchievementType = "pr" | "streak" | "milestone" | "completion"
 export type PrType = "weight" | "reps" | "volume" | "estimated_1rm"
@@ -356,6 +358,58 @@ export interface AssessmentResult {
   created_at: string
 }
 
+export interface AiConversationHistory {
+  id: string
+  user_id: string
+  feature: AiFeature
+  session_id: string
+  role: AiMessageRole
+  content: string
+  metadata: Record<string, unknown>
+  embedding?: number[] | null
+  tokens_input: number | null
+  tokens_output: number | null
+  model_used: string | null
+  created_at: string
+}
+
+export interface AiResponseFeedback {
+  id: string
+  conversation_message_id: string
+  user_id: string
+  accuracy_rating: number | null
+  relevance_rating: number | null
+  helpfulness_rating: number | null
+  notes: string | null
+  thumbs_up: boolean | null
+  feature: AiFeature
+  created_at: string
+  updated_at: string
+}
+
+export type AiRecommendationType =
+  | "weight_suggestion"
+  | "program_parameters"
+  | "exercise_selection"
+  | "deload_recommendation"
+  | "plateau_detection"
+
+export interface AiOutcomeTracking {
+  id: string
+  conversation_message_id: string | null
+  generation_log_id: string | null
+  user_id: string
+  exercise_id: string | null
+  program_id: string | null
+  recommendation_type: AiRecommendationType
+  predicted_value: Record<string, unknown>
+  actual_value: Record<string, unknown> | null
+  accuracy_score: number | null
+  outcome_positive: boolean | null
+  measured_at: string | null
+  created_at: string
+}
+
 export interface NotificationPreferences {
   id: string
   user_id: string
@@ -455,6 +509,21 @@ export interface Database {
         Row: AssessmentResult
         Insert: Omit<AssessmentResult, "id" | "created_at">
         Update: Partial<Omit<AssessmentResult, "id" | "created_at">>
+      }
+      ai_conversation_history: {
+        Row: AiConversationHistory
+        Insert: Omit<AiConversationHistory, "id" | "created_at">
+        Update: Partial<Omit<AiConversationHistory, "id" | "created_at">>
+      }
+      ai_response_feedback: {
+        Row: AiResponseFeedback
+        Insert: Omit<AiResponseFeedback, "id" | "created_at" | "updated_at">
+        Update: Partial<Omit<AiResponseFeedback, "id" | "created_at">>
+      }
+      ai_outcome_tracking: {
+        Row: AiOutcomeTracking
+        Insert: Omit<AiOutcomeTracking, "id" | "created_at">
+        Update: Partial<Omit<AiOutcomeTracking, "id" | "created_at">>
       }
     }
   }

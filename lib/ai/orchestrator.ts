@@ -9,7 +9,7 @@ import type {
   OrchestrationResult,
 } from "@/lib/ai/types"
 import type { AiGenerationLog, ProgramCategory, ProgramDifficulty } from "@/types/database"
-import { callAgent, MODEL_HAIKU } from "@/lib/ai/anthropic"
+import { callAgent, MODEL_HAIKU, MODEL_SONNET } from "@/lib/ai/anthropic"
 import { scoreAndFilterExercises, semanticFilterExercises } from "@/lib/ai/exercise-filter"
 import { estimateTokens } from "@/lib/ai/token-utils"
 import {
@@ -36,6 +36,8 @@ import {
 } from "@/lib/db/ai-generation-log"
 import { getUserById } from "@/lib/db/users"
 import { createAssignment } from "@/lib/db/assignments"
+import { saveConversationBatch } from "@/lib/db/ai-conversations"
+import { retrieveSimilarContext, formatRagContext, buildRagAugmentedPrompt, embedConversationMessage } from "@/lib/ai/rag"
 
 const MAX_RETRIES = 2
 
@@ -715,11 +717,22 @@ ${profile?.exercise_dislikes ? `- Exercise dislikes: ${profile.exercise_dislikes
 ${profile?.training_background ? `- Training background: ${profile.training_background}` : ''}
 ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` : ''}${assessmentSection}`
 
+    // RAG: retrieve similar past program generations for context
+    const ragQuery = `${request.goals.join(", ")} ${request.duration_weeks}wk ${request.sessions_per_week}x/wk ${profile?.experience_level ?? "beginner"}`
+    const ragResults = await retrieveSimilarContext(ragQuery, "program_generation", {
+      threshold: 0.5,
+      limit: 2,
+    }).catch(() => [] as Awaited<ReturnType<typeof retrieveSimilarContext>>)
+    const ragContext = formatRagContext(ragResults)
+    const augmentedAgent1Prompt = ragContext
+      ? buildRagAugmentedPrompt(PROFILE_ANALYZER_PROMPT, ragContext)
+      : PROFILE_ANALYZER_PROMPT
+
     // Agent 1 + exercise fetch in parallel
     console.log("[orchestrator:sync] Running Agent 1 (profile analysis) + exercise fetch...")
     const [agent1Result, allExercises] = await Promise.all([
       callAgent<ProfileAnalysis>(
-        PROFILE_ANALYZER_PROMPT,
+        augmentedAgent1Prompt,
         agent1UserMessage,
         profileAnalysisSchema,
         { model: MODEL_HAIKU, cacheSystemPrompt: true }
@@ -728,6 +741,36 @@ ${profile?.additional_notes ? `- Additional notes: ${profile.additional_notes}` 
     ])
     tokenUsage.agent1 = agent1Result.tokens_used
     console.log("[orchestrator:sync] Agent 1 complete. Tokens:", agent1Result.tokens_used, "Exercises fetched:", allExercises.length)
+
+    // Save agent 1 conversation (fire-and-forget)
+    const genSessionId = `gen-${log.id}`
+    saveConversationBatch([
+      {
+        user_id: requestedBy,
+        feature: "program_generation" as const,
+        session_id: genSessionId,
+        role: "user" as const,
+        content: agent1UserMessage,
+        metadata: { step: 1, log_id: log.id, client_id: request.client_id },
+        tokens_input: null,
+        tokens_output: null,
+        model_used: null,
+      },
+      {
+        user_id: requestedBy,
+        feature: "program_generation" as const,
+        session_id: genSessionId,
+        role: "assistant" as const,
+        content: JSON.stringify(agent1Result.content),
+        metadata: { step: 1, log_id: log.id, model: MODEL_HAIKU },
+        tokens_input: null,
+        tokens_output: agent1Result.tokens_used,
+        model_used: MODEL_HAIKU,
+      },
+    ]).then((saved) => {
+      const assistantMsg = saved.find((m) => m.role === "assistant")
+      if (assistantMsg) embedConversationMessage(assistantMsg.id).catch(() => {})
+    }).catch(() => {})
 
     const analysis = agent1Result.content
     // Apply difficulty score filter when assessment context is provided
@@ -763,6 +806,35 @@ ${request.additional_instructions ? `- Additional instructions: ${request.additi
     tokenUsage.agent2 = agent2Result.tokens_used
     const skeleton = agent2Result.content
     console.log("[orchestrator:sync] Agent 2 complete. Tokens:", agent2Result.tokens_used, "Weeks:", skeleton.weeks.length)
+
+    // Save agent 2 conversation (fire-and-forget)
+    saveConversationBatch([
+      {
+        user_id: requestedBy,
+        feature: "program_generation" as const,
+        session_id: genSessionId,
+        role: "user" as const,
+        content: agent2UserMessage,
+        metadata: { step: 2, log_id: log.id },
+        tokens_input: null,
+        tokens_output: null,
+        model_used: null,
+      },
+      {
+        user_id: requestedBy,
+        feature: "program_generation" as const,
+        session_id: genSessionId,
+        role: "assistant" as const,
+        content: JSON.stringify(agent2Result.content),
+        metadata: { step: 2, log_id: log.id },
+        tokens_input: null,
+        tokens_output: agent2Result.tokens_used,
+        model_used: MODEL_SONNET,
+      },
+    ]).then((saved) => {
+      const assistantMsg = saved.find((m) => m.role === "assistant")
+      if (assistantMsg) embedConversationMessage(assistantMsg.id).catch(() => {})
+    }).catch(() => {})
 
     // Pre-filter exercises
     const availableEquipment = request.equipment_override ?? profile?.available_equipment ?? []

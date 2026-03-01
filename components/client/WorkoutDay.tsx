@@ -66,12 +66,23 @@ export interface ExerciseWithRecommendation {
   loggedToday: boolean
 }
 
+export interface ProgramContextData {
+  programName: string
+  difficulty: string
+  category: string | string[]
+  periodization: string | null
+  splitType: string | null
+  currentWeek: number
+  totalWeeks: number
+}
+
 export interface WorkoutDayProps {
   day: number
   dayLabel: string
   exercises: ExerciseWithRecommendation[]
   assignmentId: string
   onExerciseLogged?: (exerciseId: string) => void
+  programContext?: ProgramContextData | null
 }
 
 interface ExerciseGroup {
@@ -212,11 +223,11 @@ function shouldNudgeCoach(rows: SetRow[]): boolean {
 function createInitialSetRows(
   numSets: number,
   defaultWeight: string,
-  defaultReps: string
+  _defaultReps: string
 ): SetRow[] {
   return Array.from({ length: numSets }, () => ({
     weight: defaultWeight,
-    reps: defaultReps,
+    reps: "",
     rpe: null,
   }))
 }
@@ -273,11 +284,13 @@ function ExerciseCard({
   index,
   onLogged,
   hideNotes,
+  programContext,
 }: ExerciseWithRecommendation & {
   assignmentId: string
   index: number
   onLogged?: () => void
   hideNotes?: boolean
+  programContext?: ProgramContextData | null
 }) {
   const router = useRouter()
   const { unit, displayWeight, formatWeightCompact, toKg, unitLabel } = useWeightUnit()
@@ -978,6 +991,20 @@ function ExerciseCard({
           reps: parseInt(row.reps, 10) || 0,
           rpe: row.rpe,
         }))}
+        programContext={programContext ? {
+          ...programContext,
+          prescription: {
+            sets: pe.sets,
+            reps: pe.reps,
+            rpe_target: pe.rpe_target,
+            intensity_pct: pe.intensity_pct,
+            tempo: pe.tempo,
+            rest_seconds: pe.rest_seconds,
+            notes: pe.notes,
+            technique: pe.technique,
+            group_tag: pe.group_tag,
+          },
+        } : undefined}
       />
 
       <ExerciseSwapSheet
@@ -1014,6 +1041,7 @@ export function WorkoutDay({
   exercises,
   assignmentId,
   onExerciseLogged,
+  programContext,
 }: WorkoutDayProps) {
   const [sessionLoggedIds, setSessionLoggedIds] = useState<Set<string>>(
     new Set()
@@ -1076,6 +1104,7 @@ export function WorkoutDay({
                     assignmentId={assignmentId}
                     onLogged={() => handleExerciseLogged(item.exercise.id)}
                     hideNotes={!!sharedNote}
+                    programContext={programContext}
                   />
                 </motion.div>
               )
@@ -1114,6 +1143,7 @@ export function WorkoutDay({
                   {...item}
                   assignmentId={assignmentId}
                   onLogged={() => handleExerciseLogged(item.exercise.id)}
+                  programContext={programContext}
                 />
               </motion.div>
             )
