@@ -7,7 +7,8 @@ import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getWeightRecommendation } from "@/lib/weight-recommendation"
 import type { ClientContext } from "@/lib/weight-recommendation"
 import { EmptyState } from "@/components/ui/empty-state"
-import { WorkoutTabs } from "@/components/client/WorkoutTabs"
+import { WorkoutViewToggle } from "@/components/client/WorkoutViewToggle"
+import type { WorkoutCalendarDay } from "@/components/client/WorkoutCalendar"
 import { Dumbbell } from "lucide-react"
 import type { Program, ProgramAssignment, Exercise, ProgramExercise } from "@/types/database"
 
@@ -35,6 +36,25 @@ const dayLabels: Record<number, string> = {
 function getTodayDow(): number {
   const jsDay = new Date().getDay()
   return jsDay === 0 ? 7 : jsDay
+}
+
+/** Convert a (startDate, weekNumber, dayOfWeek) triple to an actual calendar Date */
+function getDateForWorkoutDay(
+  startDate: string,
+  weekNumber: number,
+  dayOfWeek: number
+): Date {
+  const start = new Date(startDate)
+  // Normalize start to its Monday (ISO week start)
+  const jsDay = start.getDay() // 0=Sun..6=Sat
+  const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay
+  const monday = new Date(start)
+  monday.setDate(start.getDate() + mondayOffset)
+
+  // weekNumber is 1-based, dayOfWeek is 1=Mon..7=Sun
+  const target = new Date(monday)
+  target.setDate(monday.getDate() + (weekNumber - 1) * 7 + (dayOfWeek - 1))
+  return target
 }
 
 /** Fallback: compute current week from start date if DB current_week is not available */
@@ -199,6 +219,63 @@ export default async function ClientWorkoutsPage() {
       })
   }
 
+  // Build calendar day data from the same program/exercise data (no extra DB queries)
+  const calendarDays: WorkoutCalendarDay[] = []
+  for (const { assignment, exercises } of programExercises) {
+    if (!assignment.programs) continue
+    const program = assignment.programs
+    const totalWeeks = assignment.total_weeks ?? program.duration_weeks ?? 1
+
+    // Collect unique (week, day) combos with counts
+    const dayMap = new Map<
+      string,
+      { weekNumber: number; dayOfWeek: number; exerciseCount: number; completedCount: number }
+    >()
+
+    for (const ex of exercises) {
+      const key = `${ex.week_number}-${ex.day_of_week}`
+      if (!dayMap.has(key)) {
+        dayMap.set(key, {
+          weekNumber: ex.week_number,
+          dayOfWeek: ex.day_of_week,
+          exerciseCount: 0,
+          completedCount: 0,
+        })
+      }
+      const entry = dayMap.get(key)!
+      entry.exerciseCount++
+      if (ex.exercise_id && wasLoggedToday(ex.exercise_id)) {
+        entry.completedCount++
+      }
+    }
+
+    // Expand across all weeks (template repetition like tabPrograms does)
+    const definedWeeks = [...dayMap.keys()].map((k) => Number(k.split("-")[0]))
+    const uniqueDefinedWeeks = [...new Set(definedWeeks)].sort((a, b) => a - b)
+
+    for (let w = 1; w <= totalWeeks; w++) {
+      // Find the best source week
+      let sourceWeek = uniqueDefinedWeeks[0] ?? 1
+      for (const dw of uniqueDefinedWeeks) {
+        if (dw <= w) sourceWeek = dw
+        else break
+      }
+
+      // Get all days for that source week
+      for (const [key, entry] of dayMap) {
+        if (entry.weekNumber !== sourceWeek) continue
+        calendarDays.push({
+          date: getDateForWorkoutDay(assignment.start_date, w, entry.dayOfWeek),
+          exerciseCount: entry.exerciseCount,
+          completedCount: w === (assignment.current_week ?? 1) ? entry.completedCount : 0,
+          programName: program.name,
+          dayOfWeek: entry.dayOfWeek,
+          weekNumber: w,
+        })
+      }
+    }
+  }
+
   return (
     <div>
       <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-4">My Workouts</h1>
@@ -210,7 +287,10 @@ export default async function ClientWorkoutsPage() {
           description="You don't have any active workout programs. Once a program is assigned to you, your exercises will appear here."
         />
       ) : (
-        <WorkoutTabs programs={tabPrograms} todayDow={getTodayDow()} />
+        <WorkoutViewToggle
+          tabsProps={{ programs: tabPrograms, todayDow: getTodayDow() }}
+          calendarDays={calendarDays}
+        />
       )}
     </div>
   )

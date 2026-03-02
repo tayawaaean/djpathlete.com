@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { InstallPrompt } from "@/components/client/InstallPrompt"
 import { PullToRefresh } from "@/components/client/PullToRefresh"
+import { NotificationBell } from "@/components/shared/NotificationBell"
 
 const navItems = [
   { label: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
@@ -52,7 +53,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-surface">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col w-64 fixed inset-y-0 left-0 bg-white border-r border-border">
-        <div className="px-6 pt-8 pb-5">
+        <div className="px-6 pt-8 pb-5 flex items-center justify-between">
           <Link href="/client/dashboard" className="flex items-center gap-2">
             <Image
               src="/logos/logo-icon-dark.png"
@@ -67,6 +68,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
               Athlete
             </span>
           </Link>
+          <NotificationBell />
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {navItems.map((item) => {
@@ -104,6 +106,23 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="lg:pl-64">
+        {/* Mobile notification header */}
+        <div className="lg:hidden sticky top-0 z-20 flex items-center justify-between px-4 py-2 bg-white border-b border-border">
+          <Link href="/client/dashboard" className="flex items-center gap-1.5">
+            <Image
+              src="/logos/logo-icon-dark.png"
+              alt="DJP Athlete"
+              width={80}
+              height={54}
+              className="object-contain"
+              style={{ height: 22, width: "auto" }}
+            />
+            <span className="font-heading font-semibold tracking-[0.15em] text-[9px] uppercase text-foreground">
+              Athlete
+            </span>
+          </Link>
+          <NotificationBell />
+        </div>
         <main className="p-6 pb-28 lg:pb-6">
           <PullToRefresh>{children}</PullToRefresh>
         </main>

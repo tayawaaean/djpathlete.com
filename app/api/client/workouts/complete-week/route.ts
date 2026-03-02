@@ -3,7 +3,11 @@ import { auth } from "@/lib/auth"
 import { advanceWeek, getAssignmentById } from "@/lib/db/assignments"
 import { getProgramById } from "@/lib/db/programs"
 import { getUserById } from "@/lib/db/users"
-import { sendCoachProgramCompletedNotification } from "@/lib/email"
+import {
+  sendCoachProgramCompletedNotification,
+  sendReassessmentReminderEmail,
+} from "@/lib/email"
+import { createNotification } from "@/lib/db/notifications"
 import { z } from "zod"
 
 const completeWeekSchema = z.object({
@@ -44,26 +48,56 @@ export async function POST(request: Request) {
 
     const result = await advanceWeek(assignmentId)
 
-    // Notify coach when the program is fully completed
+    // Notify coach and client when the program is fully completed
     if (result.program_completed) {
-      try {
-        const [client, program] = await Promise.all([
-          getUserById(session.user.id),
-          getProgramById(assignment.program_id),
-        ])
+      const [client, program] = await Promise.all([
+        getUserById(session.user.id),
+        getProgramById(assignment.program_id),
+      ])
 
+      const programName = program?.name ?? "Unknown Program"
+      const clientName = `${client.first_name} ${client.last_name}`.trim()
+
+      // Notify coach
+      try {
         const coachEmail = process.env.COACH_EMAIL ?? "admin@djpathlete.com"
         const coachFirstName = process.env.COACH_FIRST_NAME ?? "Coach"
 
         await sendCoachProgramCompletedNotification({
           coachEmail,
           coachFirstName,
-          clientName: `${client.first_name} ${client.last_name}`.trim(),
+          clientName,
           clientId: session.user.id,
-          programName: program?.name ?? "Unknown Program",
+          programName,
         })
       } catch {
-        // Coach notification failure should not affect the client response
+        // Non-blocking
+      }
+
+      // Notify client — reassessment reminder email
+      try {
+        await sendReassessmentReminderEmail({
+          to: client.email,
+          firstName: client.first_name,
+          programName,
+          clientUserId: session.user.id,
+        })
+      } catch {
+        // Non-blocking
+      }
+
+      // In-app notification for client
+      try {
+        await createNotification({
+          user_id: session.user.id,
+          title: "Program Complete!",
+          message: `You've finished ${programName}. Take a reassessment to get your next program.`,
+          type: "success",
+          is_read: false,
+          link: "/client/reassessment",
+        })
+      } catch {
+        // Non-blocking
       }
     }
 

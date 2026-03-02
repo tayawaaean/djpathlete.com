@@ -1132,3 +1132,102 @@ export async function sendFormReviewFeedbackEmail({
     // Non-blocking
   }
 }
+
+export async function sendReassessmentReminderEmail({
+  to,
+  firstName,
+  programName,
+  clientUserId,
+}: {
+  to: string
+  firstName: string
+  programName: string
+  clientUserId?: string
+}) {
+  if (clientUserId) {
+    const prefs = await getPreferences(clientUserId)
+    if (!prefs.email_notifications) return
+  }
+
+  const baseUrl = getBaseUrl()
+  const reassessmentUrl = `${baseUrl}/client/reassessment`
+
+  const html = emailLayout(`
+    <!-- Hero banner -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background: linear-gradient(180deg, #0E3F50 0%, #145569 100%); padding:36px 48px; text-align:center;">
+          <p style="margin:0 0 6px; font-family:Georgia, 'Times New Roman', serif; font-size:14px; color:#C49B7A; letter-spacing:1.5px; text-transform:uppercase;">
+            Program Complete
+          </p>
+          <h2 style="margin:0; font-family:'Trebuchet MS', Helvetica, Arial, sans-serif; font-size:26px; font-weight:700; color:#ffffff;">
+            Time for your reassessment!
+          </h2>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Content -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:40px 48px 48px;">
+
+          <p style="margin:0 0 20px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:18px; font-weight:600; color:#0E3F50;">
+            Congratulations, ${firstName}!
+          </p>
+
+          <p style="margin:0 0 24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#555; line-height:1.7;">
+            You&rsquo;ve completed your training program. Take a reassessment so your coach can build your next phase based on your progress.
+          </p>
+
+          <!-- Program name card -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafb; border-radius:12px; border-left:4px solid #C49B7A; margin-bottom:28px;">
+            <tr>
+              <td style="padding:20px 24px;">
+                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">
+                  Completed Program
+                </p>
+                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:18px; font-weight:700; color:#0E3F50;">
+                  ${programName}
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#555; line-height:1.7;">
+            The reassessment takes just a few minutes and helps ensure your next program is tailored to where you are now.
+          </p>
+
+          <!-- CTA Button -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 32px;">
+            <tr>
+              <td align="center" style="background-color:#C49B7A; border-radius:8px;">
+                <a href="${reassessmentUrl}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:8px;">
+                  Start Reassessment
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Fallback link -->
+          <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:#999; line-height:1.6;">
+            Button not working? Copy and paste this link into your browser:<br />
+            <a href="${reassessmentUrl}" style="color:#0E3F50; word-break:break-all;">${reassessmentUrl}</a>
+          </p>
+
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `You've completed ${programName} — time for your reassessment!`,
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send reassessment reminder email:", error)
+  }
+}
