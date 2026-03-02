@@ -1,17 +1,18 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import NextImage from "next/image"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { JsonLd } from "@/components/shared/JsonLd"
 import { FadeIn } from "@/components/shared/FadeIn"
-import { getBlogPosts, getBlogPostBySlug } from "@/lib/ghl-blog"
-import type { Category } from "@/lib/blog-data"
+import { getPublishedBlogPostBySlug } from "@/lib/db/blog-posts"
+import type { BlogCategory } from "@/types/database"
 
 interface Props {
   params: Promise<{ slug: string }>
 }
 
-const categoryStyles: Record<Category, string> = {
+const categoryStyles: Record<BlogCategory, string> = {
   Performance: "bg-primary/10 text-primary",
   Recovery: "bg-success/10 text-success",
   Coaching: "bg-accent/10 text-accent",
@@ -19,8 +20,7 @@ const categoryStyles: Record<Category, string> = {
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString + "T00:00:00")
-  return date.toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -29,7 +29,7 @@ function formatDate(dateString: string): string {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const post = await getBlogPostBySlug(slug)
+  const post = await getPublishedBlogPostBySlug(slug)
 
   if (!post) {
     return { title: "Post Not Found" }
@@ -37,24 +37,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: post.title,
-    description: post.excerpt,
+    description: post.meta_description ?? post.excerpt,
     openGraph: {
       title: `${post.title} | DJP Athlete`,
-      description: post.excerpt,
+      description: post.meta_description ?? post.excerpt,
       type: "article",
-      publishedTime: post.date,
+      publishedTime: post.published_at ?? post.created_at,
+      ...(post.cover_image_url && { images: [post.cover_image_url] }),
     },
     twitter: {
       card: "summary_large_image",
       title: `${post.title} | DJP Athlete`,
-      description: post.excerpt,
+      description: post.meta_description ?? post.excerpt,
+      ...(post.cover_image_url && { images: [post.cover_image_url] }),
     },
   }
 }
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
-  const post = await getBlogPostBySlug(slug)
+  const post = await getPublishedBlogPostBySlug(slug)
 
   if (!post) {
     notFound()
@@ -64,8 +66,8 @@ export default async function BlogPostPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
-    description: post.excerpt,
-    datePublished: post.date,
+    description: post.meta_description ?? post.excerpt,
+    datePublished: post.published_at ?? post.created_at,
     url: `https://djpathlete.com/blog/${post.slug}`,
     author: {
       "@type": "Person",
@@ -78,6 +80,7 @@ export default async function BlogPostPage({ params }: Props) {
       url: "https://djpathlete.com",
     },
     articleSection: post.category,
+    ...(post.cover_image_url && { image: post.cover_image_url }),
   }
 
   return (
@@ -105,10 +108,10 @@ export default async function BlogPostPage({ params }: Props) {
                 {post.category}
               </span>
               <time
-                dateTime={post.date}
+                dateTime={post.published_at ?? post.created_at}
                 className="text-sm text-muted-foreground"
               >
-                {formatDate(post.date)}
+                {formatDate(post.published_at ?? post.created_at)}
               </time>
             </div>
 
@@ -125,32 +128,52 @@ export default async function BlogPostPage({ params }: Props) {
         </FadeIn>
       </section>
 
+      {/* Cover Image */}
+      {post.cover_image_url && (
+        <section className="px-4 sm:px-8 pb-8">
+          <div className="max-w-4xl mx-auto">
+            <FadeIn>
+              <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+                <NextImage
+                  src={post.cover_image_url}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+      )}
+
       {/* Article Body */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
-          {post.htmlContent ? (
-            <FadeIn>
-              <div
-                className="prose prose-lg max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
-                dangerouslySetInnerHTML={{ __html: post.htmlContent }}
-              />
-            </FadeIn>
-          ) : (
-            post.body.map((section, i) => (
-              <FadeIn key={i} delay={i * 0.08}>
-                <div className={i > 0 ? "mt-10" : ""}>
-                  <h2 className="text-xl font-heading font-semibold text-primary mb-4">
-                    {section.subheading}
-                  </h2>
-                  <p className="text-base text-muted-foreground leading-relaxed">
-                    {section.text}
-                  </p>
-                </div>
-              </FadeIn>
-            ))
-          )}
+          <FadeIn>
+            <div
+              className="prose prose-lg max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          </FadeIn>
         </div>
       </section>
+
+      {/* Tags */}
+      {post.tags && post.tags.length > 0 && (
+        <section className="py-8 px-4 sm:px-8">
+          <div className="max-w-3xl mx-auto flex flex-wrap gap-2">
+            {post.tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-3 py-1 rounded-full text-xs font-medium bg-surface text-muted-foreground border border-border"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="py-16 lg:py-24 px-4 sm:px-8">

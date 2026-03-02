@@ -79,6 +79,27 @@ export const adminChat = onDocumentCreated(
 // Triggered when a new ai_jobs doc is created with type "ai_coach"
 // Two-phase: streams coaching text, then structured analysis
 
+// ─── Blog Generation ────────────────────────────────────────────────────────
+// Triggered when a new ai_jobs doc is created with type "blog_generation"
+// Structured output: generates complete blog post fields via callAgent
+
+export const blogGeneration = onDocumentCreated(
+  {
+    document: "ai_jobs/{jobId}",
+    timeoutSeconds: 300,
+    memory: "512MiB",
+    region: "us-central1",
+    secrets: allSecrets,
+  },
+  async (event) => {
+    const data = event.data?.data()
+    if (!data || data.type !== "blog_generation") return
+
+    const { handleBlogGeneration } = await import("./blog-generation.js")
+    await handleBlogGeneration(event.params.jobId)
+  }
+)
+
 export const aiCoach = onDocumentCreated(
   {
     document: "ai_jobs/{jobId}",

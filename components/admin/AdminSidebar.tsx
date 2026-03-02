@@ -9,6 +9,7 @@ import {
   Users,
   Dumbbell,
   ClipboardList,
+  FileText,
   CreditCard,
   BarChart3,
   Brain,
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Exercises", href: "/admin/exercises", icon: Dumbbell },
   { label: "Programs", href: "/admin/programs", icon: ClipboardList },
+  { label: "Blog", href: "/admin/blog", icon: FileText },
 
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },

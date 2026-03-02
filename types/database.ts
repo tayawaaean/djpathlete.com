@@ -8,6 +8,8 @@ export type ProgramTier = "generalize" | "premium"
 export type AssignmentStatus = "active" | "paused" | "completed" | "cancelled"
 export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded"
 export type NotificationType = "info" | "success" | "warning" | "error"
+export type BlogPostStatus = "draft" | "published"
+export type BlogCategory = "Performance" | "Recovery" | "Coaching" | "Youth Development"
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say"
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced" | "elite"
 export type SleepHours = "5_or_less" | "6" | "7" | "8_plus"
@@ -445,6 +447,23 @@ export interface FormReviewMessage {
   user_id: string
   message: string
   created_at: string
+}
+
+export interface BlogPost {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  category: BlogCategory
+  cover_image_url: string | null
+  status: BlogPostStatus
+  tags: string[]
+  meta_description: string | null
+  author_id: string
+  published_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface Database {
