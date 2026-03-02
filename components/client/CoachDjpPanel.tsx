@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useWeightUnit } from "@/hooks/use-weight-unit"
+import { useAiJob } from "@/hooks/use-ai-job"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -335,8 +336,50 @@ export function CoachDjpPanel({
   const [metadata, setMetadata] = useState<CoachMetadata | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loadingPhase, setLoadingPhase] = useState(0)
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Firestore realtime listener for AI job
+  const aiJob = useAiJob(currentJobId)
+
+  // Process AI job updates
+  useEffect(() => {
+    if (!currentJobId) return
+
+    // Update streaming text
+    if (aiJob.text) {
+      setStreamingText(aiJob.text)
+    }
+
+    // Process analysis chunk
+    if (aiJob.analysis) {
+      setMetadata({
+        plateau_detected: !!aiJob.analysis.plateau_detected,
+        suggested_weight_kg: (aiJob.analysis.suggested_weight_kg as number) ?? null,
+        deload_recommended: !!aiJob.analysis.deload_recommended,
+        key_observations: Array.isArray(aiJob.analysis.key_observations)
+          ? aiJob.analysis.key_observations as string[]
+          : [],
+      })
+    }
+
+    // Handle completion
+    if (aiJob.status === "completed") {
+      if (aiJob.text.trim()) {
+        setRecommendation(aiJob.text.trim())
+      }
+      setStreaming(false)
+      setCurrentJobId(null)
+    }
+
+    // Handle failure
+    if (aiJob.status === "failed" || aiJob.error) {
+      setError(aiJob.error || "An error occurred")
+      setStreaming(false)
+      setCurrentJobId(null)
+    }
+  }, [currentJobId, aiJob.text, aiJob.analysis, aiJob.status, aiJob.error])
 
   // Advance loading phases while streaming hasn't started producing text
   useEffect(() => {
@@ -359,9 +402,6 @@ export function CoachDjpPanel({
     setError(null)
     setLoadingPhase(0)
 
-    const controller = new AbortController()
-    abortRef.current = controller
-
     try {
       const res = await fetch("/api/client/workouts/ai-coach", {
         method: "POST",
@@ -373,7 +413,6 @@ export function CoachDjpPanel({
             : {}),
           ...(programContext ? { program_context: programContext } : {}),
         }),
-        signal: controller.signal,
       })
 
       if (!res.ok) {
@@ -381,72 +420,14 @@ export function CoachDjpPanel({
         throw new Error(data.error || "Failed to get analysis")
       }
 
-      const reader = res.body?.getReader()
-      if (!reader) throw new Error("No response stream")
-
-      const decoder = new TextDecoder()
-      let accumulated = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split("\n")
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue
-          const json = line.slice(6)
-
-          try {
-            const event = JSON.parse(json)
-
-            if (event.type === "delta") {
-              accumulated += event.text
-              setStreamingText(accumulated)
-            } else if (event.type === "analysis") {
-              // Structured analysis from generateObject — guaranteed valid
-              const data = event.data
-              setMetadata({
-                plateau_detected: !!data.plateau_detected,
-                suggested_weight_kg: data.suggested_weight_kg ?? null,
-                deload_recommended: !!data.deload_recommended,
-                key_observations: Array.isArray(data.key_observations)
-                  ? data.key_observations
-                  : [],
-              })
-            } else if (event.type === "done") {
-              setRecommendation(accumulated.trim())
-              setStreaming(false)
-            } else if (event.type === "error") {
-              throw new Error(event.message || "Stream error")
-            }
-          } catch (parseErr) {
-            if (parseErr instanceof Error) {
-              const msg = parseErr.message
-              if (
-                msg !== "Unexpected end of JSON input" &&
-                !msg.startsWith("Unexpected token")
-              ) {
-                throw parseErr
-              }
-            }
-          }
-        }
-      }
-
-      // If stream ended without a done event
-      if (!recommendation && accumulated.trim()) {
-        setRecommendation(accumulated.trim())
-      }
-
-      setStreaming(false)
+      const data = await res.json()
+      setCurrentJobId(data.jobId)
+      // Streaming is now handled by the useAiJob effect above
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return
       setError(err instanceof Error ? err.message : "An error occurred")
       setStreaming(false)
     }
-  }, [exerciseId, recommendation, currentSets])
+  }, [exerciseId, currentSets, programContext])
 
   useEffect(() => {
     if (open && !recommendation && !streaming && !error) {

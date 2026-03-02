@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useAiJob } from "@/hooks/use-ai-job"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -329,11 +330,192 @@ export function AiProgramChatDialog({
   const [assignProgramId, setAssignProgramId] = useState<string | null>(null)
   const [clients, setClients] = useState<UserType[]>([])
 
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+
   const abortRef = useRef<AbortController | null>(null)
   const idCounter = useRef(0)
-  const nextId = (prefix: string) => `${prefix}-${++idCounter.current}`
+  const nextId = useCallback((prefix: string) => `${prefix}-${++idCounter.current}`, [])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Firestore realtime listener for AI job
+  const aiJob = useAiJob(currentJobId)
+  const prevChunkCountRef = useRef(0)
+  const jobAssistantIdRef = useRef("")
+
+  // Process AI job chunks from Firestore
+  useEffect(() => {
+    if (!currentJobId) return
+
+    const newChunks = aiJob.chunks.slice(prevChunkCountRef.current)
+    if (newChunks.length === 0) return
+    prevChunkCountRef.current = aiJob.chunks.length
+
+    for (const chunk of newChunks) {
+      switch (chunk.type) {
+        case "delta": {
+          const assistantId = jobAssistantIdRef.current
+          setItems((prev) => {
+            const exists = prev.some(
+              (item) => item.kind === "message" && item.data.id === assistantId
+            )
+            if (!exists) {
+              return [
+                ...prev,
+                {
+                  kind: "message" as const,
+                  data: {
+                    id: assistantId,
+                    role: "assistant" as const,
+                    content: chunk.data.text as string,
+                    status: "streaming" as const,
+                  },
+                },
+              ]
+            }
+            return prev.map((item) =>
+              item.kind === "message" && item.data.id === assistantId
+                ? { ...item, data: { ...item.data, content: item.data.content + (chunk.data.text as string) } }
+                : item
+            )
+          })
+          break
+        }
+
+        case "tool_start": {
+          // Flush current assistant message and start new one
+          const flushedId = jobAssistantIdRef.current
+          setItems((prev) => {
+            const updated = prev.map((item) => {
+              if (item.kind === "message" && item.data.id === flushedId && item.data.status === "streaming") {
+                return item.data.content.trim()
+                  ? { ...item, data: { ...item.data, status: "done" as const } }
+                  : null
+              }
+              return item
+            }).filter(Boolean) as ChatItem[]
+
+            return [
+              ...updated,
+              {
+                kind: "event" as const,
+                data: {
+                  id: nextId(`tool-${chunk.data.tool}`),
+                  type: "tool_start" as const,
+                  tool: chunk.data.tool as string,
+                },
+              },
+            ]
+          })
+          jobAssistantIdRef.current = nextId("assistant")
+          if (chunk.data.tool === "generate_program") setIsGenerating(true)
+          break
+        }
+
+        case "tool_result": {
+          setIsGenerating(false)
+          setItems((prev) => {
+            const lastToolIdx = prev.findLastIndex(
+              (i) => i.kind === "event" && i.data.type === "tool_start" && i.data.tool === (chunk.data.tool as string)
+            )
+            if (lastToolIdx === -1) return prev
+            const updated = [...prev]
+            updated[lastToolIdx] = {
+              kind: "event",
+              data: {
+                ...(updated[lastToolIdx] as Extract<ChatItem, { kind: "event" }>).data,
+                type: "tool_result",
+                summary: chunk.data.summary as string,
+                error: !!chunk.data.error,
+              },
+            }
+            return updated
+          })
+          break
+        }
+
+        case "program_created": {
+          setIsGenerating(false)
+          setItems((prev) => {
+            const lastToolIdx = prev.findLastIndex(
+              (i) => i.kind === "event" && i.data.tool === "generate_program"
+            )
+            const newItem: ChatItem = {
+              kind: "event",
+              data: {
+                id: nextId("program"),
+                type: "program_created",
+                programId: chunk.data.programId as string,
+                validationPass: chunk.data.validationPass as boolean,
+                durationMs: chunk.data.durationMs as number,
+              },
+            }
+            if (lastToolIdx === -1) return [...prev, newItem]
+            const updated = [...prev]
+            updated[lastToolIdx] = newItem
+            return updated
+          })
+          router.refresh()
+          break
+        }
+
+        case "error": {
+          setIsGenerating(false)
+          setItems((prev) => [
+            ...prev,
+            {
+              kind: "message" as const,
+              data: {
+                id: nextId("error"),
+                role: "assistant" as const,
+                content: (chunk.data.message as string) ?? "Something went wrong. Please try again.",
+                status: "error" as const,
+              },
+            },
+          ])
+          break
+        }
+
+        case "done": {
+          const doneAssistantId = jobAssistantIdRef.current
+          setItems((prev) =>
+            prev.map((item) =>
+              item.kind === "message" && item.data.id === doneAssistantId && item.data.status === "streaming"
+                ? { ...item, data: { ...item.data, status: "done" as const } }
+                : item
+            )
+          )
+          setIsStreaming(false)
+          setCurrentJobId(null)
+          prevChunkCountRef.current = 0
+          break
+        }
+      }
+    }
+  }, [currentJobId, aiJob.chunks, nextId, router])
+
+  // Handle job failure from status
+  useEffect(() => {
+    if (!currentJobId) return
+    if (aiJob.status === "failed" && aiJob.error) {
+      setIsGenerating(false)
+      setIsStreaming(false)
+      setItems((prev) => [
+        ...prev,
+        {
+          kind: "message" as const,
+          data: {
+            id: nextId("error"),
+            role: "assistant" as const,
+            content: aiJob.error ?? "Something went wrong.",
+            status: "error" as const,
+          },
+        },
+      ])
+      setCurrentJobId(null)
+      prevChunkCountRef.current = 0
+    }
+  }, [currentJobId, aiJob.status, aiJob.error, nextId])
 
   // Auto-scroll
   useEffect(() => {
@@ -408,11 +590,9 @@ export function AiProgramChatDialog({
     // Auto-resize textarea back
     if (inputRef.current) inputRef.current.style.height = "44px"
 
-    // Track current assistant segment (mutable — regenerated after tool flushes)
-    let assistantId = nextId("assistant")
-
-    const controller = new AbortController()
-    abortRef.current = controller
+    // Set up assistant ID for the Firestore chunk processing effect
+    jobAssistantIdRef.current = nextId("assistant")
+    prevChunkCountRef.current = 0
 
     try {
       const messages = [
@@ -424,7 +604,6 @@ export function AiProgramChatDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages }),
-        signal: controller.signal,
       })
 
       if (!res.ok) {
@@ -432,244 +611,26 @@ export function AiProgramChatDialog({
         throw new Error(data.error || `HTTP ${res.status}`)
       }
 
-      const reader = res.body?.getReader()
-      if (!reader) throw new Error("No response body")
-
-      const decoder = new TextDecoder()
-      let buffer = ""
-      let assistantAdded = false
-      let currentContent = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const chunks = buffer.split("\n\n")
-        buffer = chunks.pop() ?? ""
-
-        for (const chunk of chunks) {
-          const line = chunk.trim()
-          if (!line || line === ":" || !line.startsWith("data: ")) continue
-
-          let event: Record<string, unknown>
-          try {
-            event = JSON.parse(line.slice(6))
-          } catch {
-            continue
-          }
-
-          switch (event.type) {
-            case "delta": {
-              if (!assistantAdded) {
-                const newMsg: ChatItem = {
-                  kind: "message",
-                  data: {
-                    id: assistantId,
-                    role: "assistant",
-                    content: "",
-                    status: "streaming",
-                  },
-                }
-                setItems((prev) => [...prev, newMsg])
-                assistantAdded = true
-              }
-              currentContent += event.text as string
-              setItems((prev) =>
-                prev.map((item) =>
-                  item.kind === "message" && item.data.id === assistantId
-                    ? {
-                        ...item,
-                        data: { ...item.data, content: currentContent },
-                      }
-                    : item
-                )
-              )
-              break
-            }
-
-            case "tool_start": {
-              // Flush any streaming assistant message first
-              if (assistantAdded) {
-                const flushedId = assistantId
-                if (currentContent.trim()) {
-                  // Mark existing assistant message as done
-                  setItems((prev) =>
-                    prev.map((item) =>
-                      item.kind === "message" && item.data.id === flushedId
-                        ? {
-                            ...item,
-                            data: {
-                              ...item.data,
-                              content: currentContent,
-                              status: "done" as const,
-                            },
-                          }
-                        : item
-                    )
-                  )
-                } else {
-                  // Remove empty assistant message
-                  setItems((prev) =>
-                    prev.filter(
-                      (item) =>
-                        !(item.kind === "message" && item.data.id === flushedId)
-                    )
-                  )
-                }
-                // Reset for next assistant segment with a NEW id
-                currentContent = ""
-                assistantAdded = false
-                assistantId = nextId("assistant")
-              }
-
-              const toolEvent: ChatItem = {
-                kind: "event",
-                data: {
-                  id: nextId(`tool-${event.tool}`),
-                  type: "tool_start",
-                  tool: event.tool as string,
-                },
-              }
-              setItems((prev) => [...prev, toolEvent])
-
-              if (event.tool === "generate_program") {
-                setIsGenerating(true)
-              }
-              break
-            }
-
-            case "tool_result": {
-              setIsGenerating(false)
-              // Update the matching tool_start to tool_result
-              setItems((prev) => {
-                const lastToolIdx = prev.findLastIndex(
-                  (i) =>
-                    i.kind === "event" &&
-                    i.data.type === "tool_start" &&
-                    i.data.tool === (event.tool as string)
-                )
-                if (lastToolIdx === -1) return prev
-                const updated = [...prev]
-                updated[lastToolIdx] = {
-                  kind: "event",
-                  data: {
-                    ...(updated[lastToolIdx] as Extract<ChatItem, { kind: "event" }>).data,
-                    type: "tool_result",
-                    summary: event.summary as string,
-                    error: !!event.error,
-                  },
-                }
-                return updated
-              })
-              break
-            }
-
-            case "program_created": {
-              setIsGenerating(false)
-              // Replace the generate_program tool_start with the result card
-              setItems((prev) => {
-                const lastToolIdx = prev.findLastIndex(
-                  (i) =>
-                    i.kind === "event" &&
-                    i.data.tool === "generate_program"
-                )
-                if (lastToolIdx === -1) {
-                  // No tool_start found, just append
-                  return [
-                    ...prev,
-                    {
-                      kind: "event" as const,
-                      data: {
-                        id: nextId("program"),
-                        type: "program_created" as const,
-                        programId: event.programId as string,
-                        validationPass: event.validationPass as boolean,
-                        durationMs: event.durationMs as number,
-                      },
-                    },
-                  ]
-                }
-                const updated = [...prev]
-                updated[lastToolIdx] = {
-                  kind: "event",
-                  data: {
-                    id: nextId("program"),
-                    type: "program_created",
-                    programId: event.programId as string,
-                    validationPass: event.validationPass as boolean,
-                    durationMs: event.durationMs as number,
-                  },
-                }
-                return updated
-              })
-              router.refresh()
-              break
-            }
-
-            case "done": {
-              // Mark final assistant message as done
-              if (assistantAdded) {
-                setItems((prev) =>
-                  prev.map((item) =>
-                    item.kind === "message" && item.data.id === assistantId
-                      ? {
-                          ...item,
-                          data: {
-                            ...item.data,
-                            content: currentContent,
-                            status: "done" as const,
-                          },
-                        }
-                      : item
-                  )
-                )
-              }
-              break
-            }
-
-            case "error": {
-              setIsGenerating(false)
-              const errorMsg: ChatItem = {
-                kind: "message",
-                data: {
-                  id: nextId("error"),
-                  role: "assistant",
-                  content:
-                    (event.message as string) ??
-                    "Something went wrong. Please try again.",
-                  status: "error",
-                },
-              }
-              setItems((prev) => [...prev, errorMsg])
-              break
-            }
-          }
-        }
-      }
+      const data = await res.json()
+      setCurrentJobId(data.jobId)
+      // Streaming is now handled by the useAiJob effect above
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        // User cancelled — ignore
-      } else {
-        const message =
-          err instanceof Error ? err.message : "Something went wrong"
-        setItems((prev) => [
-          ...prev,
-          {
-            kind: "message",
-            data: {
-              id: nextId("error"),
-              role: "assistant",
-              content: message,
-              status: "error",
-            },
+      const message =
+        err instanceof Error ? err.message : "Something went wrong"
+      setItems((prev) => [
+        ...prev,
+        {
+          kind: "message",
+          data: {
+            id: nextId("error"),
+            role: "assistant",
+            content: message,
+            status: "error",
           },
-        ])
-      }
-    } finally {
+        },
+      ])
       setIsStreaming(false)
       setIsGenerating(false)
-      abortRef.current = null
     }
   }
 

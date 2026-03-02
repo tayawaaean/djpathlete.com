@@ -14,6 +14,7 @@ import {
   Brain,
   Lightbulb,
   Star,
+  Video,
   Settings,
   LogOut,
 } from "lucide-react"
@@ -32,6 +33,7 @@ const navItems = [
   { label: "AI Usage", href: "/admin/ai-usage", icon: Brain },
   { label: "AI Insights", href: "/admin/ai-insights", icon: Lightbulb },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
+  { label: "Form Reviews", href: "/admin/form-reviews", icon: Video },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 

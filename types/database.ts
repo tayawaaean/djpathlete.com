@@ -422,6 +422,31 @@ export interface NotificationPreferences {
   updated_at: string
 }
 
+// Form review types
+export type FormReviewStatus = "pending" | "in_progress" | "reviewed"
+
+export interface FormReview {
+  id: string
+  client_user_id: string
+  exercise_id: string
+  assignment_id: string | null
+  video_path: string
+  thumbnail_url: string | null
+  title: string
+  notes: string | null
+  status: FormReviewStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface FormReviewMessage {
+  id: string
+  form_review_id: string
+  user_id: string
+  message: string
+  created_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -524,6 +549,16 @@ export interface Database {
         Row: AiOutcomeTracking
         Insert: Omit<AiOutcomeTracking, "id" | "created_at">
         Update: Partial<Omit<AiOutcomeTracking, "id" | "created_at">>
+      }
+      form_reviews: {
+        Row: FormReview
+        Insert: Omit<FormReview, "id" | "created_at" | "updated_at">
+        Update: Partial<Omit<FormReview, "id" | "created_at">>
+      }
+      form_review_messages: {
+        Row: FormReviewMessage
+        Insert: Omit<FormReviewMessage, "id" | "created_at">
+        Update: Partial<Omit<FormReviewMessage, "id" | "created_at">>
       }
     }
   }

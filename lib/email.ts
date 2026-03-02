@@ -936,3 +936,199 @@ export async function sendCoachProgramCompletedNotification({
     // Non-blocking — don't throw
   }
 }
+
+/**
+ * Notify the coach/admin that a client submitted a form review request.
+ * Gated by the coach's notification preferences.
+ */
+export async function sendFormReviewRequestEmail({
+  coachEmail,
+  coachFirstName,
+  coachUserId,
+  clientName,
+  reviewTitle,
+  reviewId,
+}: {
+  coachEmail: string
+  coachFirstName: string
+  coachUserId?: string
+  clientName: string
+  reviewTitle: string
+  reviewId: string
+}) {
+  if (coachUserId) {
+    const prefs = await getPreferences(coachUserId)
+    if (!prefs.notify_new_client) return
+  }
+
+  const baseUrl = getBaseUrl()
+  const reviewUrl = `${baseUrl}/admin/form-reviews/${reviewId}`
+
+  const html = emailLayout(`
+    <!-- Hero banner -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background: linear-gradient(180deg, #0E3F50 0%, #145569 100%); padding:36px 48px; text-align:center;">
+          <p style="margin:0 0 6px; font-family:Georgia, 'Times New Roman', serif; font-size:14px; color:#C49B7A; letter-spacing:1.5px; text-transform:uppercase;">
+            Form Review Request
+          </p>
+          <h2 style="margin:0; font-family:'Trebuchet MS', Helvetica, Arial, sans-serif; font-size:26px; font-weight:700; color:#ffffff;">
+            New video submitted for review
+          </h2>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Details -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:36px 48px 24px;">
+          <p style="margin:0 0 24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.7;">
+            Hi ${coachFirstName}, ${clientName} just submitted a video for form review.
+          </p>
+
+          <!-- Info card -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafb; border-radius:12px; border:1px solid #e5e7eb;">
+            <tr>
+              <td style="padding:24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="padding:0 0 12px;">
+                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Client</p>
+                      <p style="margin:4px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${clientName}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0 0; border-top:1px solid #e5e7eb;">
+                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Review</p>
+                      <p style="margin:4px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${reviewTitle}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- CTA button -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;">
+            <tr>
+              <td>
+                <a href="${reviewUrl}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none; padding:12px 28px; background-color:#C49B7A; border-radius:8px;">
+                  Review Video
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: coachEmail,
+    subject: `Form review request: ${clientName} — ${reviewTitle}`,
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send form review request email:", error)
+    // Non-blocking
+  }
+}
+
+/**
+ * Notify a client that their coach left feedback on their form review.
+ * Gated by the client's email_notifications preference.
+ */
+export async function sendFormReviewFeedbackEmail({
+  clientEmail,
+  clientFirstName,
+  clientUserId,
+  reviewTitle,
+  reviewId,
+}: {
+  clientEmail: string
+  clientFirstName: string
+  clientUserId?: string
+  reviewTitle: string
+  reviewId: string
+}) {
+  if (clientUserId) {
+    const prefs = await getPreferences(clientUserId)
+    if (!prefs.email_notifications) return
+  }
+
+  const baseUrl = getBaseUrl()
+  const reviewUrl = `${baseUrl}/client/form-reviews/${reviewId}`
+
+  const html = emailLayout(`
+    <!-- Hero banner -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background: linear-gradient(180deg, #0E3F50 0%, #145569 100%); padding:36px 48px; text-align:center;">
+          <p style="margin:0 0 6px; font-family:Georgia, 'Times New Roman', serif; font-size:14px; color:#C49B7A; letter-spacing:1.5px; text-transform:uppercase;">
+            Form Review Feedback
+          </p>
+          <h2 style="margin:0; font-family:'Trebuchet MS', Helvetica, Arial, sans-serif; font-size:26px; font-weight:700; color:#ffffff;">
+            Your coach left feedback!
+          </h2>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Content -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:36px 48px 24px;">
+          <p style="margin:0 0 24px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.7;">
+            Hi ${clientFirstName}, your coach has reviewed your form video and left feedback.
+          </p>
+
+          <!-- Info card -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafb; border-radius:12px; border-left:4px solid #C49B7A; margin-bottom:28px;">
+            <tr>
+              <td style="padding:20px 24px;">
+                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">
+                  Review
+                </p>
+                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:18px; font-weight:700; color:#0E3F50;">
+                  ${reviewTitle}
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- CTA Button -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td align="center" style="background-color:#C49B7A; border-radius:8px;">
+                <a href="${reviewUrl}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:8px;">
+                  View Feedback
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Fallback link -->
+          <p style="margin:24px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:#999; line-height:1.6;">
+            Button not working? Copy and paste this link into your browser:<br />
+            <a href="${reviewUrl}" style="color:#0E3F50; word-break:break-all;">${reviewUrl}</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: clientEmail,
+    subject: `Your coach reviewed your form video: ${reviewTitle}`,
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send form review feedback email:", error)
+    // Non-blocking
+  }
+}

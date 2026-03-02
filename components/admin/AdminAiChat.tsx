@@ -26,6 +26,7 @@ import {
   AI_CHAT_HISTORY_LIMIT,
   AI_CHAT_MAX_CONVERSATIONS,
 } from "@/lib/admin-ai-config"
+import { useAiJob } from "@/hooks/use-ai-job"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -238,10 +239,15 @@ export function AdminAiChat() {
     typeof window !== "undefined" && window.innerWidth >= 768
   )
   const [modelPref, setModelPref] = useState<"auto" | "sonnet" | "haiku">("auto")
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const initializedRef = useRef(false)
+  const jobConvoIdRef = useRef<string | null>(null)
+
+  // Firestore realtime listener for AI job
+  const aiJob = useAiJob(currentJobId)
 
   // Current conversation's messages
   const activeConvo = conversations.find((c) => c.id === activeId)
@@ -281,6 +287,74 @@ export function AdminAiChat() {
   useEffect(() => {
     return () => { abortControllerRef.current?.abort() }
   }, [])
+
+  // ── Process AI job updates from Firestore ─────────────────────────────
+  const prevTextLenRef = useRef(0)
+  useEffect(() => {
+    if (!currentJobId || !jobConvoIdRef.current) return
+    const convoId = jobConvoIdRef.current
+
+    const updateMsgs = (updater: (prev: Message[]) => Message[]) => {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === convoId
+            ? { ...c, messages: updater(c.messages), updatedAt: new Date() }
+            : c
+        )
+      )
+    }
+
+    // Update streaming text
+    if (aiJob.text.length > prevTextLenRef.current) {
+      const newText = aiJob.text
+      updateMsgs((prev) => {
+        const updated = [...prev]
+        const last = updated[updated.length - 1]
+        if (last?.role === "assistant" && last.status === "streaming") {
+          updated[updated.length - 1] = { ...last, content: newText }
+        }
+        return updated
+      })
+      prevTextLenRef.current = aiJob.text.length
+    }
+
+    // Handle completion
+    if (aiJob.status === "completed") {
+      updateMsgs((prev) => {
+        const updated = [...prev]
+        const last = updated[updated.length - 1]
+        if (last?.role === "assistant") {
+          updated[updated.length - 1] = { ...last, status: "done" }
+        }
+        return updated
+      })
+      setIsStreaming(false)
+      setCurrentJobId(null)
+      prevTextLenRef.current = 0
+      textareaRef.current?.focus()
+    }
+
+    // Handle failure
+    if (aiJob.status === "failed" || aiJob.error) {
+      updateMsgs((prev) => {
+        const updated = [...prev]
+        const last = updated[updated.length - 1]
+        if (last?.role === "assistant") {
+          updated[updated.length - 1] = {
+            ...last,
+            content: last.content || aiJob.error || "Something went wrong. Please try again.",
+            status: "error",
+            errorType: "server",
+          }
+        }
+        return updated
+      })
+      setIsStreaming(false)
+      setCurrentJobId(null)
+      prevTextLenRef.current = 0
+      textareaRef.current?.focus()
+    }
+  }, [currentJobId, aiJob.text, aiJob.status, aiJob.error])
 
   // ── Auto-resize textarea ────────────────────────────────────────────────
   useEffect(() => {
@@ -460,77 +534,12 @@ export function AdminAiChat() {
           return
         }
 
-        const reader = res.body?.getReader()
-        if (!reader) throw new Error("No response body")
-
-        const decoder = new TextDecoder()
-        let buffer = ""
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split("\n\n")
-          buffer = lines.pop() ?? ""
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue
-            try {
-              const event = JSON.parse(line.slice(6))
-              if (event.type === "delta") {
-                updateMsgs((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === "assistant" && last.status === "streaming") {
-                    updated[updated.length - 1] = { ...last, content: last.content + event.text }
-                  }
-                  return updated
-                })
-              } else if (event.type === "done") {
-                updateMsgs((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === "assistant") {
-                    updated[updated.length - 1] = { ...last, status: "done" }
-                  }
-                  return updated
-                })
-              } else if (event.type === "error") {
-                updateMsgs((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === "assistant") {
-                    updated[updated.length - 1] = {
-                      ...last,
-                      content: last.content || "Something went wrong. Please try again.",
-                      status: "error",
-                      errorType: "server",
-                    }
-                  }
-                  return updated
-                })
-              }
-            } catch {
-              // malformed SSE
-            }
-          }
-        }
-
-        // Finalize if still streaming
-        updateMsgs((prev) => {
-          const updated = [...prev]
-          const last = updated[updated.length - 1]
-          if (last?.role === "assistant" && last.status === "streaming") {
-            updated[updated.length - 1] = {
-              ...last,
-              status: last.content ? "done" : "error",
-              content: last.content || "Sorry, I couldn't process that request.",
-              errorType: last.content ? null : "server",
-            }
-          }
-          return updated
-        })
+        const data = await res.json()
+        // Store the conversation ID so the effect can update the right conversation
+        jobConvoIdRef.current = currentId
+        prevTextLenRef.current = 0
+        setCurrentJobId(data.jobId)
+        // Streaming is now handled by the useAiJob effect above
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
 
@@ -553,7 +562,6 @@ export function AdminAiChat() {
           }
           return updated
         })
-      } finally {
         setIsStreaming(false)
         abortControllerRef.current = null
         textareaRef.current?.focus()

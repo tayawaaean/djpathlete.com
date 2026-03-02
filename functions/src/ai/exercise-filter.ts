@@ -1,0 +1,146 @@
+import type { CompressedExercise, ExerciseSlot, ProgramSkeleton, ProfileAnalysis } from "./types.js"
+import { slotToText, embedText } from "./embeddings.js"
+import { getSupabase } from "../lib/supabase.js"
+
+// ─── Related movement patterns ──────────────────────────────────────────────
+
+const RELATED_PATTERNS: Record<string, string[]> = {
+  push: ["isometric"], pull: ["isometric"],
+  squat: ["lunge", "isometric"], hinge: ["pull", "isometric"],
+  lunge: ["squat"], carry: ["isometric"],
+  rotation: ["isometric"], isometric: ["push", "pull", "squat", "hinge"],
+  locomotion: ["carry"],
+}
+
+function jaccard(a: string[], b: string[]): number {
+  if (a.length === 0 && b.length === 0) return 0
+  const setA = new Set(a.map((s) => s.toLowerCase()))
+  const setB = new Set(b.map((s) => s.toLowerCase()))
+  let intersection = 0
+  for (const item of setA) { if (setB.has(item)) intersection++ }
+  const union = setA.size + setB.size - intersection
+  return union === 0 ? 0 : intersection / union
+}
+
+const DIFFICULTY_ORDER = ["beginner", "intermediate", "advanced"] as const
+
+function difficultyDistance(a: string, b: string): number {
+  const idxA = DIFFICULTY_ORDER.indexOf(a as (typeof DIFFICULTY_ORDER)[number])
+  const idxB = DIFFICULTY_ORDER.indexOf(b as (typeof DIFFICULTY_ORDER)[number])
+  if (idxA === -1 || idxB === -1) return 2
+  return Math.abs(idxA - idxB)
+}
+
+export function scoreExerciseForSlot(
+  exercise: CompressedExercise, slot: ExerciseSlot,
+  equipment: string[], difficulty: string
+): number {
+  let score = 0
+  if (exercise.movement_pattern === slot.movement_pattern) score += 40
+  else if (exercise.movement_pattern && RELATED_PATTERNS[slot.movement_pattern]?.includes(exercise.movement_pattern)) score += 20
+
+  const allExerciseMuscles = [...exercise.primary_muscles, ...exercise.secondary_muscles]
+  score += Math.round(jaccard(allExerciseMuscles, slot.target_muscles) * 30)
+
+  const equipmentSet = new Set(equipment.map((e) => e.toLowerCase()))
+  if (exercise.is_bodyweight) score += 20
+  else if (exercise.equipment_required.length === 0 || exercise.equipment_required.every((eq) => equipmentSet.has(eq.toLowerCase()))) score += 20
+
+  const dist = difficultyDistance(exercise.difficulty, difficulty)
+  if (dist === 0) score += 10
+  else if (dist === 1) score += 5
+
+  const isCompoundSlot = slot.role === "primary_compound" || slot.role === "secondary_compound"
+  const isIsolationSlot = slot.role === "isolation" || slot.role === "accessory"
+  if (isCompoundSlot && exercise.is_compound) score += 5
+  if (isIsolationSlot && !exercise.is_compound) score += 5
+
+  return score
+}
+
+function slotGroupKey(slot: ExerciseSlot): string {
+  const muscles = [...slot.target_muscles].sort().join(",")
+  return `${slot.movement_pattern}|${muscles}`
+}
+
+const MIN_EXERCISES = 15
+const MAX_EXERCISES = 40
+
+export function scoreAndFilterExercises(
+  exercises: CompressedExercise[], skeleton: ProgramSkeleton,
+  equipment: string[], analysis: ProfileAnalysis
+): CompressedExercise[] {
+  const difficulty = analysis.training_age_category === "novice" ? "beginner"
+    : analysis.training_age_category === "elite" ? "advanced"
+    : analysis.training_age_category
+
+  const slotGroups = new Map<string, ExerciseSlot>()
+  for (const week of skeleton.weeks) {
+    for (const day of week.days) {
+      for (const slot of day.slots) {
+        const key = slotGroupKey(slot)
+        if (!slotGroups.has(key)) slotGroups.set(key, slot)
+      }
+    }
+  }
+
+  const exerciseMaxScores = new Map<string, number>()
+  for (const exercise of exercises) {
+    let maxScore = 0
+    for (const slot of slotGroups.values()) {
+      const score = scoreExerciseForSlot(exercise, slot, equipment, difficulty)
+      if (score > maxScore) maxScore = score
+    }
+    exerciseMaxScores.set(exercise.id, maxScore)
+  }
+
+  const sorted = [...exercises].sort((a, b) => {
+    return (exerciseMaxScores.get(b.id) ?? 0) - (exerciseMaxScores.get(a.id) ?? 0)
+  })
+
+  const cutoff = Math.min(MAX_EXERCISES, sorted.length)
+  const filtered = sorted.slice(0, cutoff)
+  if (filtered.length < MIN_EXERCISES) return exercises
+  return filtered
+}
+
+export async function semanticFilterExercises(
+  exercises: CompressedExercise[], skeleton: ProgramSkeleton,
+  equipment: string[], analysis: ProfileAnalysis
+): Promise<CompressedExercise[]> {
+  const supabase = getSupabase()
+  const slotGroups = new Map<string, ExerciseSlot>()
+  for (const week of skeleton.weeks) {
+    for (const day of week.days) {
+      for (const slot of day.slots) {
+        const key = slotGroupKey(slot)
+        if (!slotGroups.has(key)) slotGroups.set(key, slot)
+      }
+    }
+  }
+
+  const matchedIds = new Set<string>()
+  for (const slot of slotGroups.values()) {
+    try {
+      const queryText = slotToText(slot)
+      const queryEmbedding = await embedText(queryText)
+      const { data } = await supabase.rpc("match_exercise_embeddings", {
+        query_embedding: JSON.stringify(queryEmbedding),
+        match_threshold: 0.2,
+        match_count: 15,
+      })
+      for (const match of data ?? []) matchedIds.add(match.id)
+    } catch (err) {
+      console.warn(`[semanticFilter] Embedding search failed for slot ${slot.slot_id}:`, err instanceof Error ? err.message : err)
+    }
+  }
+
+  if (matchedIds.size < MIN_EXERCISES) {
+    console.log(`[semanticFilter] Only ${matchedIds.size} matches — falling back to heuristic filter`)
+    return scoreAndFilterExercises(exercises, skeleton, equipment, analysis)
+  }
+
+  const filtered = exercises.filter((ex) => matchedIds.has(ex.id))
+  if (filtered.length > MAX_EXERCISES) return filtered.slice(0, MAX_EXERCISES)
+  return filtered
+}

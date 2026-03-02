@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { X, LayoutDashboard, Bot, Users, Dumbbell, ClipboardList, CreditCard, BarChart3, Brain, Lightbulb, Star, Settings, LogOut } from "lucide-react"
+import { X, LayoutDashboard, Bot, Users, Dumbbell, ClipboardList, CreditCard, BarChart3, Brain, Lightbulb, Star, Video, Settings, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
@@ -19,6 +19,7 @@ const navItems = [
   { label: "AI Usage", href: "/admin/ai-usage", icon: Brain },
   { label: "AI Insights", href: "/admin/ai-insights", icon: Lightbulb },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
+  { label: "Form Reviews", href: "/admin/form-reviews", icon: Video },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 

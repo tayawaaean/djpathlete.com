@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Dumbbell, ShoppingBag, TrendingUp, Trophy, User, CreditCard, Settings, ClipboardList, LogOut, MoreHorizontal } from "lucide-react"
+import { LayoutDashboard, Dumbbell, ShoppingBag, TrendingUp, Trophy, Video, User, CreditCard, Settings, ClipboardList, LogOut, MoreHorizontal } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
@@ -17,6 +17,7 @@ const navItems = [
   { label: "Workouts", href: "/client/workouts", icon: Dumbbell },
   { label: "Progress", href: "/client/progress", icon: TrendingUp },
   { label: "Achievements", href: "/client/achievements", icon: Trophy },
+  { label: "Form Reviews", href: "/client/form-reviews", icon: Video },
   { label: "Assessment", href: "/client/questionnaire", icon: ClipboardList },
   { label: "Profile", href: "/client/profile", icon: User },
   { label: "Payments", href: "/client/payments", icon: CreditCard },

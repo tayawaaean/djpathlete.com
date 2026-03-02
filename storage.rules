@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Form review videos — open upload scoped to form-reviews path only
+    // Auth is enforced at the Next.js API layer (NextAuth session check)
+    match /form-reviews/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.resource.size < 200 * 1024 * 1024  // 200MB max
+                   && request.resource.contentType.matches('video/.*');
+    }
+
+    // Deny everything else by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

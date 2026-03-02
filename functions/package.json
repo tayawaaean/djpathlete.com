@@ -1,0 +1,29 @@
+{
+  "name": "djpathlete-functions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.77.0",
+    "@huggingface/transformers": "^3.8.1",
+    "@supabase/supabase-js": "^2.97.0",
+    "firebase-admin": "^13.7.0",
+    "firebase-functions": "^6.3.0",
+    "p-retry": "^7.1.1",
+    "string-similarity-js": "^2.1.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2"
+  }
+}

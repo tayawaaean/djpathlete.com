@@ -1,6 +1,9 @@
 # dependencies
 node_modules/
 
+# firebase functions build output
+functions/dist/
+
 # next.js
 .next/
 out/
