@@ -15,36 +15,16 @@ Your writing style:
 - No fluff, no fads — just what works
 
 Sources and references (MANDATORY):
-- You MUST include inline hyperlinks to credible sources using <a href="..."> tags throughout the content
-- Link to SPECIFIC pages about the topic — NEVER link to just a homepage. Link to the actual guideline, position statement, article, or resource page that supports the claim.
-- Use these verified deep-link URLs when relevant:
-  NSCA:
-    - Position statements: https://www.nsca.com/education/articles/nsca-position-statements/
-    - Youth resistance training position statement: https://www.nsca.com/education/articles/nsca-position-statements/youth-resistance-training/
-    - Certification info: https://www.nsca.com/certification/cscs/
-  ACSM:
-    - Exercise guidelines: https://www.acsm.org/education-resources/trending-topics-resources/physical-activity-guidelines
-    - Current comments / position stands: https://www.acsm.org/education-resources/expert-consensus/current-comments
-  BJSM:
-    - Articles by topic: https://bjsm.bmj.com/collection/ (append topic slug)
-  PubMed:
-    - Search results by topic: https://pubmed.ncbi.nlm.nih.gov/?term= (append search terms with + between words)
-    - Example: https://pubmed.ncbi.nlm.nih.gov/?term=periodization+strength+training
-  WHO:
-    - Physical activity fact sheet: https://www.who.int/news-room/fact-sheets/detail/physical-activity
-    - Physical activity guidelines: https://www.who.int/publications/i/item/9789240015128
-  Sports Medicine Australia:
-    - Fact sheets: https://sma.org.au/resources-advice/fact-sheets/
-    - Injury prevention: https://sma.org.au/resources-advice/injury-fact-sheets/
-  Other trusted sources:
-    - Examine.com (evidence-based supplement/nutrition): https://examine.com/supplements/ or https://examine.com/topics/
-    - Precision Nutrition: https://www.precisionnutrition.com/all-about-recovery
-    - Science for Sport: https://www.scienceforsport.com/
-- When referencing a concept (e.g., periodization, progressive overload, RPE), link the claim text directly to a PubMed search or relevant resource page about that concept
-- You MUST include at least 3-4 inline <a href="..."> source references per post, placed naturally where claims are made
-- ALWAYS include a "References" or "Further Reading" section at the end with 2-3 hyperlinks to the specific pages referenced
-- Example: <p>Research on <a href="https://pubmed.ncbi.nlm.nih.gov/?term=sleep+athletic+recovery">sleep and athletic recovery</a> consistently shows that 7-9 hours is critical for adaptation.</p>
-- Example: <p>The <a href="https://www.who.int/news-room/fact-sheets/detail/physical-activity">WHO physical activity guidelines</a> recommend at least 150 minutes of moderate activity per week.</p>
+- You MUST include inline hyperlinks using <a href="..."> tags to real, specific articles or pages that support your claims
+- NEVER link to homepages (e.g., nsca.com) or search result pages (e.g., pubmed.ncbi.nlm.nih.gov/?term=...)
+- ONLY link to a specific article, position statement, guideline, fact sheet, or publication page — the URL should point to ONE piece of content about a specific topic
+- Use DOI links for research papers when you know the DOI (e.g., https://doi.org/10.1519/JSC.0000000000000XXX) — DOI links are permanent and never break
+- You MUST include at least 3-4 inline source references per post, placed naturally where claims are made
+- ALWAYS include a "References" or "Further Reading" section at the end listing the specific articles/pages cited with their full titles as link text
+- The link text should describe what the source actually says, not just the organization name
+- IMPORTANT: All URLs will be automatically validated after generation. Any link that returns a 404 will be removed. Only use URLs you are highly confident are real and currently live.
+- Example: <p>A <a href="https://doi.org/10.1519/SSC.0000000000000764">2023 review in Strength and Conditioning Journal</a> found that progressive overload remains the cornerstone of hypertrophy training.</p>
+- Example: <p>The <a href="https://www.who.int/news-room/fact-sheets/detail/physical-activity">WHO Fact Sheet on Physical Activity</a> recommends at least 150 minutes of moderate-intensity activity per week for adults.</p>
 
 Content structure:
 - Start with a compelling hook or observation (no heading needed for the intro)
@@ -78,6 +58,67 @@ You must output a JSON object with these fields:
 - meta_description: SEO meta description (max 160 chars)
 
 Output ONLY the JSON object, no additional text.`
+
+// ─── URL Validation ─────────────────────────────────────────────────────────
+
+/**
+ * Validates all <a href="..."> URLs in the generated HTML.
+ * Removes any links that return 404 or are unreachable, keeping the link text.
+ */
+async function validateUrls(html: string): Promise<string> {
+  const linkRegex = /<a\s+href="([^"]+)"([^>]*)>([\s\S]*?)<\/a>/gi
+  const links: { full: string; url: string; text: string }[] = []
+
+  let match
+  while ((match = linkRegex.exec(html)) !== null) {
+    links.push({ full: match[0], url: match[1], text: match[3] })
+  }
+
+  if (links.length === 0) return html
+
+  // Check all URLs in parallel with a 8s timeout per request
+  const checks = await Promise.allSettled(
+    links.map(async (link) => {
+      try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 8000)
+        // Use GET with minimal download — some sites block HEAD requests
+        const res = await fetch(link.url, {
+          method: "GET",
+          signal: controller.signal,
+          redirect: "follow",
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; DJPAthlete-Bot/1.0; +https://djpathlete.com)",
+          },
+        })
+        clearTimeout(timeout)
+        // Read and discard body to avoid memory leaks
+        await res.text().catch(() => {})
+        return { ...link, ok: res.status < 400 }
+      } catch {
+        return { ...link, ok: false }
+      }
+    })
+  )
+
+  let cleaned = html
+  let removed = 0
+
+  for (const result of checks) {
+    if (result.status === "fulfilled" && !result.value.ok) {
+      // Replace broken link with just the text content
+      cleaned = cleaned.replace(result.value.full, result.value.text)
+      removed++
+      console.log(`[blog-generation] Removed broken link: ${result.value.url}`)
+    }
+  }
+
+  if (removed > 0) {
+    console.log(`[blog-generation] Removed ${removed}/${links.length} broken links`)
+  }
+
+  return cleaned
+}
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
@@ -128,6 +169,10 @@ Current date: ${new Date().toISOString().slice(0, 10)}`
       { model: MODEL_SONNET, maxTokens: 8192 }
     )
 
+    // Validate all URLs in the generated content — remove any 404s
+    const validatedContent = await validateUrls(result.content.content)
+    const finalResult = { ...result.content, content: validatedContent }
+
     // Log generation (non-fatal)
     try {
       const supabase = getSupabase()
@@ -150,7 +195,7 @@ Current date: ${new Date().toISOString().slice(0, 10)}`
 
     await jobRef.update({
       status: "completed",
-      result: result.content,
+      result: finalResult,
       updatedAt: FieldValue.serverTimestamp(),
     })
   } catch (error) {
