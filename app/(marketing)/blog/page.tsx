@@ -62,7 +62,6 @@ export default async function BlogPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
-        <FadeIn>
         <div className="max-w-5xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-8 bg-accent" />
@@ -80,7 +79,6 @@ export default async function BlogPage() {
             every level. No fluff, no fads — just what works.
           </p>
         </div>
-        </FadeIn>
       </section>
 
       {/* Blog Grid */}
@@ -92,9 +90,9 @@ export default async function BlogPage() {
             </p>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post, i) => (
-                <FadeIn key={post.id} delay={i * 0.08}>
+              {posts.map((post) => (
                 <Link
+                  key={post.id}
                   href={`/blog/${post.slug}`}
                   className="group"
                 >
@@ -137,7 +135,6 @@ export default async function BlogPage() {
                     </div>
                   </article>
                 </Link>
-                </FadeIn>
               ))}
             </div>
           )}

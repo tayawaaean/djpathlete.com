@@ -89,60 +89,56 @@ export default async function BlogPostPage({ params }: Props) {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 px-4 sm:px-8">
-        <FadeIn>
-          <div className="max-w-3xl mx-auto">
-            {/* Back link */}
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
+        <div className="max-w-3xl mx-auto">
+          {/* Back link */}
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
+          >
+            <ArrowLeft className="size-4" />
+            All Posts
+          </Link>
+
+          {/* Category + Date */}
+          <div className="flex items-center gap-3 mb-4">
+            <span
+              className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryStyles[post.category]}`}
             >
-              <ArrowLeft className="size-4" />
-              All Posts
-            </Link>
-
-            {/* Category + Date */}
-            <div className="flex items-center gap-3 mb-4">
-              <span
-                className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${categoryStyles[post.category]}`}
-              >
-                {post.category}
-              </span>
-              <time
-                dateTime={post.published_at ?? post.created_at}
-                className="text-sm text-muted-foreground"
-              >
-                {formatDate(post.published_at ?? post.created_at)}
-              </time>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
-              {post.title}
-            </h1>
-
-            {/* Excerpt as lead */}
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {post.excerpt}
-            </p>
+              {post.category}
+            </span>
+            <time
+              dateTime={post.published_at ?? post.created_at}
+              className="text-sm text-muted-foreground"
+            >
+              {formatDate(post.published_at ?? post.created_at)}
+            </time>
           </div>
-        </FadeIn>
+
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-semibold text-primary tracking-tight mb-6">
+            {post.title}
+          </h1>
+
+          {/* Excerpt as lead */}
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            {post.excerpt}
+          </p>
+        </div>
       </section>
 
       {/* Cover Image */}
       {post.cover_image_url && (
         <section className="px-4 sm:px-8 pb-8">
           <div className="max-w-4xl mx-auto">
-            <FadeIn>
-              <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
-                <NextImage
-                  src={post.cover_image_url}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </FadeIn>
+            <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+              <NextImage
+                src={post.cover_image_url}
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
         </section>
       )}
@@ -150,12 +146,10 @@ export default async function BlogPostPage({ params }: Props) {
       {/* Article Body */}
       <section className="py-16 lg:py-24 px-4 sm:px-8 bg-surface">
         <div className="max-w-3xl mx-auto">
-          <FadeIn>
-            <div
-              className="prose prose-lg max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
-          </FadeIn>
+          <article
+            className="prose prose-lg max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         </div>
       </section>
 
