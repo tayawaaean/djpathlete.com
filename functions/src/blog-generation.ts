@@ -16,20 +16,35 @@ Your writing style:
 
 Sources and references (MANDATORY):
 - You MUST include inline hyperlinks to credible sources using <a href="..."> tags throughout the content
-- Reference real, well-known organizations and their actual websites:
-  - NSCA (National Strength and Conditioning Association) — https://www.nsca.com
-  - ACSM (American College of Sports Medicine) — https://www.acsm.org
-  - BJSM (British Journal of Sports Medicine) — https://bjsm.bmj.com
-  - PubMed / NIH — https://pubmed.ncbi.nlm.nih.gov
-  - World Health Organization — https://www.who.int
-  - Sports Medicine Australia — https://sma.org.au
-  - Journal of Strength and Conditioning Research (JSCR)
-  - International Journal of Sports Physiology and Performance (IJSPP)
-- Reference specific well-established concepts, models, or guidelines by name (e.g., "NSCA's position statement on youth resistance training", "the ACSM guidelines for exercise testing")
-- NEVER fabricate specific article URLs, DOIs, or study links — only link to organization home pages or well-known section pages you are confident exist
+- Link to SPECIFIC pages about the topic — NEVER link to just a homepage. Link to the actual guideline, position statement, article, or resource page that supports the claim.
+- Use these verified deep-link URLs when relevant:
+  NSCA:
+    - Position statements: https://www.nsca.com/education/articles/nsca-position-statements/
+    - Youth resistance training position statement: https://www.nsca.com/education/articles/nsca-position-statements/youth-resistance-training/
+    - Certification info: https://www.nsca.com/certification/cscs/
+  ACSM:
+    - Exercise guidelines: https://www.acsm.org/education-resources/trending-topics-resources/physical-activity-guidelines
+    - Current comments / position stands: https://www.acsm.org/education-resources/expert-consensus/current-comments
+  BJSM:
+    - Articles by topic: https://bjsm.bmj.com/collection/ (append topic slug)
+  PubMed:
+    - Search results by topic: https://pubmed.ncbi.nlm.nih.gov/?term= (append search terms with + between words)
+    - Example: https://pubmed.ncbi.nlm.nih.gov/?term=periodization+strength+training
+  WHO:
+    - Physical activity fact sheet: https://www.who.int/news-room/fact-sheets/detail/physical-activity
+    - Physical activity guidelines: https://www.who.int/publications/i/item/9789240015128
+  Sports Medicine Australia:
+    - Fact sheets: https://sma.org.au/resources-advice/fact-sheets/
+    - Injury prevention: https://sma.org.au/resources-advice/injury-fact-sheets/
+  Other trusted sources:
+    - Examine.com (evidence-based supplement/nutrition): https://examine.com/supplements/ or https://examine.com/topics/
+    - Precision Nutrition: https://www.precisionnutrition.com/all-about-recovery
+    - Science for Sport: https://www.scienceforsport.com/
+- When referencing a concept (e.g., periodization, progressive overload, RPE), link the claim text directly to a PubMed search or relevant resource page about that concept
 - You MUST include at least 3-4 inline <a href="..."> source references per post, placed naturally where claims are made
-- ALWAYS include a "References" or "Further Reading" section at the end with 2-3 hyperlinks to authoritative organizations
-- Example inline reference: <p>According to the <a href="https://www.nsca.com">NSCA</a>, progressive overload is essential for...</p>
+- ALWAYS include a "References" or "Further Reading" section at the end with 2-3 hyperlinks to the specific pages referenced
+- Example: <p>Research on <a href="https://pubmed.ncbi.nlm.nih.gov/?term=sleep+athletic+recovery">sleep and athletic recovery</a> consistently shows that 7-9 hours is critical for adaptation.</p>
+- Example: <p>The <a href="https://www.who.int/news-room/fact-sheets/detail/physical-activity">WHO physical activity guidelines</a> recommend at least 150 minutes of moderate activity per week.</p>
 
 Content structure:
 - Start with a compelling hook or observation (no heading needed for the intro)
