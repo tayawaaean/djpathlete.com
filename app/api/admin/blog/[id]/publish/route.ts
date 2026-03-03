@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getBlogPostById, updateBlogPost } from "@/lib/db/blog-posts"
-import { ghlTriggerWebhook } from "@/lib/ghl"
-
-const GHL_BLOG_WEBHOOK_URL =
-  process.env.GHL_BLOG_PUBLISHED_WEBHOOK_URL ?? ""
+import { sendBlogNewsletterToAll } from "@/lib/email"
 
 export async function POST(
   _request: Request,
@@ -24,22 +21,19 @@ export async function POST(
       published_at: post.published_at ?? new Date().toISOString(),
     })
 
-    // Fire-and-forget GHL webhook for newsletter
-    if (GHL_BLOG_WEBHOOK_URL) {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL ?? "https://djpathlete.com"
-      ghlTriggerWebhook(GHL_BLOG_WEBHOOK_URL, {
-        type: "blog_published",
-        title: updated.title,
-        slug: updated.slug,
-        excerpt: updated.excerpt,
-        url: `${baseUrl}/blog/${updated.slug}`,
-        category: updated.category,
-        published_at: updated.published_at,
-      }).catch((err) =>
-        console.error("[Blog] GHL webhook failed:", err)
-      )
-    }
+    // Send newsletter to all subscribers (fire-and-forget)
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ?? "https://djpathlete.com"
+
+    sendBlogNewsletterToAll({
+      title: updated.title,
+      excerpt: updated.excerpt,
+      url: `${baseUrl}/blog/${updated.slug}`,
+      category: updated.category,
+      coverImageUrl: updated.cover_image_url,
+    }).catch((err) =>
+      console.error("[Blog] Newsletter send failed:", err)
+    )
 
     return NextResponse.json(updated)
   } catch (error) {

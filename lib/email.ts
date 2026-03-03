@@ -1,5 +1,6 @@
 import { Resend } from "resend"
 import { getPreferences } from "@/lib/db/notification-preferences"
+import { getActiveSubscribers } from "@/lib/db/newsletter"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -1230,4 +1231,129 @@ export async function sendReassessmentReminderEmail({
   if (error) {
     console.error("Failed to send reassessment reminder email:", error)
   }
+}
+
+// ---------------------------------------------------------------------------
+// Blog Newsletter
+// ---------------------------------------------------------------------------
+
+interface BlogNewsletterData {
+  title: string
+  excerpt: string
+  url: string
+  category: string
+  coverImageUrl?: string | null
+}
+
+export async function sendBlogNewsletterToAll(blog: BlogNewsletterData) {
+  const baseUrl = getBaseUrl()
+  const subscribers = await getActiveSubscribers()
+
+  if (subscribers.length === 0) {
+    console.log("[Newsletter] No active subscribers — skipping")
+    return { sent: 0, failed: 0 }
+  }
+
+  const html = emailLayout(`
+    <!-- Blog hero banner -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background: linear-gradient(135deg, #0E3F50 0%, #1a6b80 100%); padding:32px 48px; text-align:center;">
+          <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; font-weight:600; color:#C49B7A; text-transform:uppercase; letter-spacing:2px;">
+            New on the Blog
+          </p>
+          <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:rgba(255,255,255,0.6);">
+            ${blog.category}
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    ${blog.coverImageUrl ? `
+    <!-- Cover image -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:0;">
+          <img src="${blog.coverImageUrl}" alt="${blog.title}" width="600" style="display:block; width:100%; max-width:600px; height:auto;" />
+        </td>
+      </tr>
+    </table>
+    ` : ""}
+
+    <!-- Content -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:40px 48px 48px;">
+
+          <h2 style="margin:0 0 16px; font-family:'Trebuchet MS', Helvetica, Arial, sans-serif; font-size:24px; font-weight:700; color:#0E3F50; line-height:1.3;">
+            ${blog.title}
+          </h2>
+
+          <p style="margin:0 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#555; line-height:1.7;">
+            ${blog.excerpt}
+          </p>
+
+          <!-- Read More Button -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 32px;">
+            <tr>
+              <td align="center" style="background-color:#C49B7A; border-radius:8px;">
+                <a href="${blog.url}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:8px;">
+                  Read the Full Post &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Divider -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="border-top:1px solid #e5e7eb; padding-top:24px;">
+                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#999; line-height:1.6;">
+                  You're receiving this because you subscribed to the DJP Athlete newsletter.
+                  <a href="${baseUrl}/unsubscribe" style="color:#0E3F50; text-decoration:underline;">Unsubscribe</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  `)
+
+  let sent = 0
+  let failed = 0
+
+  // Resend supports up to 100 recipients in batch mode
+  // Send in batches of 50 to stay safe
+  const BATCH_SIZE = 50
+
+  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+    const batch = subscribers.slice(i, i + BATCH_SIZE)
+
+    const results = await Promise.allSettled(
+      batch.map((sub) =>
+        resend.emails.send({
+          from: FROM_EMAIL,
+          to: sub.email,
+          subject: `New Post: ${blog.title}`,
+          html,
+        })
+      )
+    )
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && !result.value.error) {
+        sent++
+      } else {
+        failed++
+        if (result.status === "fulfilled" && result.value.error) {
+          console.error("[Newsletter] Send failed:", result.value.error)
+        }
+      }
+    }
+  }
+
+  console.log(`[Newsletter] Sent ${sent}/${subscribers.length} emails (${failed} failed)`)
+  return { sent, failed }
 }

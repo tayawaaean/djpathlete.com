@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { addSubscriber } from "@/lib/db/newsletter"
 import { ghlCreateContact } from "@/lib/ghl"
 
 const newsletterSchema = z.object({
@@ -18,8 +19,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Fire-and-forget: create contact in GHL but always return success
-    // to the user regardless of whether GHL succeeds
+    // Save to Supabase (primary — this is the source of truth)
+    await addSubscriber(result.data.email)
+
+    // Also sync to GHL if configured (fire-and-forget)
     ghlCreateContact({
       email: result.data.email,
       tags: ["newsletter"],
@@ -29,7 +32,8 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (error) {
+    console.error("[Newsletter] Subscription failed:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
