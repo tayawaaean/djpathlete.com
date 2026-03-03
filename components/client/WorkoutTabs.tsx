@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import {
@@ -211,6 +211,13 @@ function ProgramDetail({
     ? todayDow
     : allDays[0] ?? 1
   const [selectedDay, setSelectedDay] = useState(defaultDay)
+
+  // Re-sync selected day when todayDow updates from server→client timezone
+  useEffect(() => {
+    if (isCurrentWeekInit && allDays.includes(todayDow)) {
+      setSelectedDay(todayDow)
+    }
+  }, [todayDow]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset selected day when week changes and current day isn't in new week
   function handleWeekChange(week: number) {
@@ -467,9 +474,20 @@ function ProgramDetail({
   )
 }
 
+/** Compute today's day-of-week using the browser's local timezone (1=Mon … 7=Sun) */
+function getLocalDow(): number {
+  const jsDay = new Date().getDay()
+  return jsDay === 0 ? 7 : jsDay
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────
 
-export function WorkoutTabs({ programs, todayDow }: WorkoutTabsProps) {
+export function WorkoutTabs({ programs, todayDow: serverDow }: WorkoutTabsProps) {
+  // Override server-computed day with client-local day after hydration
+  const [todayDow, setTodayDow] = useState(serverDow)
+  useEffect(() => {
+    setTodayDow(getLocalDow())
+  }, [])
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(
     programs.length === 1 ? programs[0].assignmentId : null
   )
