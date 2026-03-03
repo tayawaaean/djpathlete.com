@@ -2,6 +2,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore"
 import { z } from "zod"
 import { callAgent, MODEL_SONNET } from "./ai/anthropic.js"
 import { getSupabase } from "./lib/supabase.js"
+import { fetchResearchPapers, formatResearchForPrompt } from "./lib/research.js"
 
 // ─── System Prompt ───────────────────────────────────────────────────────────
 
@@ -15,16 +16,14 @@ Your writing style:
 - No fluff, no fads — just what works
 
 Sources and references (MANDATORY):
-- You MUST include inline hyperlinks using <a href="..."> tags to real, specific articles or pages that support your claims
-- NEVER link to homepages (e.g., nsca.com) or search result pages (e.g., pubmed.ncbi.nlm.nih.gov/?term=...)
-- ONLY link to a specific article, position statement, guideline, fact sheet, or publication page — the URL should point to ONE piece of content about a specific topic
-- Use DOI links for research papers when you know the DOI (e.g., https://doi.org/10.1519/JSC.0000000000000XXX) — DOI links are permanent and never break
-- You MUST include at least 3-4 inline source references per post, placed naturally where claims are made
-- ALWAYS include a "References" or "Further Reading" section at the end listing the specific articles/pages cited with their full titles as link text
-- The link text should describe what the source actually says, not just the organization name
-- IMPORTANT: All URLs will be automatically validated after generation. Any link that returns a 404 will be removed. Only use URLs you are highly confident are real and currently live.
-- Example: <p>A <a href="https://doi.org/10.1519/SSC.0000000000000764">2023 review in Strength and Conditioning Journal</a> found that progressive overload remains the cornerstone of hypertrophy training.</p>
-- Example: <p>The <a href="https://www.who.int/news-room/fact-sheets/detail/physical-activity">WHO Fact Sheet on Physical Activity</a> recommends at least 150 minutes of moderate-intensity activity per week for adults.</p>
+- Verified research papers will be provided at the end of the topic prompt. You MUST cite from those provided sources using their exact URLs.
+- Do NOT invent, guess, or fabricate any DOI links, PubMed URLs, or research paper URLs that were not provided to you.
+- You may ALSO cite well-known organization pages you are confident exist (e.g., WHO fact sheets, NSCA position statements, ACSM guidelines).
+- You MUST include at least 3-4 inline <a href="..."> source references per post, placed naturally where claims are made.
+- The link text should describe what the source says — NEVER just an organization name or "click here".
+- ALWAYS include a "References" or "Further Reading" section at the end with the full title of each cited paper as the link text.
+- IMPORTANT: All URLs will be automatically validated after generation. Any link that returns a 404 will be removed.
+- Example: <p>A <a href="https://doi.org/10.1519/JSC.0000000000004234">2022 systematic review in the Journal of Strength and Conditioning Research</a> confirmed that progressive overload is essential for long-term strength gains.</p>
 
 Content structure:
 - Start with a compelling hook or observation (no heading needed for the intro)
@@ -156,11 +155,25 @@ export async function handleBlogGeneration(jobId: string): Promise<void> {
   const startTime = Date.now()
 
   try {
+    // Step 1: Fetch verified research papers for the topic
+    let researchBlock = ""
+    let researchMeta = { papers: 0, source: "none", duration_ms: 0 }
+
+    try {
+      const research = await fetchResearchPapers(input.prompt)
+      researchBlock = formatResearchForPrompt(research.papers)
+      researchMeta = { papers: research.papers.length, source: research.source, duration_ms: research.duration_ms }
+      console.log(`[blog-generation] Found ${research.papers.length} papers via ${research.source} in ${research.duration_ms}ms`)
+    } catch (err) {
+      console.warn("[blog-generation] Research fetch failed, proceeding without:", err)
+    }
+
+    // Step 2: Generate the blog post with research context
     const userMessage = `Write a blog post about: ${input.prompt}
 
 Tone: ${input.tone ?? "professional"}
 Target length: ${input.length ?? "medium"}
-Current date: ${new Date().toISOString().slice(0, 10)}`
+Current date: ${new Date().toISOString().slice(0, 10)}${researchBlock}`
 
     const result = await callAgent(
       BLOG_GENERATION_PROMPT,
@@ -169,7 +182,7 @@ Current date: ${new Date().toISOString().slice(0, 10)}`
       { model: MODEL_SONNET, maxTokens: 8192 }
     )
 
-    // Validate all URLs in the generated content — remove any 404s
+    // Step 3: Validate all URLs in the generated content — remove any 404s
     const validatedContent = await validateUrls(result.content.content)
     const finalResult = { ...result.content, content: validatedContent }
 
@@ -181,7 +194,15 @@ Current date: ${new Date().toISOString().slice(0, 10)}`
         client_id: null,
         requested_by: input.userId,
         status: "completed",
-        input_params: { feature: "blog_generation", prompt: input.prompt, tone: input.tone, length: input.length },
+        input_params: {
+          feature: "blog_generation",
+          prompt: input.prompt,
+          tone: input.tone,
+          length: input.length,
+          research_papers: researchMeta.papers,
+          research_source: researchMeta.source,
+          research_duration_ms: researchMeta.duration_ms,
+        },
         output_summary: `Generated blog: ${result.content.title}`,
         error_message: null,
         model_used: MODEL_SONNET,
