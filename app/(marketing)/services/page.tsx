@@ -3,7 +3,6 @@ import {
   ClipboardList,
   BarChart3,
   Video,
-  Apple,
   Dumbbell,
   Heart,
   ArrowRight,
@@ -16,18 +15,18 @@ import { PricingSection } from "@/components/PricingSection"
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Explore DJP Athlete's coaching services: personalized training plans, performance tracking, video analysis, nutrition coaching, strength & conditioning, and recovery programs.",
+    "Explore DJP Athlete's coaching services: personalized training plans, performance tracking, video analysis, strength & conditioning, and recovery programs.",
   openGraph: {
     title: "Services | DJP Athlete",
     description:
-      "Personalized training plans, video analysis, nutrition coaching, and more. Explore the full range of DJP Athlete coaching services.",
+      "Personalized training plans, video analysis, strength & conditioning, and more. Explore the full range of DJP Athlete coaching services.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Services | DJP Athlete",
     description:
-      "Personalized training plans, video analysis, nutrition coaching, and more. Explore the full range of DJP Athlete coaching services.",
+      "Personalized training plans, video analysis, strength & conditioning, and more. Explore the full range of DJP Athlete coaching services.",
   },
 }
 
@@ -42,7 +41,7 @@ const serviceSchema = {
   serviceType: "Athletic Performance Coaching",
   areaServed: "Worldwide",
   description:
-    "Elite sports coaching services including personalized training plans, performance tracking, video analysis, nutrition coaching, and recovery programs.",
+    "Elite sports coaching services including personalized training plans, performance tracking, video analysis, strength & conditioning, and recovery programs.",
   url: "https://djpathlete.com/services",
   hasOfferCatalog: {
     "@type": "OfferCatalog",
@@ -63,7 +62,7 @@ const serviceSchema = {
         itemOffered: {
           "@type": "Service",
           name: "Performance Plan",
-          description: "Advanced coaching with video analysis and nutrition",
+          description: "Advanced coaching with video analysis and recovery support",
         },
         price: "199.00",
         priceCurrency: "USD",
@@ -114,17 +113,6 @@ const services = [
       "Frame-by-frame breakdown",
       "Annotated coach feedback",
       "Before/after comparisons",
-    ],
-  },
-  {
-    icon: Apple,
-    title: "Nutrition Coaching",
-    description:
-      "Fuel your performance with nutrition plans tailored to your training load, body composition goals, and sport demands.",
-    features: [
-      "Personalized meal plans",
-      "Macro tracking guidance",
-      "Pre/post workout nutrition",
     ],
   },
   {
@@ -196,9 +184,9 @@ export default function ServicesPage() {
             <br className="hidden sm:block" /> serious athletes.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            From personalized training plans to video analysis and nutrition
-            guidance — everything you need to train smarter, recover faster, and
-            perform at your best.
+            From personalized training plans to video analysis and recovery
+            programming — everything you need to train smarter, recover faster,
+            and perform at your best.
           </p>
         </div>
       </section>

@@ -9,6 +9,7 @@ export type AssignmentStatus = "active" | "paused" | "completed" | "cancelled"
 export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded"
 export type NotificationType = "info" | "success" | "warning" | "error"
 export type BlogPostStatus = "draft" | "published"
+export type NewsletterStatus = "draft" | "sent"
 export type BlogCategory = "Performance" | "Recovery" | "Coaching" | "Youth Development"
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say"
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced" | "elite"
@@ -466,6 +467,20 @@ export interface BlogPost {
   updated_at: string
 }
 
+export interface Newsletter {
+  id: string
+  subject: string
+  preview_text: string
+  content: string
+  status: NewsletterStatus
+  sent_at: string | null
+  sent_count: number
+  failed_count: number
+  author_id: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -578,6 +593,11 @@ export interface Database {
         Row: FormReviewMessage
         Insert: Omit<FormReviewMessage, "id" | "created_at">
         Update: Partial<Omit<FormReviewMessage, "id" | "created_at">>
+      }
+      newsletters: {
+        Row: Newsletter
+        Insert: Omit<Newsletter, "id" | "created_at" | "updated_at" | "sent_at" | "sent_count" | "failed_count">
+        Update: Partial<Omit<Newsletter, "id" | "created_at">>
       }
     }
   }

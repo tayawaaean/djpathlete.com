@@ -9,8 +9,10 @@ initializeApp()
 const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY")
 const supabaseUrl = defineSecret("SUPABASE_URL")
 const supabaseServiceRoleKey = defineSecret("SUPABASE_SERVICE_ROLE_KEY")
+const resendApiKey = defineSecret("RESEND_API_KEY")
 
 const allSecrets = [anthropicApiKey, supabaseUrl, supabaseServiceRoleKey]
+const sendSecrets = [supabaseUrl, supabaseServiceRoleKey, resendApiKey]
 
 // ─── Program Generation ────────────────────────────────────────────────────────
 // Triggered when a new ai_jobs doc is created with type "program_generation"
@@ -97,6 +99,49 @@ export const blogGeneration = onDocumentCreated(
 
     const { handleBlogGeneration } = await import("./blog-generation.js")
     await handleBlogGeneration(event.params.jobId)
+  }
+)
+
+// ─── Newsletter Generation ──────────────────────────────────────────────────
+// Triggered when a new ai_jobs doc is created with type "newsletter_generation"
+// Structured output: generates subject, preview_text, and content HTML
+
+export const newsletterGeneration = onDocumentCreated(
+  {
+    document: "ai_jobs/{jobId}",
+    timeoutSeconds: 300,
+    memory: "512MiB",
+    region: "us-central1",
+    secrets: allSecrets,
+  },
+  async (event) => {
+    const data = event.data?.data()
+    if (!data || data.type !== "newsletter_generation") return
+
+    const { handleNewsletterGeneration } = await import("./newsletter-generation.js")
+    await handleNewsletterGeneration(event.params.jobId)
+  }
+)
+
+// ─── Newsletter Send (Batch) ────────────────────────────────────────────────
+// Triggered when a new ai_jobs doc is created with type "newsletter_send"
+// Handles 10k+ subscribers via Resend Batch API with rate limiting
+// Runs up to 9 minutes — cannot timeout on serverless API routes
+
+export const newsletterSend = onDocumentCreated(
+  {
+    document: "ai_jobs/{jobId}",
+    timeoutSeconds: 540,
+    memory: "512MiB",
+    region: "us-central1",
+    secrets: sendSecrets,
+  },
+  async (event) => {
+    const data = event.data?.data()
+    if (!data || data.type !== "newsletter_send") return
+
+    const { handleNewsletterSend } = await import("./newsletter-send.js")
+    await handleNewsletterSend(event.params.jobId)
   }
 )
 

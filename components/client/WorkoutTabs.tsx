@@ -202,20 +202,21 @@ function ProgramDetail({
 
   const days = program.weeks?.[selectedWeek] ?? []
   const allDays = days.map((d) => d.day).sort((a, b) => a - b)
-  // Only auto-select today's day when the program has started and we're on the current week
   const programStarted = program.currentWeek > 0
-  const isCurrentWeekInit = programStarted && selectedWeek === effectiveCurrentWeek
-  const defaultDay = isCurrentWeekInit && allDays.includes(todayDow)
-    ? todayDow
-    : allDays[0] ?? 1
-  const [selectedDay, setSelectedDay] = useState(defaultDay)
 
-  // Re-sync selected day when todayDow updates from server→client timezone
-  useEffect(() => {
-    if (isCurrentWeekInit && allDays.includes(todayDow)) {
-      setSelectedDay(todayDow)
+  // Default to the first incomplete day (resume where you left off)
+  // If all days are complete, show the last day. If none started, show Day 1.
+  const firstIncompleteDay = (() => {
+    for (const day of allDays) {
+      const dayData = days.find((d) => d.day === day)
+      if (!dayData || dayData.exercises.length === 0) continue
+      const allLogged = dayData.exercises.every((e) => e.loggedToday)
+      if (!allLogged) return day
     }
-  }, [todayDow]) // eslint-disable-line react-hooks/exhaustive-deps
+    // All complete — show last day; or fallback to first
+    return allDays[allDays.length - 1] ?? allDays[0] ?? 1
+  })()
+  const [selectedDay, setSelectedDay] = useState(firstIncompleteDay)
 
   // Reset selected day when week changes and current day isn't in new week
   function handleWeekChange(week: number) {
@@ -224,11 +225,7 @@ function ProgramDetail({
       .map((d) => d.day)
       .sort((a, b) => a - b)
     if (!newDays.includes(selectedDay)) {
-      const isNewWeekCurrent = programStarted && week === effectiveCurrentWeek
-      const fallback = isNewWeekCurrent && newDays.includes(todayDow)
-        ? todayDow
-        : newDays[0] ?? 1
-      setSelectedDay(fallback)
+      setSelectedDay(newDays[0] ?? 1)
     }
   }
 

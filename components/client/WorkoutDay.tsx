@@ -589,19 +589,17 @@ function ExerciseCard({
                     Watch
                   </Button>
                 )}
-                {!loggedToday && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1"
-                    onClick={() => setExpanded(!expanded)}
-                  >
-                    Log
-                    <ChevronDown
-                      className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
-                    />
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant={loggedToday ? "ghost" : "outline"}
+                  className={cn("gap-1", loggedToday && "text-success hover:text-success")}
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {loggedToday ? "Update" : "Log"}
+                  <ChevronDown
+                    className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+                  />
+                </Button>
               </div>
             </div>
 

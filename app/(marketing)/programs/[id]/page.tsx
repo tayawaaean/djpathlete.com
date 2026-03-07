@@ -16,7 +16,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   conditioning: "Conditioning",
   sport_specific: "Sport Specific",
   recovery: "Recovery",
-  nutrition: "Nutrition",
   hybrid: "Hybrid",
 }
 

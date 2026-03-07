@@ -27,6 +27,7 @@ function emailLayout(content: string) {
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
   <title>DJP Athlete</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Exa:wght@400;600;700&family=Lexend+Deca:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <!--[if mso]>
   <noscript>
     <xml>
@@ -52,7 +53,7 @@ function emailLayout(content: string) {
                 <tr>
                   <td style="width:40px; border-bottom:2px solid #C49B7A;"></td>
                   <td style="padding:0 16px;">
-                    <p style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:11px; color:#8a8680; letter-spacing:3px; text-transform:uppercase;">
+                    <p style="margin:0; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:11px; color:#8a8680; letter-spacing:3px; text-transform:uppercase;">
                       DJP Athlete
                     </p>
                   </td>
@@ -79,14 +80,14 @@ function emailLayout(content: string) {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center" style="padding:44px 48px 40px;">
-                    <h1 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:28px; font-weight:400; color:#ffffff; letter-spacing:8px; text-transform:uppercase;">
+                    <h1 style="margin:0; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:28px; font-weight:400; color:#ffffff; letter-spacing:8px; text-transform:uppercase;">
                       DJP ATHLETE
                     </h1>
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
                       <tr>
                         <td style="width:24px; border-bottom:1px solid rgba(196,155,122,0.4);"></td>
                         <td style="padding:0 12px;">
-                          <p style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:10px; color:#C49B7A; letter-spacing:4px; text-transform:uppercase;">
+                          <p style="margin:0; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:10px; color:#C49B7A; letter-spacing:4px; text-transform:uppercase;">
                             Elite Performance
                           </p>
                         </td>
@@ -129,13 +130,13 @@ function emailLayout(content: string) {
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center" style="padding-bottom:24px;">
-                          <a href="${baseUrl}/programs" style="font-family:Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Programs</a>
+                          <a href="${baseUrl}/programs" style="font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Programs</a>
                           <span style="color:#d4cfc8; font-size:10px;">&bull;</span>
-                          <a href="${baseUrl}/online" style="font-family:Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Coaching</a>
+                          <a href="${baseUrl}/online" style="font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Coaching</a>
                           <span style="color:#d4cfc8; font-size:10px;">&bull;</span>
-                          <a href="${baseUrl}/blog" style="font-family:Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Blog</a>
+                          <a href="${baseUrl}/blog" style="font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Blog</a>
                           <span style="color:#d4cfc8; font-size:10px;">&bull;</span>
-                          <a href="${baseUrl}/contact" style="font-family:Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Contact</a>
+                          <a href="${baseUrl}/contact" style="font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:12px; color:#0E3F50; text-decoration:none; letter-spacing:1px; text-transform:uppercase; padding:0 14px;">Contact</a>
                         </td>
                       </tr>
                     </table>
@@ -143,10 +144,10 @@ function emailLayout(content: string) {
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center">
-                          <p style="margin:0 0 6px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; color:#a09b94; letter-spacing:0.5px;">
+                          <p style="margin:0 0 6px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; color:#a09b94; letter-spacing:0.5px;">
                             &copy; ${new Date().getFullYear()} DJP Athlete. All rights reserved.
                           </p>
-                          <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; color:#b5b0a8;">
+                          <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; color:#b5b0a8;">
                             <a href="${baseUrl}/privacy-policy" style="color:#a09b94; text-decoration:underline;">Privacy Policy</a>
                             &nbsp;&middot;&nbsp;
                             <a href="${baseUrl}/terms-of-service" style="color:#a09b94; text-decoration:underline;">Terms of Service</a>
@@ -179,7 +180,7 @@ function ctaButton(href: string, label: string, variant: "primary" | "secondary"
     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td align="center" style="border:2px solid #0E3F50; border-radius:2px;">
-          <a href="${href}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#0E3F50; text-decoration:none; padding:12px 32px; letter-spacing:1.5px; text-transform:uppercase;">
+          <a href="${href}" target="_blank" style="display:inline-block; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#0E3F50; text-decoration:none; padding:12px 32px; letter-spacing:1.5px; text-transform:uppercase;">
             ${label}
           </a>
         </td>
@@ -190,7 +191,7 @@ function ctaButton(href: string, label: string, variant: "primary" | "secondary"
   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
     <tr>
       <td align="center" style="background-color:#0E3F50; border-radius:2px;">
-        <a href="${href}" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 40px; letter-spacing:1.5px; text-transform:uppercase;">
+        <a href="${href}" target="_blank" style="display:inline-block; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 40px; letter-spacing:1.5px; text-transform:uppercase;">
           ${label}
         </a>
       </td>
@@ -205,10 +206,10 @@ function infoCard(rows: { label: string; value: string; valueColor?: string }[])
       (r, i) => `
       <tr>
         <td style="padding:${i === 0 ? "0" : "16px"} 0 ${i === rows.length - 1 ? "0" : "16px"}; ${i > 0 ? "border-top:1px solid #eae7e2;" : ""}">
-          <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">
+          <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">
             ${r.label}
           </p>
-          <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:${r.valueColor ?? "#0E3F50"};">
+          <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:${r.valueColor ?? "#0E3F50"};">
             ${r.value}
           </p>
         </td>
@@ -234,7 +235,7 @@ function sectionLabel(text: string) {
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
     <tr>
       <td style="border-bottom:2px solid #C49B7A; padding-bottom:8px;">
-        <p style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:10px; font-weight:400; color:#C49B7A; letter-spacing:3px; text-transform:uppercase;">
+        <p style="margin:0; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:10px; font-weight:400; color:#C49B7A; letter-spacing:3px; text-transform:uppercase;">
           ${text}
         </p>
       </td>
@@ -245,7 +246,7 @@ function sectionLabel(text: string) {
 /** Fallback link block */
 function fallbackLink(url: string) {
   return `
-  <p style="margin:28px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; color:#b5b0a8; line-height:1.6;">
+  <p style="margin:28px 0 0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11px; color:#b5b0a8; line-height:1.6;">
     Button not working? Copy and paste this link:<br />
     <a href="${url}" style="color:#0E3F50; word-break:break-all; font-size:11px;">${url}</a>
   </p>`
@@ -257,10 +258,10 @@ function heroBanner(label: string, headline: string) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
       <td style="background-color:#0E3F50; padding:36px 48px; text-align:center;">
-        <p style="margin:0 0 10px; font-family:Georgia, 'Times New Roman', serif; font-size:10px; color:#C49B7A; letter-spacing:4px; text-transform:uppercase;">
+        <p style="margin:0 0 10px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:10px; color:#C49B7A; letter-spacing:4px; text-transform:uppercase;">
           ${label}
         </p>
-        <h2 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:24px; font-weight:400; color:#ffffff; line-height:1.3;">
+        <h2 style="margin:0; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:24px; font-weight:400; color:#ffffff; line-height:1.3;">
           ${headline}
         </h2>
       </td>
@@ -280,11 +281,11 @@ export async function sendPasswordResetEmail(
 
           ${sectionLabel("Password Reset")}
 
-          <p style="margin:0 0 8px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
+          <p style="margin:0 0 8px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
             Hi ${firstName},
           </p>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             We received a request to reset the password for your DJP Athlete account. Click the button below to set a new password.
           </p>
 
@@ -294,10 +295,10 @@ export async function sendPasswordResetEmail(
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:36px; background-color:#faf9f7; border-radius:2px; border-left:3px solid #C49B7A;">
             <tr>
               <td style="padding:20px 24px;">
-                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">
+                <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">
                   Security Notice
                 </p>
-                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#5c5750; line-height:1.7;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#5c5750; line-height:1.7;">
                   This link expires in <strong style="color:#0E3F50;">1 hour</strong>. If you didn&rsquo;t request this reset, you can safely ignore this email &mdash; your password will remain unchanged.
                 </p>
               </td>
@@ -336,17 +337,17 @@ export async function sendVerificationEmail(
 
           ${sectionLabel("Email Verification")}
 
-          <p style="margin:0 0 8px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
+          <p style="margin:0 0 8px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
             Hi ${firstName},
           </p>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Thanks for signing up. Please verify your email address to activate your account.
           </p>
 
           ${ctaButton(verifyUrl, "Verify Email")}
 
-          <p style="margin:32px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#a09b94; line-height:1.7;">
+          <p style="margin:32px 0 0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#a09b94; line-height:1.7;">
             This link expires in <strong style="color:#5c5750;">24 hours</strong>. If you didn&rsquo;t create this account, you can safely ignore this email.
           </p>
 
@@ -380,11 +381,11 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
       <tr>
         <td style="padding:48px 48px 20px;">
 
-          <p style="margin:0 0 8px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
+          <p style="margin:0 0 8px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
             Your email is verified and your account is fully activated. Welcome to DJP Athlete &mdash; the platform built for athletes who are serious about performance.
           </p>
 
-          <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Whether you&rsquo;re training in-person, coaching online, or coming back from injury &mdash; we&rsquo;ve got you covered.
           </p>
 
@@ -419,10 +420,10 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#faf9f7; border-radius:2px; border-left:3px solid #0E3F50;">
             <tr>
               <td style="padding:22px 28px;">
-                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#0E3F50;">
+                <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#0E3F50;">
                   Personalized Programs
                 </p>
-                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c; line-height:1.6;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c; line-height:1.6;">
                   Training programs designed around your sport, position, and goals.
                 </p>
               </td>
@@ -435,10 +436,10 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#faf9f7; border-radius:2px; border-left:3px solid #C49B7A;">
             <tr>
               <td style="padding:22px 28px;">
-                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#0E3F50;">
+                <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#0E3F50;">
                   Expert Coaching
                 </p>
-                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c; line-height:1.6;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c; line-height:1.6;">
                   Guidance from experienced coaches &mdash; in-person or online, wherever you train.
                 </p>
               </td>
@@ -451,10 +452,10 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#faf9f7; border-radius:2px; border-left:3px solid #0E3F50;">
             <tr>
               <td style="padding:22px 28px;">
-                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#0E3F50;">
+                <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; font-weight:600; color:#0E3F50;">
                   Performance Tracking
                 </p>
-                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c; line-height:1.6;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c; line-height:1.6;">
                   Data-driven assessments and benchmarks to track your progress.
                 </p>
               </td>
@@ -468,13 +469,13 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:32px 48px 12px; text-align:center;">
-          <p style="margin:0 0 24px; font-family:Georgia, 'Times New Roman', serif; font-size:16px; color:#333;">
+          <p style="margin:0 0 24px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:16px; color:#333;">
             Ready to get started?
           </p>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
             <tr>
               <td align="center" style="background-color:#0E3F50; border-radius:2px;">
-                <a href="${baseUrl}/dashboard" target="_blank" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 48px; letter-spacing:1.5px; text-transform:uppercase;">
+                <a href="${baseUrl}/dashboard" target="_blank" style="display:inline-block; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; font-weight:600; color:#ffffff; text-decoration:none; padding:14px 48px; letter-spacing:1.5px; text-transform:uppercase;">
                   Go to My Dashboard
                 </a>
               </td>
@@ -488,18 +489,18 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:20px 48px 44px; text-align:center;">
-          <p style="margin:0 0 16px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#a09b94;">
+          <p style="margin:0 0 16px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:13px; color:#a09b94;">
             Or explore what we offer:
           </p>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
             <tr>
               <td style="padding:0 6px;">
-                <a href="${baseUrl}/programs" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; font-weight:600; color:#0E3F50; text-decoration:none; padding:10px 24px; border:2px solid #0E3F50; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">
+                <a href="${baseUrl}/programs" style="display:inline-block; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; font-weight:600; color:#0E3F50; text-decoration:none; padding:10px 24px; border:2px solid #0E3F50; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">
                   Programs
                 </a>
               </td>
               <td style="padding:0 6px;">
-                <a href="${baseUrl}/online" style="display:inline-block; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; font-weight:600; color:#0E3F50; text-decoration:none; padding:10px 24px; border:2px solid #0E3F50; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">
+                <a href="${baseUrl}/online" style="display:inline-block; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; font-weight:600; color:#0E3F50; text-decoration:none; padding:10px 24px; border:2px solid #0E3F50; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">
                   Coaching
                 </a>
               </td>
@@ -536,11 +537,11 @@ export async function sendAccountCreatedEmail(
 
           ${sectionLabel("Account Created")}
 
-          <p style="margin:0 0 8px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
+          <p style="margin:0 0 8px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
             Hi ${firstName},
           </p>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Your coach has created a DJP Athlete account for you. Use the temporary password below to log in and get started.
           </p>
 
@@ -548,10 +549,10 @@ export async function sendAccountCreatedEmail(
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0E3F50; border-radius:2px; margin-bottom:32px;">
             <tr>
               <td style="padding:24px 28px;">
-                <p style="margin:0 0 6px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#C49B7A; text-transform:uppercase; letter-spacing:2px;">
+                <p style="margin:0 0 6px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#C49B7A; text-transform:uppercase; letter-spacing:2px;">
                   Temporary Password
                 </p>
-                <p style="margin:0; font-family:'Courier New', Courier, monospace; font-size:22px; font-weight:700; color:#ffffff; letter-spacing:3px;">
+                <p style="margin:0; font-family:'JetBrains Mono', 'Courier New', Courier, monospace; font-size:22px; font-weight:700; color:#ffffff; letter-spacing:3px;">
                   ${tempPassword}
                 </p>
               </td>
@@ -564,10 +565,10 @@ export async function sendAccountCreatedEmail(
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:36px; background-color:#faf9f7; border-radius:2px; border-left:3px solid #C49B7A;">
             <tr>
               <td style="padding:20px 24px;">
-                <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">
+                <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">
                   Important
                 </p>
-                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#5c5750; line-height:1.7;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#5c5750; line-height:1.7;">
                   Please change your password after your first login for security.
                 </p>
               </td>
@@ -616,17 +617,17 @@ export async function sendProgramReadyEmail(
       <tr>
         <td style="padding:48px 48px 52px;">
 
-          <p style="margin:0 0 8px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
+          <p style="margin:0 0 8px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
             Hi ${firstName},
           </p>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Great news &mdash; your coach has created a personalized training program for you.
           </p>
 
           ${infoCard([{ label: "Program", value: programName }])}
 
-          <p style="margin:28px 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:28px 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Log in to your account to view the full program details and start training.
           </p>
 
@@ -675,11 +676,11 @@ export async function sendProgramAvailableForPurchaseEmail(
       <tr>
         <td style="padding:48px 48px 52px;">
 
-          <p style="margin:0 0 8px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
+          <p style="margin:0 0 8px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
             Hi ${firstName},
           </p>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Your coach has created a personalized training program just for you. Purchase it to get started.
           </p>
 
@@ -759,7 +760,7 @@ export async function sendCoachPurchaseNotification({
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:44px 48px 24px;">
-          <p style="margin:0 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
+          <p style="margin:0 0 28px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
             Hi ${coachFirstName}, a client just purchased a program. Here are the details:
           </p>
 
@@ -770,15 +771,15 @@ export async function sendCoachPurchaseNotification({
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td style="padding:0 0 16px;">
-                      <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Client</p>
-                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${clientName}</p>
-                      <p style="margin:2px 0 0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c;">${clientEmail}</p>
+                      <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Client</p>
+                      <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${clientName}</p>
+                      <p style="margin:2px 0 0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#78736c;">${clientEmail}</p>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding:16px 0; border-top:1px solid #eae7e2;">
-                      <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Program</p>
-                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${programName}</p>
+                      <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Program</p>
+                      <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${programName}</p>
                     </td>
                   </tr>
                   <tr>
@@ -786,11 +787,11 @@ export async function sendCoachPurchaseNotification({
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <td width="50%">
-                            <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Amount</p>
-                            <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#166534;">${amountFormatted}</p>
+                            <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Amount</p>
+                            <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#166534;">${amountFormatted}</p>
                           </td>
                           <td width="50%">
-                            <p style="margin:0 0 6px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Assessment</p>
+                            <p style="margin:0 0 6px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Assessment</p>
                             <p style="margin:0;">${questionnaireBadge}</p>
                           </td>
                         </tr>
@@ -803,7 +804,7 @@ export async function sendCoachPurchaseNotification({
           </table>
 
           <!-- Next steps -->
-          <p style="margin:28px 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:28px 0 28px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             ${nextStepText}
           </p>
 
@@ -870,7 +871,7 @@ export async function sendCoachProgramCompletedNotification({
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:44px 48px 24px;">
-          <p style="margin:0 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
+          <p style="margin:0 0 28px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
             Hi ${coachFirstName}, great news &mdash; one of your athletes just completed their training program.
           </p>
 
@@ -881,19 +882,19 @@ export async function sendCoachProgramCompletedNotification({
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td style="padding:0 0 16px;">
-                      <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Client</p>
-                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${clientName}</p>
+                      <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Client</p>
+                      <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${clientName}</p>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding:16px 0; border-top:1px solid #eae7e2;">
-                      <p style="margin:0 0 4px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Program</p>
-                      <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${programName}</p>
+                      <p style="margin:0 0 4px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Program</p>
+                      <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; font-weight:600; color:#0E3F50;">${programName}</p>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding:16px 0 0; border-top:1px solid #eae7e2;">
-                      <p style="margin:0 0 6px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Status</p>
+                      <p style="margin:0 0 6px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:10px; font-weight:600; color:#a09b94; text-transform:uppercase; letter-spacing:2px;">Status</p>
                       <p style="margin:0;">
                         <span style="display:inline-block; background-color:#dcfce7; color:#166534; font-size:11px; font-weight:600; padding:4px 14px; border-radius:2px; letter-spacing:0.5px;">Completed</span>
                       </p>
@@ -905,7 +906,7 @@ export async function sendCoachProgramCompletedNotification({
           </table>
 
           <!-- Next steps -->
-          <p style="margin:28px 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:28px 0 28px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             Now might be a good time to check in, review their progress, or assign a new program.
           </p>
 
@@ -961,7 +962,7 @@ export async function sendFormReviewRequestEmail({
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:44px 48px 48px;">
-          <p style="margin:0 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
+          <p style="margin:0 0 28px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
             Hi ${coachFirstName}, ${clientName} just submitted a video for form review.
           </p>
 
@@ -1022,7 +1023,7 @@ export async function sendFormReviewFeedbackEmail({
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:44px 48px 48px;">
-          <p style="margin:0 0 28px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
+          <p style="margin:0 0 28px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#333; line-height:1.8;">
             Hi ${clientFirstName}, your coach has reviewed your form video and left feedback.
           </p>
 
@@ -1077,17 +1078,17 @@ export async function sendReassessmentReminderEmail({
       <tr>
         <td style="padding:48px 48px 52px;">
 
-          <p style="margin:0 0 8px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
+          <p style="margin:0 0 8px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:400; color:#0E3F50;">
             Congratulations, ${firstName}.
           </p>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             You&rsquo;ve completed your training program. Take a reassessment so your coach can build your next phase based on your progress.
           </p>
 
           ${infoCard([{ label: "Completed Program", value: programName }])}
 
-          <p style="margin:28px 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:28px 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             The reassessment takes just a few minutes and helps ensure your next program is tailored to where you are now.
           </p>
 
@@ -1110,6 +1111,61 @@ export async function sendReassessmentReminderEmail({
   if (error) {
     console.error("Failed to send reassessment reminder email:", error)
   }
+}
+
+// ---------------------------------------------------------------------------
+// Batch Email Sender (handles 10k+ subscribers)
+// ---------------------------------------------------------------------------
+// Uses Resend Batch API (up to 100 per call) with rate-limit delays.
+
+const BATCH_SIZE = 100 // Resend batch API max
+const BATCH_DELAY_MS = 1000 // 1 second between batches to respect rate limits
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function sendBatched(
+  subscribers: { email: string }[],
+  subject: string,
+  html: string,
+  label: string
+) {
+  let sent = 0
+  let failed = 0
+
+  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+    const batch = subscribers.slice(i, i + BATCH_SIZE)
+
+    try {
+      const { data, error } = await resend.batch.send(
+        batch.map((sub) => ({
+          from: FROM_EMAIL,
+          to: sub.email,
+          subject,
+          html,
+        }))
+      )
+
+      if (error) {
+        console.error(`[${label}] Batch ${i / BATCH_SIZE + 1} error:`, error)
+        failed += batch.length
+      } else {
+        sent += data?.data?.length ?? batch.length
+      }
+    } catch (err) {
+      console.error(`[${label}] Batch ${i / BATCH_SIZE + 1} exception:`, err)
+      failed += batch.length
+    }
+
+    // Rate-limit delay between batches (skip after last batch)
+    if (i + BATCH_SIZE < subscribers.length) {
+      await sleep(BATCH_DELAY_MS)
+    }
+  }
+
+  console.log(`[${label}] Sent ${sent}/${subscribers.length} emails (${failed} failed)`)
+  return { sent, failed }
 }
 
 // ---------------------------------------------------------------------------
@@ -1138,10 +1194,10 @@ export async function sendBlogNewsletterToAll(blog: BlogNewsletterData) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="background-color:#0E3F50; padding:32px 48px; text-align:center;">
-          <p style="margin:0 0 6px; font-family:Georgia, 'Times New Roman', serif; font-size:10px; color:#C49B7A; letter-spacing:4px; text-transform:uppercase;">
+          <p style="margin:0 0 6px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:10px; color:#C49B7A; letter-spacing:4px; text-transform:uppercase;">
             New on the Blog
           </p>
-          <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:rgba(255,255,255,0.5); letter-spacing:1px;">
+          <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:rgba(255,255,255,0.5); letter-spacing:1px;">
             ${blog.category}
           </p>
         </td>
@@ -1164,11 +1220,11 @@ export async function sendBlogNewsletterToAll(blog: BlogNewsletterData) {
       <tr>
         <td style="padding:44px 48px 48px;">
 
-          <h2 style="margin:0 0 20px; font-family:Georgia, 'Times New Roman', serif; font-size:24px; font-weight:400; color:#0E3F50; line-height:1.4;">
+          <h2 style="margin:0 0 20px; font-family:'Lexend Exa', Georgia, 'Times New Roman', serif; font-size:24px; font-weight:400; color:#0E3F50; line-height:1.4;">
             ${blog.title}
           </h2>
 
-          <p style="margin:0 0 32px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
             ${blog.excerpt}
           </p>
 
@@ -1178,7 +1234,7 @@ export async function sendBlogNewsletterToAll(blog: BlogNewsletterData) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:36px;">
             <tr>
               <td style="border-top:1px solid #eae7e2; padding-top:24px;">
-                <p style="margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:#b5b0a8; line-height:1.6;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:#b5b0a8; line-height:1.6;">
                   You're receiving this because you subscribed to the DJP Athlete newsletter.
                   <a href="${baseUrl}/unsubscribe" style="color:#0E3F50; text-decoration:underline;">Unsubscribe</a>
                 </p>
@@ -1191,39 +1247,70 @@ export async function sendBlogNewsletterToAll(blog: BlogNewsletterData) {
     </table>
   `)
 
-  let sent = 0
-  let failed = 0
+  return sendBatched(
+    subscribers,
+    `New Post: ${blog.title}`,
+    html,
+    "Blog Newsletter"
+  )
+}
 
-  // Resend supports up to 100 recipients in batch mode
-  // Send in batches of 50 to stay safe
-  const BATCH_SIZE = 50
+// ---------------------------------------------------------------------------
+// Standalone Newsletter
+// ---------------------------------------------------------------------------
 
-  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-    const batch = subscribers.slice(i, i + BATCH_SIZE)
+/** Builds the full branded HTML for a newsletter. Exported so the send API
+ *  route can pre-build the HTML and pass it to the Cloud Function. */
+export function buildNewsletterHtml(htmlContent: string): string {
+  const baseUrl = getBaseUrl()
+  return emailLayout(`
+    <!-- Newsletter content -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:44px 48px 48px;">
 
-    const results = await Promise.allSettled(
-      batch.map((sub) =>
-        resend.emails.send({
-          from: FROM_EMAIL,
-          to: sub.email,
-          subject: `New Post: ${blog.title}`,
-          html,
-        })
-      )
-    )
+          <div style="font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:15px; color:#5c5750; line-height:1.8;">
+            ${htmlContent}
+          </div>
 
-    for (const result of results) {
-      if (result.status === "fulfilled" && !result.value.error) {
-        sent++
-      } else {
-        failed++
-        if (result.status === "fulfilled" && result.value.error) {
-          console.error("[Newsletter] Send failed:", result.value.error)
-        }
-      }
-    }
+          <!-- Divider -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:36px;">
+            <tr>
+              <td style="border-top:1px solid #eae7e2; padding-top:24px;">
+                <p style="margin:0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:12px; color:#b5b0a8; line-height:1.6;">
+                  You're receiving this because you subscribed to the DJP Athlete newsletter.
+                  <a href="${baseUrl}/unsubscribe" style="color:#0E3F50; text-decoration:underline;">Unsubscribe</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  `)
+}
+
+interface StandaloneNewsletterData {
+  subject: string
+  previewText: string
+  htmlContent: string
+}
+
+export async function sendStandaloneNewsletter(data: StandaloneNewsletterData) {
+  const subscribers = await getActiveSubscribers()
+
+  if (subscribers.length === 0) {
+    console.log("[Newsletter] No active subscribers — skipping")
+    return { sent: 0, failed: 0 }
   }
 
-  console.log(`[Newsletter] Sent ${sent}/${subscribers.length} emails (${failed} failed)`)
-  return { sent, failed }
+  const html = buildNewsletterHtml(data.htmlContent)
+
+  return sendBatched(
+    subscribers,
+    data.subject,
+    html,
+    "Standalone Newsletter"
+  )
 }

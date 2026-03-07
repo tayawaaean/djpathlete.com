@@ -53,7 +53,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 Perform like a champion.
               </p>
               <p className="mt-6 text-base text-white/50 leading-relaxed">
-                Personalized coaching, performance tracking, and nutrition
+                Personalized coaching, performance tracking, and expert
                 guidance — everything you need to reach your full potential.
               </p>
             </blockquote>

@@ -51,7 +51,6 @@ const credentials = [
   { icon: Award, title: "NASM Certified Personal Trainer" },
   { icon: Trophy, title: "USA Weightlifting Level 2 Coach" },
   { icon: GraduationCap, title: "B.S. in Exercise Science & Kinesiology" },
-  { icon: Award, title: "Precision Nutrition Level 1 Certified" },
   { icon: Trophy, title: "10+ Years Coaching Experience" },
 ]
 
@@ -234,7 +233,7 @@ export default function AboutPage() {
             </p>
             <p className="leading-relaxed mb-6">
               When I discovered the science of athletic performance — periodization,
-              biomechanics, sport psychology, and nutrition — everything changed. I
+              biomechanics, and sport psychology — everything changed. I
               realized that with the right approach, athletes could train harder
               while staying healthier and performing at levels they never thought
               possible.
