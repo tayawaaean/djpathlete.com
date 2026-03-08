@@ -32,7 +32,7 @@ const contactPageSchema = {
   mainEntity: {
     "@type": "Organization",
     name: "DJP Athlete",
-    email: "coach@djpathlete.com",
+    email: "info@darrenjpaul.com",
     url: "https://djpathlete.com",
   },
 }
@@ -41,8 +41,8 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email",
-    value: "coach@djpathlete.com",
-    href: "mailto:coach@djpathlete.com",
+    value: "info@darrenjpaul.com",
+    href: "mailto:info@darrenjpaul.com",
   },
   {
     icon: Phone,

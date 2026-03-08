@@ -586,7 +586,7 @@ ALTER TABLE assessment_results
 ## Test Accounts
 
 ```
-Admin:  admin@djpathlete.com / Admin123!
+Admin:  admin@darrenjpaul.com / Admin123!
 Client: marcus@test.com     / Admin123!  (has 2 programs + exercise history)
 Client: sarah@test.com      / Admin123!  (has 1 program)
 Client: james@test.com      / Admin123!  (has 1 program)

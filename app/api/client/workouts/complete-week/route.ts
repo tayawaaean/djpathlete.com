@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
       // Notify coach
       try {
-        const coachEmail = process.env.COACH_EMAIL ?? "admin@djpathlete.com"
+        const coachEmail = process.env.COACH_EMAIL ?? "admin@darrenjpaul.com"
         const coachFirstName = process.env.COACH_FIRST_NAME ?? "Coach"
 
         await sendCoachProgramCompletedNotification({

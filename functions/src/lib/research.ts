@@ -48,7 +48,7 @@ interface SemanticScholarPaper {
 const PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 const SEMANTIC_SCHOLAR_BASE = "https://api.semanticscholar.org/graph/v1"
 const TOOL_NAME = "DJPAthlete"
-const TOOL_EMAIL = "admin@djpathlete.com"
+const TOOL_EMAIL = "admin@darrenjpaul.com"
 const MIN_PAPERS = 5
 const MAX_PAPERS = 8
 const FETCH_TIMEOUT_MS = 10_000

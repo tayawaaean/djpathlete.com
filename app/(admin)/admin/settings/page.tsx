@@ -102,7 +102,7 @@ export default async function SettingsPage() {
             <Input
               id="support-email"
               type="email"
-              placeholder="support@djpathlete.com"
+              placeholder="support@darrenjpaul.com"
               disabled
               className="opacity-60"
             />

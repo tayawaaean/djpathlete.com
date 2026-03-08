@@ -5,7 +5,7 @@ import { getActiveSubscribers } from "@/lib/db/newsletter"
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 const FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL ?? "DJP Athlete <noreply@djpathlete.com>"
+  process.env.RESEND_FROM_EMAIL ?? "DJP Athlete <noreply@darrenjpaul.com>"
 
 function getBaseUrl() {
   return (

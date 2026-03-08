@@ -49,7 +49,7 @@ export async function handleNewsletterSend(jobId: string): Promise<void> {
       return
     }
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "DJP Athlete <noreply@djpathlete.com>"
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "DJP Athlete <noreply@darrenjpaul.com>"
     let sent = 0
     let failed = 0
 

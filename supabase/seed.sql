@@ -1,6 +1,6 @@
 -- Seed: Admin user (password: Admin123!)
 insert into public.users (id, email, password_hash, first_name, last_name, role) values
-  ('00000000-0000-0000-0000-000000000001', 'admin@djpathlete.com', '$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO', 'Darren', 'Paul', 'admin');
+  ('00000000-0000-0000-0000-000000000001', 'admin@darrenjpaul.com', '$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO', 'Darren', 'Paul', 'admin');
 
 -- Seed: Test clients (password: Admin123!)
 insert into public.users (id, email, password_hash, first_name, last_name, role) values

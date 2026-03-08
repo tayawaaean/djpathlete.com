@@ -1197,7 +1197,7 @@ async function seed() {
   // 2. Ensure users exist
   console.log("  Upserting users...")
   const { error: usersErr } = await supabase.from("users").upsert([
-    { id: ADMIN_ID, email: "admin@djpathlete.com", password_hash: "$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO", first_name: "Darren", last_name: "Paul", role: "admin", email_verified: true, status: "active" },
+    { id: ADMIN_ID, email: "admin@darrenjpaul.com", password_hash: "$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO", first_name: "Darren", last_name: "Paul", role: "admin", email_verified: true, status: "active" },
     { id: CLIENT_MARCUS, email: "marcus@test.com", password_hash: "$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO", first_name: "Marcus", last_name: "Thompson", role: "client", email_verified: true, status: "active" },
     { id: CLIENT_SARAH, email: "sarah@test.com", password_hash: "$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO", first_name: "Sarah", last_name: "Kim", role: "client", email_verified: true, status: "active" },
     { id: CLIENT_JAMES, email: "james@test.com", password_hash: "$2b$12$WESyL.XRso7rzSEHahgeFuPbXqLl6GsqBKa2RCBiwBkL9Dqi/8kUO", first_name: "James", last_name: "Rodriguez", role: "client", email_verified: true, status: "active" },
@@ -1247,7 +1247,7 @@ async function seed() {
   console.log("═══════════════════════════════════════════")
   console.log("  Seed complete! Test accounts:")
   console.log("  ─────────────────────────────────────────")
-  console.log("  Admin:  admin@djpathlete.com / Admin123!")
+  console.log("  Admin:  admin@darrenjpaul.com / Admin123!")
   console.log("  Client: marcus@test.com     / Admin123!")
   console.log("  Client: sarah@test.com      / Admin123!")
   console.log("  Client: james@test.com      / Admin123!")
