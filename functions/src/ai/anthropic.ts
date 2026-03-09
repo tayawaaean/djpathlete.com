@@ -91,7 +91,8 @@ function callAgentWithModel<T>(
       const jsonStr = textBlock.text.trim()
       const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
       if (!jsonMatch) {
-        throw new Error("No JSON object found in response")
+        // Throw SyntaxError so pRetry will retry this attempt
+        throw new SyntaxError("No JSON object found in response")
       }
 
       let parsed: unknown
