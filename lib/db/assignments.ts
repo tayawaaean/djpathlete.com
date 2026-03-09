@@ -60,6 +60,21 @@ export async function getActiveUserIdsForProgram(programId: string): Promise<str
   return (data ?? []).map((r) => r.user_id)
 }
 
+/** Get the user's active assignment (most recent). */
+export async function getActiveAssignment(userId: string) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("program_assignments")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data as ProgramAssignment | null
+}
+
 export async function getAssignmentCountsByProgram(): Promise<Record<string, number>> {
   const supabase = getClient()
   const { data, error } = await supabase

@@ -4,12 +4,12 @@ import { useState, useEffect, useMemo } from "react"
 import { ArrowLeftRight, Loader2, Dumbbell, Sparkles, Search } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -28,6 +28,7 @@ interface ExerciseSwapSheetProps {
   exerciseId: string
   exerciseName: string
   muscleGroup: string | null
+  equipment: string | null
   onSwap: (exercise: Exercise) => void
 }
 
@@ -191,6 +192,7 @@ export function ExerciseSwapSheet({
   exerciseId,
   exerciseName,
   muscleGroup,
+  equipment,
   onSwap,
 }: ExerciseSwapSheetProps) {
   const [loading, setLoading] = useState(false)
@@ -232,6 +234,22 @@ export function ExerciseSwapSheet({
 
   const filteredLinked = useMemo(() => filterExercises(linked, equipmentFilter, searchQuery), [linked, equipmentFilter, searchQuery])
   const filteredSimilar = useMemo(() => filterExercises(similar, equipmentFilter, searchQuery), [similar, equipmentFilter, searchQuery])
+
+  // Split similar exercises: same equipment vs different equipment
+  const normalizedEquipment = equipment?.toLowerCase().trim() ?? ""
+  const similarSameEquip = useMemo(
+    () => normalizedEquipment
+      ? filteredSimilar.filter((ex) => (ex.equipment ?? "").toLowerCase().trim() === normalizedEquipment)
+      : filteredSimilar,
+    [filteredSimilar, normalizedEquipment]
+  )
+  const similarDiffEquip = useMemo(
+    () => normalizedEquipment
+      ? filteredSimilar.filter((ex) => (ex.equipment ?? "").toLowerCase().trim() !== normalizedEquipment)
+      : [],
+    [filteredSimilar, normalizedEquipment]
+  )
+
   const totalResults = filteredLinked.length + filteredSimilar.length
 
   function handleConfirmSwap() {
@@ -242,36 +260,31 @@ export function ExerciseSwapSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="rounded-t-2xl max-h-[85dvh] overflow-hidden px-0 flex flex-col"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-md max-h-[85dvh] overflow-hidden p-0 flex flex-col gap-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-2 pb-1">
-          <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
-        </div>
-
-        <SheetHeader className="px-5 pb-2">
+        <DialogHeader className="px-5 pt-5 pb-2">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <ArrowLeftRight className="size-5 text-primary" />
             </div>
             <div>
-              <SheetTitle className="text-base font-heading">
+              <DialogTitle className="text-base font-heading">
                 Swap Exercise
-              </SheetTitle>
-              <SheetDescription className="text-xs">
+              </DialogTitle>
+              <DialogDescription className="text-xs">
                 {exerciseName}
                 {muscleGroup && (
                   <span className="ml-1 text-muted-foreground/60">
                     &middot; {muscleGroup}
                   </span>
                 )}
-              </SheetDescription>
+              </DialogDescription>
             </div>
           </div>
-        </SheetHeader>
+        </DialogHeader>
 
         <AnimatePresence mode="wait">
           {confirmExercise ? (
@@ -303,7 +316,7 @@ export function ExerciseSwapSheet({
                   />
                 </div>
                 {/* Equipment filter chips */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-hide">
+                <div className="flex flex-wrap gap-1.5">
                   {EQUIPMENT_FILTERS.map((filter) => (
                     <button
                       key={filter.value}
@@ -372,8 +385,8 @@ export function ExerciseSwapSheet({
                       </div>
                     )}
 
-                    {/* Similar exercises */}
-                    {filteredSimilar.length > 0 && (
+                    {/* Similar exercises — same equipment */}
+                    {similarSameEquip.length > 0 && (
                       <div>
                         <div className="flex items-center gap-3 px-5 py-2">
                           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
@@ -382,7 +395,33 @@ export function ExerciseSwapSheet({
                           <Separator className="flex-1" />
                         </div>
                         <div className="divide-y divide-border">
-                          {filteredSimilar.map((exercise, idx) => (
+                          {similarSameEquip.map((exercise, idx) => (
+                            <ExerciseRow
+                              key={exercise.id}
+                              exercise={exercise}
+                              isCurated={false}
+                              onSelect={() => setConfirmExercise(exercise)}
+                              index={idx}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Different equipment alternatives */}
+                    {similarDiffEquip.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-3 px-5 py-2">
+                          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                            Equipment Unavailable?
+                          </p>
+                          <Separator className="flex-1" />
+                        </div>
+                        <p className="px-5 pb-2 text-[11px] text-muted-foreground/70">
+                          Same movement, different equipment
+                        </p>
+                        <div className="divide-y divide-border">
+                          {similarDiffEquip.map((exercise, idx) => (
                             <ExerciseRow
                               key={exercise.id}
                               exercise={exercise}
@@ -400,8 +439,8 @@ export function ExerciseSwapSheet({
             </motion.div>
           )}
         </AnimatePresence>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
 

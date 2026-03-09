@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/PageHeader"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
@@ -20,7 +21,10 @@ export default async function ClientProfilePage() {
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-5">Profile</h1>
+      <PageHeader
+        title="Profile"
+        description="View your account details and update your athlete profile including body metrics, experience level, and training preferences."
+      />
 
       {/* Read-only account info */}
       <div className="bg-white rounded-xl border border-border p-4 sm:p-6 mb-5">

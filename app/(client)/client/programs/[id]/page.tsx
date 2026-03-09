@@ -166,7 +166,7 @@ export default async function ClientProgramDetailPage({ params }: Props) {
             className="inline-flex items-center gap-2 rounded-full bg-success px-6 py-3 text-sm font-medium text-white hover:bg-success/90 transition-colors"
           >
             <CheckCircle2 className="size-4" />
-            Go to Workouts
+            Start Training
           </Link>
         ) : (
           <>

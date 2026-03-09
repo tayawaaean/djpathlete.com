@@ -8,7 +8,6 @@ import type { FormReviewStatus } from "@/types/database"
 interface FormReviewCardProps {
   id: string
   title: string
-  exerciseName: string
   status: FormReviewStatus
   createdAt: string
 }
@@ -37,7 +36,6 @@ const statusConfig: Record<
 export function FormReviewCard({
   id,
   title,
-  exerciseName,
   status,
   createdAt,
 }: FormReviewCardProps) {
@@ -68,8 +66,7 @@ export function FormReviewCard({
               {config.label}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground truncate">{exerciseName}</p>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {new Date(createdAt).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",

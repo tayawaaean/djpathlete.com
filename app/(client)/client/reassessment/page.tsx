@@ -9,6 +9,7 @@ import { getProgramExercises } from "@/lib/db/program-exercises"
 import { ReassessmentForm } from "@/components/client/ReassessmentForm"
 import { EmptyState } from "@/components/ui/empty-state"
 import { ClipboardList } from "lucide-react"
+import { PageHeader } from "@/components/shared/PageHeader"
 import type { ProgramAssignment, Exercise, AssessmentQuestion } from "@/types/database"
 
 export const metadata = { title: "Reassessment | DJP Athlete" }
@@ -88,15 +89,10 @@ export default async function ReassessmentPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-5 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-semibold text-primary font-heading">
-          Reassessment
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1.5">
-          Help us fine-tune your next program based on how the last one went.
-          This takes about 2 minutes.
-        </p>
-      </div>
+      <PageHeader
+        title="Reassessment"
+        description="Help us fine-tune your next program based on how the last one went. This takes about 2 minutes."
+      />
       <ReassessmentForm
         previousResult={previousResult}
         programExercises={programExercises}

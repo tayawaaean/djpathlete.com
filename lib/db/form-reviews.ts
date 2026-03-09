@@ -17,7 +17,7 @@ export async function getFormReviewsByClient(userId: string) {
   const supabase = getClient()
   const { data, error } = await supabase
     .from("form_reviews")
-    .select("*, exercises(name)")
+    .select("*")
     .eq("client_user_id", userId)
     .order("created_at", { ascending: false })
   if (error) throw error
@@ -30,7 +30,7 @@ export async function getAllFormReviews(filters?: {
   const supabase = getClient()
   let query = supabase
     .from("form_reviews")
-    .select("*, users(first_name, last_name, email), exercises(name)")
+    .select("*, users(first_name, last_name, email)")
     .order("created_at", { ascending: false })
 
   if (filters?.status) {
@@ -47,7 +47,7 @@ export async function getFormReviewById(id: string) {
   const { data, error } = await supabase
     .from("form_reviews")
     .select(
-      "*, users(first_name, last_name, email, avatar_url), exercises(name)"
+      "*, users(first_name, last_name, email, avatar_url)"
     )
     .eq("id", id)
     .single()

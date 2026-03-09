@@ -19,7 +19,6 @@ interface FormReviewDetailProps {
     created_at: string
     video_path: string
     users?: { first_name: string; last_name: string; email: string; avatar_url?: string | null } | null
-    exercises?: { name: string } | null
   }
   videoUrl: string | null
   messages: Array<{
@@ -56,8 +55,6 @@ export function FormReviewDetail({
   const clientName = review.users
     ? `${review.users.first_name} ${review.users.last_name}`
     : "Unknown"
-  const exerciseName = review.exercises?.name ?? "Unknown Exercise"
-
   async function markAsReviewed() {
     setUpdating(true)
     try {
@@ -85,8 +82,6 @@ export function FormReviewDetail({
           <h1 className="text-xl sm:text-2xl font-semibold text-primary">{review.title}</h1>
           <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
             <span>{clientName}</span>
-            <span className="text-border">|</span>
-            <span>{exerciseName}</span>
             <span className="text-border">|</span>
             <span>
               {new Date(review.created_at).toLocaleDateString("en-US", {

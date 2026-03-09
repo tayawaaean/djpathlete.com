@@ -43,10 +43,6 @@ export default async function FormReviewDetailPage({
   const status = review.status as FormReviewStatus
   const config = statusConfig[status]
   const StatusIcon = config.icon
-  const exerciseName = (review as Record<string, unknown>).exercises
-    ? ((review as Record<string, unknown>).exercises as { name: string }).name
-    : "Unknown Exercise"
-
   // Get signed URL for the video
   let videoUrl: string | null = null
   try {
@@ -80,10 +76,8 @@ export default async function FormReviewDetailPage({
         </span>
       </div>
 
-      {/* Exercise + date info */}
+      {/* Date info */}
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-5">
-        <span>{exerciseName}</span>
-        <span className="text-border">|</span>
         <span>
           {new Date(review.created_at).toLocaleDateString("en-US", {
             month: "short",

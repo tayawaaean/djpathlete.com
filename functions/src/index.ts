@@ -64,7 +64,7 @@ export const adminChat = onDocumentCreated(
   {
     document: "ai_jobs/{jobId}",
     timeoutSeconds: 300,
-    memory: "512MiB",
+    memory: "1GiB",
     region: "us-central1",
     secrets: allSecrets,
   },
@@ -89,7 +89,7 @@ export const blogGeneration = onDocumentCreated(
   {
     document: "ai_jobs/{jobId}",
     timeoutSeconds: 300,
-    memory: "512MiB",
+    memory: "1GiB",
     region: "us-central1",
     secrets: allSecrets,
   },
@@ -110,7 +110,7 @@ export const newsletterGeneration = onDocumentCreated(
   {
     document: "ai_jobs/{jobId}",
     timeoutSeconds: 300,
-    memory: "512MiB",
+    memory: "1GiB",
     region: "us-central1",
     secrets: allSecrets,
   },
@@ -149,7 +149,7 @@ export const aiCoach = onDocumentCreated(
   {
     document: "ai_jobs/{jobId}",
     timeoutSeconds: 300,
-    memory: "512MiB",
+    memory: "1GiB",
     region: "us-central1",
     secrets: allSecrets,
   },

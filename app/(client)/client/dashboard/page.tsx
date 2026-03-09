@@ -5,10 +5,12 @@ import { getProgress, getWorkoutStreak } from "@/lib/db/progress"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getUserById } from "@/lib/db/users"
 import { getAssessmentResultsByUser } from "@/lib/db/assessments"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { EmptyState } from "@/components/ui/empty-state"
 import { EmailVerificationBanner } from "@/components/client/EmailVerificationBanner"
 import { ReassessmentBanner } from "@/components/client/ReassessmentBanner"
-import { LayoutDashboard, Dumbbell, Activity, Flame, ClipboardList } from "lucide-react"
+import { LayoutDashboard, Dumbbell, Activity, Flame, ClipboardList, Info } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import Link from "next/link"
 import type { Program, ProgramAssignment } from "@/types/database"
 
@@ -82,9 +84,10 @@ export default async function ClientDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-5">
-        Welcome back, {firstName}
-      </h1>
+      <PageHeader
+        title={`Welcome back, ${firstName}`}
+        description="Your training overview at a glance. Check your active programs, stats, and upcoming workouts."
+      />
 
       {!emailVerified && <EmailVerificationBanner userId={userId} />}
 
@@ -117,41 +120,64 @@ export default async function ClientDashboardPage() {
       )}
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white rounded-xl border border-border p-3 sm:p-4 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center gap-2 sm:gap-4">
-          <div className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-primary/10 shrink-0">
-            <Dumbbell className="size-4 sm:size-5 text-primary" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-semibold text-foreground">
-              {activeAssignments.length}
-            </p>
-            <p className="text-[10px] sm:text-sm text-muted-foreground leading-tight">Programs</p>
-          </div>
-        </div>
+      <TooltipProvider delayDuration={300}>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-xl border border-border p-3 sm:p-4 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center gap-2 sm:gap-4 cursor-default">
+                <div className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-primary/10 shrink-0">
+                  <Dumbbell className="size-4 sm:size-5 text-primary" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-semibold text-foreground">
+                    {activeAssignments.length}
+                  </p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground leading-tight">Programs</p>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Active programs assigned to you</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <div className="bg-white rounded-xl border border-border p-3 sm:p-4 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center gap-2 sm:gap-4">
-          <div className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-success/10 shrink-0">
-            <Activity className="size-4 sm:size-5 text-success" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-semibold text-foreground">
-              {totalWorkouts}
-            </p>
-            <p className="text-[10px] sm:text-sm text-muted-foreground leading-tight">Workouts</p>
-          </div>
-        </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-xl border border-border p-3 sm:p-4 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center gap-2 sm:gap-4 cursor-default">
+                <div className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-success/10 shrink-0">
+                  <Activity className="size-4 sm:size-5 text-success" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-semibold text-foreground">
+                    {totalWorkouts}
+                  </p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground leading-tight">Workouts</p>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Total workouts completed</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <div className="bg-white rounded-xl border border-border p-3 sm:p-4 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center gap-2 sm:gap-4">
-          <div className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-accent/10 shrink-0">
-            <Flame className="size-4 sm:size-5 text-accent" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-semibold text-foreground">{currentStreak}</p>
-            <p className="text-[10px] sm:text-sm text-muted-foreground leading-tight">Streak</p>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-xl border border-border p-3 sm:p-4 flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center gap-2 sm:gap-4 cursor-default">
+                <div className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-accent/10 shrink-0">
+                  <Flame className="size-4 sm:size-5 text-accent" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-semibold text-foreground">{currentStreak}</p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground leading-tight">Streak</p>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Consecutive days trained</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-      </div>
+      </TooltipProvider>
 
       {/* Active Programs */}
       <h2 className="text-lg font-semibold text-primary mb-4">
@@ -235,9 +261,9 @@ export default async function ClientDashboardPage() {
                   </p>
                   <Link
                     href="/client/workouts"
-                    className="text-xs sm:text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-full bg-success px-3 py-1 text-xs sm:text-sm font-medium text-white hover:bg-success/90 transition-colors"
                   >
-                    View Program
+                    {totalWorkouts > 0 ? "Resume" : "Start Program"}
                   </Link>
                 </div>
               </div>

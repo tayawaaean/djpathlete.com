@@ -344,6 +344,10 @@ export function CoachDjpPanel({
   const aiJob = useAiJob(currentJobId)
 
   // Process AI job updates
+  // Use the "done" chunk (not job status) to finalize — Firestore can deliver
+  // the job-doc status update before all subcollection chunks have arrived.
+  const isDoneViaChunk = aiJob.chunks.some((c) => c.type === "done")
+
   useEffect(() => {
     if (!currentJobId) return
 
@@ -364,8 +368,8 @@ export function CoachDjpPanel({
       })
     }
 
-    // Handle completion
-    if (aiJob.status === "completed") {
+    // Handle completion — wait for the "done" chunk so all data has arrived
+    if (isDoneViaChunk) {
       if (aiJob.text.trim()) {
         setRecommendation(aiJob.text.trim())
       }
@@ -379,7 +383,7 @@ export function CoachDjpPanel({
       setStreaming(false)
       setCurrentJobId(null)
     }
-  }, [currentJobId, aiJob.text, aiJob.analysis, aiJob.status, aiJob.error])
+  }, [currentJobId, aiJob.text, aiJob.analysis, aiJob.status, aiJob.error, isDoneViaChunk])
 
   // Advance loading phases while streaming hasn't started producing text
   useEffect(() => {
@@ -393,6 +397,32 @@ export function CoachDjpPanel({
       if (phaseTimerRef.current) clearInterval(phaseTimerRef.current)
     }
   }, [streaming, streamingText])
+
+  // Timeout: if streaming doesn't complete within 30s, finalize or error
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const streamingTextRef = useRef(streamingText)
+  streamingTextRef.current = streamingText
+
+  useEffect(() => {
+    if (streaming) {
+      timeoutRef.current = setTimeout(() => {
+        const text = streamingTextRef.current
+        if (text.trim()) {
+          // We have text — treat it as complete
+          setRecommendation(text.trim())
+        } else {
+          setError("Analysis timed out. Please try again.")
+        }
+        setStreaming(false)
+        setCurrentJobId(null)
+      }, 30_000)
+    } else {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [streaming])
 
   const fetchAnalysis = useCallback(async () => {
     setStreaming(true)
@@ -440,12 +470,14 @@ export function CoachDjpPanel({
       abortRef.current?.abort()
       abortRef.current = null
       if (phaseTimerRef.current) clearInterval(phaseTimerRef.current)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
       setStreamingText("")
       setRecommendation(null)
       setMetadata(null)
       setError(null)
       setStreaming(false)
       setLoadingPhase(0)
+      setCurrentJobId(null)
     }
     onOpenChange(newOpen)
   }

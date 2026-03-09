@@ -6,6 +6,7 @@ import { getLatestProgressByExercises } from "@/lib/db/progress"
 import { getProfileByUserId } from "@/lib/db/client-profiles"
 import { getWeightRecommendation } from "@/lib/weight-recommendation"
 import type { ClientContext } from "@/lib/weight-recommendation"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { EmptyState } from "@/components/ui/empty-state"
 import { WorkoutViewToggle } from "@/components/client/WorkoutViewToggle"
 import type { WorkoutCalendarDay } from "@/components/client/WorkoutCalendar"
@@ -294,7 +295,10 @@ export default async function ClientWorkoutsPage() {
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-4">My Workouts</h1>
+      <PageHeader
+        title="My Workouts"
+        description="Your daily training plan. Follow your scheduled exercises, log your sets, and track weights for each session."
+      />
 
       {activeAssignments.length === 0 ? (
         <EmptyState

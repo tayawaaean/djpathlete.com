@@ -191,16 +191,23 @@ export async function* streamRaw(opts: {
     })),
   })
 
+  let inputTokens = 0
+  let outputTokens = 0
+
   for await (const event of stream) {
     if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
       yield { type: "text", text: event.delta.text }
+    } else if (event.type === "message_delta" && "usage" in event) {
+      outputTokens = (event.usage as { output_tokens?: number })?.output_tokens ?? 0
+    } else if (event.type === "message_start" && "message" in event) {
+      const msg = event.message as { usage?: { input_tokens?: number } }
+      inputTokens = msg.usage?.input_tokens ?? 0
     }
   }
 
-  const finalMessage = await stream.finalMessage()
   yield {
     type: "usage",
-    input_tokens: finalMessage.usage?.input_tokens ?? 0,
-    output_tokens: finalMessage.usage?.output_tokens ?? 0,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
   }
 }

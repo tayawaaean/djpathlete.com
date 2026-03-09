@@ -4,6 +4,7 @@ import { getFormReviewsByClient } from "@/lib/db/form-reviews"
 import { FormReviewCard } from "@/components/client/FormReviewCard"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Video, Plus } from "lucide-react"
+import { PageHeader } from "@/components/shared/PageHeader"
 import Link from "next/link"
 
 export const metadata = { title: "Form Reviews | DJP Athlete" }
@@ -22,17 +23,19 @@ export default async function FormReviewsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl sm:text-2xl font-semibold text-primary">Form Reviews</h1>
+      <PageHeader
+        title="Form Reviews"
+        description="Submit exercise videos for your coach to review. Get feedback on your technique to train safer and more effectively."
+      >
         <Link
           href="/client/form-reviews/new"
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors shrink-0"
         >
           <Plus className="size-4" />
           <span className="hidden sm:inline">Request Review</span>
           <span className="sm:hidden">New</span>
         </Link>
-      </div>
+      </PageHeader>
 
       {reviews.length === 0 ? (
         <EmptyState
@@ -47,11 +50,6 @@ export default async function FormReviewsPage() {
               key={review.id}
               id={review.id}
               title={review.title}
-              exerciseName={
-                (review as Record<string, unknown>).exercises
-                  ? ((review as Record<string, unknown>).exercises as { name: string }).name
-                  : "Unknown Exercise"
-              }
               status={review.status as "pending" | "in_progress" | "reviewed"}
               createdAt={review.created_at}
             />

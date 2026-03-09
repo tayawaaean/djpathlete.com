@@ -335,7 +335,7 @@ export function SiteNavbar() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden xl:flex items-center gap-1">
               {NAV_ITEMS.map((item) => {
                 if (item.children) {
                   return (
@@ -370,7 +370,7 @@ export function SiteNavbar() {
             </div>
 
             {/* Desktop CTA */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden xl:flex items-center gap-3">
               <Link
                 href="/login"
                 className={`text-sm font-medium transition-colors whitespace-nowrap ${
@@ -394,7 +394,7 @@ export function SiteNavbar() {
             </div>
 
             {/* Mobile Menu */}
-            <div className="lg:hidden">
+            <div className="xl:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <button

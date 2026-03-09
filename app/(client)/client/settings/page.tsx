@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/PageHeader"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getUserById } from "@/lib/db/users"
@@ -27,7 +28,10 @@ export default async function ClientSettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-primary mb-6">Settings</h1>
+      <PageHeader
+        title="Settings"
+        description="Manage your account, preferences, notifications, and security options."
+      />
 
       {/* Account Section */}
       <div className="bg-white rounded-xl border border-border p-6 mb-6">

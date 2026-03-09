@@ -431,8 +431,6 @@ export type FormReviewStatus = "pending" | "in_progress" | "reviewed"
 export interface FormReview {
   id: string
   client_user_id: string
-  exercise_id: string
-  assignment_id: string | null
   video_path: string
   thumbnail_url: string | null
   title: string

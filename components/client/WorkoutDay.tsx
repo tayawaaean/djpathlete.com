@@ -15,7 +15,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Play,
   Check,
   Lightbulb,
   Plus,
@@ -34,13 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useWeightUnit } from "@/hooks/use-weight-unit"
 import { CoachDjpPanel } from "@/components/client/CoachDjpPanel"
@@ -232,47 +224,6 @@ function createInitialSetRows(
   }))
 }
 
-// ─── Exercise Video Sheet ───────────────────────────────────────────────────
-
-function ExerciseVideoSheet({
-  open,
-  onOpenChange,
-  videoUrl,
-  exerciseName,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  videoUrl: string
-  exerciseName: string
-}) {
-  const videoId = extractYouTubeId(videoUrl)
-  if (!videoId) return null
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="px-4 pb-8 pt-4 max-h-[85dvh]">
-        <SheetHeader className="p-0 pb-2">
-          <SheetTitle className="text-sm">{exerciseName}</SheetTitle>
-          <SheetDescription className="sr-only">
-            Exercise demonstration video
-          </SheetDescription>
-        </SheetHeader>
-        <div className="relative w-full overflow-hidden rounded-lg bg-black aspect-video">
-          {open && (
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
-              title={`${exerciseName} demonstration`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 size-full border-0"
-            />
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
-}
-
 // ─── Exercise Card ──────────────────────────────────────────────────────────
 
 function ExerciseCard({
@@ -299,7 +250,6 @@ function ExerciseCard({
   const [loggedToday, setLoggedToday] = useState(initialLogged)
   const [submitting, setSubmitting] = useState(false)
   const [showCoachDjp, setShowCoachDjp] = useState(false)
-  const [showVideo, setShowVideo] = useState(false)
   const [showExtra, setShowExtra] = useState(false)
   const [showSwap, setShowSwap] = useState(false)
   const [swappedExercise, setSwappedExercise] = useState<Exercise | null>(null)
@@ -548,7 +498,7 @@ function ExerciseCard({
 
           <div className="flex-1 min-w-0">
             {/* Name row with action buttons */}
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
@@ -563,118 +513,37 @@ function ExerciseCard({
                     </span>
                   )}
                 </p>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {!loggedToday && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1 text-muted-foreground hover:text-primary"
-                    onClick={() => setShowSwap(true)}
-                    aria-label={`Swap ${displayExercise.name}`}
-                  >
-                    <ArrowLeftRight className="size-3" />
-                    Swap
-                  </Button>
-                )}
-                {hasVideo && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1 text-muted-foreground hover:text-primary"
-                    onClick={() => setShowVideo(true)}
-                    aria-label={`Watch ${displayExercise.name} video`}
-                  >
-                    <Play className="size-3" />
-                    Watch
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant={loggedToday ? "ghost" : "outline"}
-                  className={cn("gap-1", loggedToday && "text-success hover:text-success")}
-                  onClick={() => setExpanded(!expanded)}
-                >
-                  {loggedToday ? "Update" : "Log"}
-                  <ChevronDown
-                    className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {/* Tags row */}
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {displayExercise.muscle_group && (
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize leading-none",
-                    getMuscleGroupColor(displayExercise.muscle_group)
+                {/* Compact summary line */}
+                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                  {pe.sets && pe.reps && (
+                    <span>{pe.sets} x {pe.reps}</span>
                   )}
-                >
-                  {displayExercise.muscle_group}
-                </span>
-              )}
-              {fields.showWeight && rec.recommended_kg != null && (
-                <Badge
-                  variant="outline"
-                  className="gap-1 text-[10px] border-primary/20 text-primary"
-                >
-                  <TrendIcon trend={rec.trend} />
-                  {formatWeightCompact(rec.recommended_kg)}
-                </Badge>
-              )}
-            </div>
-
-            {/* Details row */}
-            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-              {pe.sets && pe.reps && (
-                <span className="flex items-center gap-1">
-                  <Dumbbell className="size-3" strokeWidth={1.5} />
-                  {pe.sets} x {pe.reps}
-                </span>
-              )}
-              {pe.duration_seconds && (
-                <span className="flex items-center gap-1">
-                  <Clock className="size-3" strokeWidth={1.5} />
-                  {formatRestTime(pe.duration_seconds)}
-                </span>
-              )}
-              {displayExercise.equipment && (
-                <span className="flex items-center gap-1">
-                  <Weight className="size-3" strokeWidth={1.5} />
-                  {displayExercise.equipment}
-                </span>
-              )}
-              {pe.tempo && (
-                <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded leading-none">
-                  {formatTempo(pe.tempo)}
-                </span>
-              )}
-              {pe.rpe_target && (
-                <span className="text-muted-foreground/60">
-                  RPE {pe.rpe_target}
-                </span>
-              )}
-              {pe.rest_seconds && (
-                <span className="text-muted-foreground/60">
-                  Rest: {formatRestTime(pe.rest_seconds)}
-                </span>
-              )}
-            </div>
-
-            {/* Coach notes (hidden if shared across all exercises) */}
-            {!hideNotes && pe.notes && (
-              <div className="flex items-start gap-2 mt-2 rounded-md bg-amber-50 px-2.5 py-1.5">
-                <Lightbulb
-                  className="size-3.5 shrink-0 text-amber-500 mt-0.5"
-                  strokeWidth={2}
-                />
-                <p className="text-xs italic text-foreground/70 line-clamp-2 leading-relaxed">
-                  {pe.notes}
-                </p>
+                  {pe.duration_seconds && (
+                    <span>{formatRestTime(pe.duration_seconds)}</span>
+                  )}
+                  {fields.showWeight && rec.recommended_kg != null && (
+                    <Badge
+                      variant="outline"
+                      className="gap-1 text-[10px] border-primary/20 text-primary"
+                    >
+                      <TrendIcon trend={rec.trend} />
+                      {formatWeightCompact(rec.recommended_kg)}
+                    </Badge>
+                  )}
+                </div>
               </div>
-            )}
+              <Button
+                size="sm"
+                variant={loggedToday ? "ghost" : "outline"}
+                className={cn("gap-1 shrink-0", loggedToday && "text-success hover:text-success")}
+                onClick={() => setExpanded(!expanded)}
+              >
+                {loggedToday ? "Update" : "Log"}
+                <ChevronDown
+                  className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+                />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -688,7 +557,83 @@ function ExerciseCard({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <form onSubmit={handleSubmit} className="pt-4 space-y-4">
+              {/* Exercise details — revealed on expand */}
+              <div className="pt-3 pb-1 ml-10 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {displayExercise.muscle_group && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize leading-none",
+                        getMuscleGroupColor(displayExercise.muscle_group)
+                      )}
+                    >
+                      {displayExercise.muscle_group}
+                    </span>
+                  )}
+                  {displayExercise.equipment && (
+                    <span className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/50">Equipment:</span> {displayExercise.equipment}
+                    </span>
+                  )}
+                  {pe.tempo && (
+                    <span className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/50">Tempo:</span>{" "}
+                      <span className="font-mono">{formatTempo(pe.tempo)}</span>
+                    </span>
+                  )}
+                  {pe.rpe_target && (
+                    <span className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/50">RPE:</span> {pe.rpe_target}
+                    </span>
+                  )}
+                  {pe.rest_seconds && (
+                    <span className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/50">Rest:</span> {formatRestTime(pe.rest_seconds)}
+                    </span>
+                  )}
+                  {!loggedToday && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSwap(true)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                      aria-label={`Swap ${displayExercise.name}`}
+                    >
+                      <ArrowLeftRight className="size-3" />
+                      Swap
+                    </button>
+                  )}
+                </div>
+                {/* Inline video */}
+                {hasVideo && displayExercise.video_url && (() => {
+                  const videoId = extractYouTubeId(displayExercise.video_url)
+                  if (!videoId) return null
+                  return (
+                    <div className="relative w-full overflow-hidden rounded-lg bg-black aspect-video">
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
+                        title={`${displayExercise.name} demonstration`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 size-full border-0"
+                      />
+                    </div>
+                  )
+                })()}
+                {/* Coach notes */}
+                {!hideNotes && pe.notes && (
+                  <div className="flex items-start gap-2 rounded-md bg-amber-50 px-2.5 py-1.5">
+                    <Lightbulb
+                      className="size-3.5 shrink-0 text-amber-500 mt-0.5"
+                      strokeWidth={2}
+                    />
+                    <p className="text-xs italic text-foreground/70 leading-relaxed whitespace-pre-line">
+                      {pe.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleSubmit} className="pt-2 space-y-4">
                 {/* Recommendation card — only for weight-based exercises */}
                 {fields.showWeight && (rec.reasoning || aiSuggestedWeight != null) && (() => {
                   // Compute adjusted recommendation based on in-session RPE
@@ -754,7 +699,7 @@ function ExerciseCard({
                             )}
                             {fields.showRpe && (
                               <th style={{ width: 56 }} className="text-left font-medium">
-                                RPE{pe.rpe_target ? <span className="font-normal text-muted-foreground/60 ml-0.5">/{pe.rpe_target}</span> : ""}
+                                RPE
                               </th>
                             )}
                             <th style={{ width: 28 }} />
@@ -1010,17 +955,10 @@ function ExerciseCard({
         exerciseId={exercise.id}
         exerciseName={exercise.name}
         muscleGroup={exercise.muscle_group}
+        equipment={displayExercise.equipment}
         onSwap={(newExercise) => setSwappedExercise(newExercise)}
       />
 
-      {hasVideo && displayExercise.video_url && (
-        <ExerciseVideoSheet
-          open={showVideo}
-          onOpenChange={setShowVideo}
-          videoUrl={displayExercise.video_url}
-          exerciseName={displayExercise.name}
-        />
-      )}
 
       <CelebrationOverlay
         achievements={celebrations}

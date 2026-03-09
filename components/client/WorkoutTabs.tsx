@@ -120,6 +120,12 @@ function ProgramCard({
           />
         </div>
       )}
+
+      <div className="mt-3 flex justify-end">
+        <span className="inline-flex items-center gap-1 rounded-full bg-success px-3 py-1 text-xs font-medium text-white">
+          {loggedToday > 0 ? "Resume" : "Start"}
+        </span>
+      </div>
     </button>
   )
 }
@@ -367,14 +373,7 @@ function ProgramDetail({
                   Day
                 </span>
                 <span className="text-sm font-semibold">{dayIndex}</span>
-                {isToday && (
-                  <span
-                    className={cn(
-                      "absolute -top-0.5 -right-0.5 size-2 rounded-full",
-                      isSelected ? "bg-white" : "bg-primary"
-                    )}
-                  />
-                )}
+                {/* Today indicator removed for cleaner look */}
               </button>
             )
           })}

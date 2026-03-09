@@ -8,24 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Upload, Video, X, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
-interface ExerciseOption {
-  id: string
-  name: string
-  assignmentId: string | null
-}
-
 interface FormReviewUploadFormProps {
-  exercises: ExerciseOption[]
   userId: string
 }
 
@@ -33,20 +19,15 @@ const MAX_SIZE_MB = 250
 const MAX_DURATION_SECONDS = 300 // 5 minutes
 const ACCEPTED_TYPES = ["video/mp4", "video/quicktime", "video/webm", "video/x-msvideo"]
 
-export function FormReviewUploadForm({ exercises, userId }: FormReviewUploadFormProps) {
+export function FormReviewUploadForm({ userId }: FormReviewUploadFormProps) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
-  const [exerciseId, setExerciseId] = useState("")
   const [title, setTitle] = useState("")
   const [notes, setNotes] = useState("")
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [dragOver, setDragOver] = useState(false)
-
-  function getAssignmentId() {
-    return exercises.find((e) => e.id === exerciseId)?.assignmentId ?? null
-  }
 
   async function validateVideo(videoFile: File): Promise<boolean> {
     // Size check
@@ -99,7 +80,7 @@ export function FormReviewUploadForm({ exercises, userId }: FormReviewUploadForm
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!file || !exerciseId || !title.trim()) {
+    if (!file || !title.trim()) {
       toast.error("Please fill in all required fields")
       return
     }
@@ -134,8 +115,6 @@ export function FormReviewUploadForm({ exercises, userId }: FormReviewUploadForm
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          exercise_id: exerciseId,
-          assignment_id: getAssignmentId(),
           video_path: videoPath,
           title: title.trim(),
           notes: notes.trim() || null,
@@ -160,23 +139,6 @@ export function FormReviewUploadForm({ exercises, userId }: FormReviewUploadForm
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Exercise selector */}
-      <div className="space-y-2">
-        <Label htmlFor="exercise">Exercise *</Label>
-        <Select value={exerciseId} onValueChange={setExerciseId}>
-          <SelectTrigger id="exercise">
-            <SelectValue placeholder="Select an exercise" />
-          </SelectTrigger>
-          <SelectContent>
-            {exercises.map((ex) => (
-              <SelectItem key={ex.id} value={ex.id}>
-                {ex.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Title */}
       <div className="space-y-2">
         <Label htmlFor="title">Title *</Label>
@@ -279,7 +241,7 @@ export function FormReviewUploadForm({ exercises, userId }: FormReviewUploadForm
       </div>
 
       {/* Submit */}
-      <Button type="submit" disabled={uploading || !file || !exerciseId || !title.trim()} className="w-full">
+      <Button type="submit" disabled={uploading || !file || !title.trim()} className="w-full">
         {uploading ? (
           <>
             <Loader2 className="size-4 mr-2 animate-spin" />

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Dumbbell, ShoppingBag, TrendingUp, Trophy, Video, User, CreditCard, Settings, ClipboardList, LogOut, MoreHorizontal } from "lucide-react"
+import { LayoutDashboard, Dumbbell, ShoppingBag, TrendingUp, Trophy, Video, User, Settings, ClipboardList, LogOut, MoreHorizontal } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
@@ -21,13 +21,18 @@ const navItems = [
   { label: "Form Reviews", href: "/client/form-reviews", icon: Video },
   { label: "Assessment", href: "/client/questionnaire", icon: ClipboardList },
   { label: "Profile", href: "/client/profile", icon: User },
-  { label: "Payments", href: "/client/payments", icon: CreditCard },
   { label: "Settings", href: "/client/settings", icon: Settings },
 ]
 
-// Bottom tab bar: 4 primary items + More
-const bottomTabs = navItems.slice(0, 4)
-const moreItems = navItems.slice(4)
+// Bottom tab bar: Dashboard, Form Reviews, Workouts, Progress + More
+const bottomTabs = [
+  navItems[0], // Dashboard
+  navItems[5], // Form Reviews
+  navItems[2], // Workouts
+  navItems[3], // Progress
+]
+const bottomTabHrefs = new Set(bottomTabs.map((t) => t.href))
+const moreItems = navItems.filter((item) => !bottomTabHrefs.has(item.href))
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

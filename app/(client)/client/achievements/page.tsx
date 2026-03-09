@@ -5,6 +5,7 @@ import { getWorkoutStreak } from "@/lib/db/progress"
 import { AchievementFilterTabs } from "@/components/client/AchievementFilterTabs"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Trophy, Flame, Star, ArrowLeft } from "lucide-react"
+import { PageHeader } from "@/components/shared/PageHeader"
 import Link from "next/link"
 
 export const metadata = { title: "Achievements | DJP Athlete" }
@@ -48,7 +49,10 @@ export default async function AchievementsPage() {
         Back to Progress
       </Link>
 
-      <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-5">Achievements</h1>
+      <PageHeader
+        title="Achievements"
+        description="Celebrate your milestones. View personal records, streak badges, and other accomplishments you've earned."
+      />
 
       {/* Stats Summary */}
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-6">

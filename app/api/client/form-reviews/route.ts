@@ -10,14 +10,7 @@ import { getUsers } from "@/lib/db/users"
 import { getUserById } from "@/lib/db/users"
 import { sendFormReviewRequestEmail } from "@/lib/email"
 
-const uuidLike = z.string().regex(
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-  "Invalid UUID format"
-)
-
 const createSchema = z.object({
-  exercise_id: uuidLike,
-  assignment_id: uuidLike.nullable().optional(),
   video_path: z.string().min(1),
   title: z.string().min(1).max(200),
   notes: z.string().max(2000).nullable().optional(),
@@ -60,8 +53,6 @@ export async function POST(request: Request) {
 
     const review = await createFormReview({
       client_user_id: session.user.id,
-      exercise_id: parsed.data.exercise_id,
-      assignment_id: parsed.data.assignment_id ?? null,
       video_path: parsed.data.video_path,
       title: parsed.data.title,
       notes: parsed.data.notes ?? null,

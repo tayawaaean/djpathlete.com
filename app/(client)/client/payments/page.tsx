@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/PageHeader"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getPayments } from "@/lib/db/payments"
@@ -49,9 +50,10 @@ export default async function ClientPaymentsPage() {
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-5">
-        Payment History
-      </h1>
+      <PageHeader
+        title="Payment History"
+        description="View your past purchases and payment receipts for training programs."
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
