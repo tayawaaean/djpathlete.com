@@ -121,7 +121,7 @@ export interface ExerciseAIFilters {
   equipment?: string[]
   difficulty?: ExerciseDifficulty
   is_bodyweight?: boolean
-  is_compound?: boolean
+  training_intent?: string[]
 }
 
 export async function getExercisesForAI(filters?: ExerciseAIFilters) {
@@ -146,8 +146,8 @@ export async function getExercisesForAI(filters?: ExerciseAIFilters) {
   if (filters?.is_bodyweight !== undefined) {
     query = query.eq("is_bodyweight", filters.is_bodyweight)
   }
-  if (filters?.is_compound !== undefined) {
-    query = query.eq("is_compound", filters.is_compound)
+  if (filters?.training_intent && filters.training_intent.length > 0) {
+    query = query.overlaps("training_intent", filters.training_intent)
   }
 
   const { data, error } = await query.order("name", { ascending: true })

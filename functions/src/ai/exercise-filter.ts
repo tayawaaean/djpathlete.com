@@ -50,10 +50,12 @@ export function scoreExerciseForSlot(
   if (dist === 0) score += 10
   else if (dist === 1) score += 5
 
+  // Role bonus (5pts) — training_intent matching slot role
   const isCompoundSlot = slot.role === "primary_compound" || slot.role === "secondary_compound"
   const isIsolationSlot = slot.role === "isolation" || slot.role === "accessory"
-  if (isCompoundSlot && exercise.is_compound) score += 5
-  if (isIsolationSlot && !exercise.is_compound) score += 5
+  const intent = exercise.training_intent ?? ["build"]
+  if (isCompoundSlot && (intent.includes("shape") || intent.includes("express"))) score += 5
+  if (isIsolationSlot && intent.includes("build")) score += 5
 
   return score
 }

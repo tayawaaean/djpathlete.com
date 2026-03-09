@@ -245,7 +245,7 @@ export async function handleAiCoach(jobId: string): Promise<void> {
         muscle_group: exercise.muscle_group,
         equipment: exercise.equipment,
         is_bodyweight: exercise.is_bodyweight,
-        is_compound: exercise.is_compound,
+        training_intent: exercise.training_intent,
         movement_pattern: exercise.movement_pattern,
       },
       client_profile: clientProfile,

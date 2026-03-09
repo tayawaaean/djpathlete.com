@@ -82,7 +82,7 @@ export async function getExercisesForAI(): Promise<CompressedExercise[]> {
   const supabase = getSupabase()
   const { data: exercises } = await supabase
     .from("exercises")
-    .select("id, name, category, difficulty, difficulty_score, muscle_group, movement_pattern, primary_muscles, secondary_muscles, force_type, laterality, equipment_required, is_bodyweight, is_compound")
+    .select("id, name, category, difficulty, difficulty_score, muscle_group, movement_pattern, primary_muscles, secondary_muscles, force_type, laterality, equipment_required, is_bodyweight, training_intent")
     .eq("is_active", true)
     .limit(1000)
 
@@ -100,6 +100,6 @@ export async function getExercisesForAI(): Promise<CompressedExercise[]> {
     laterality: ex.laterality ?? null,
     equipment_required: ex.equipment_required ?? [],
     is_bodyweight: ex.is_bodyweight ?? false,
-    is_compound: ex.is_compound ?? false,
+    training_intent: ex.training_intent ?? ["build"],
   }))
 }

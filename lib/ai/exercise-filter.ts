@@ -82,11 +82,23 @@ export function scoreExerciseForSlot(
   if (dist === 0) score += 10
   else if (dist === 1) score += 5
 
-  // Role bonus (5pts) — compound in compound slot, isolation in isolation slot
+  // Role bonus (5pts) — training_intent matching slot role
   const isCompoundSlot = slot.role === "primary_compound" || slot.role === "secondary_compound"
   const isIsolationSlot = slot.role === "isolation" || slot.role === "accessory"
-  if (isCompoundSlot && exercise.is_compound) score += 5
-  if (isIsolationSlot && !exercise.is_compound) score += 5
+  const intent = exercise.training_intent ?? ["build"]
+  if (isCompoundSlot && (intent.includes("shape") || intent.includes("express"))) score += 5
+  if (isIsolationSlot && intent.includes("build")) score += 5
+
+  // Difficulty range bonus — if exercise has difficulty_max, check if target falls within range
+  if (exercise.difficulty_max) {
+    const diffOrder = ["beginner", "intermediate", "advanced"]
+    const exMinIdx = diffOrder.indexOf(exercise.difficulty)
+    const exMaxIdx = diffOrder.indexOf(exercise.difficulty_max)
+    const targetIdx = diffOrder.indexOf(difficulty)
+    if (exMinIdx >= 0 && exMaxIdx >= 0 && targetIdx >= exMinIdx && targetIdx <= exMaxIdx) {
+      score += 3
+    }
+  }
 
   return score
 }

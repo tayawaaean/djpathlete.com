@@ -2,11 +2,20 @@ import { z } from "zod"
 
 export const EXERCISE_CATEGORIES = [
   "strength",
-  "cardio",
-  "flexibility",
+  "speed",
+  "power",
   "plyometric",
-  "sport_specific",
-  "recovery",
+  "flexibility",
+  "mobility",
+  "motor_control",
+  "strength_endurance",
+  "relative_strength",
+] as const
+
+export const TRAINING_INTENTS = [
+  "build",
+  "shape",
+  "express",
 ] as const
 
 export const EXERCISE_DIFFICULTIES = [
@@ -90,6 +99,10 @@ export const EQUIPMENT_OPTIONS = [
   "agility_ladder",
   "cones",
   "yoga_mat",
+  "gliders",
+  "wall",
+  "weight_plate",
+  "short_barbell",
 ] as const
 
 export const exerciseFormSchema = z.object({
@@ -135,7 +148,8 @@ export const exerciseFormSchema = z.object({
   laterality: z.enum(LATERALITY_OPTIONS).nullable().optional().transform((v) => v ?? null),
   equipment_required: z.array(z.string()).optional().default([]),
   is_bodyweight: z.boolean().optional().default(false),
-  is_compound: z.boolean().optional().default(true),
+  training_intent: z.array(z.enum(TRAINING_INTENTS)).min(1, "Select at least one training intent").default(["build"]),
+  difficulty_max: z.enum(EXERCISE_DIFFICULTIES).nullable().optional().transform((v) => v ?? null),
   difficulty_score: z.coerce.number().int().min(1).max(10).nullable().optional().transform((v) => v ?? null),
   prerequisite_exercises: z.array(z.string().uuid()).optional().default([]),
   progression_order: z.coerce.number().int().nullable().optional().transform((v) => v ?? null),

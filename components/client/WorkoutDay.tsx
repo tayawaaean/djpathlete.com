@@ -349,7 +349,7 @@ function ExerciseCard({
       const currentWeight = lastFilledWeight ? parseFloat(lastFilledWeight) : null
       const lowerPatterns = ["squat", "hinge", "lunge", "carry"]
       const isLowerCompound = exercise.movement_pattern
-        ? lowerPatterns.includes(exercise.movement_pattern) && exercise.is_compound
+        ? lowerPatterns.includes(exercise.movement_pattern) && (exercise.training_intent?.includes("shape") || exercise.training_intent?.includes("express"))
         : false
       const increment = isLowerCompound ? (unit === "lbs" ? 10 : 5) : (unit === "lbs" ? 5 : 2.5)
       const reduced = currentWeight != null ? Math.max(0, currentWeight - increment) : baseWeight
@@ -651,7 +651,7 @@ function ExerciseCard({
                     const currentKg = toKg(parseFloat(lastFilledWeight))
                     const lowerPatterns = ["squat", "hinge", "lunge", "carry"]
                     const isLowerCompound = exercise.movement_pattern
-                      ? lowerPatterns.includes(exercise.movement_pattern) && exercise.is_compound
+                      ? lowerPatterns.includes(exercise.movement_pattern) && (exercise.training_intent?.includes("shape") || exercise.training_intent?.includes("express"))
                       : false
                     const inc = isLowerCompound ? (unit === "lbs" ? 10 : 5) : (unit === "lbs" ? 5 : 2.5)
                     const reducedDisplay = Math.max(0, parseFloat(lastFilledWeight) - inc)

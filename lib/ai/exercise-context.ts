@@ -19,7 +19,8 @@ export interface CompressedExercise {
   laterality: Laterality | null
   equipment_required: string[]
   is_bodyweight: boolean
-  is_compound: boolean
+  training_intent: string[]
+  difficulty_max: string | null
 }
 
 /**
@@ -41,7 +42,8 @@ export function compressExercises(exercises: Exercise[]): CompressedExercise[] {
     laterality: ex.laterality,
     equipment_required: ex.equipment_required,
     is_bodyweight: ex.is_bodyweight,
-    is_compound: ex.is_compound,
+    training_intent: (ex as Exercise & { training_intent?: string[] }).training_intent || ["build"],
+    difficulty_max: (ex as Exercise & { difficulty_max?: string | null }).difficulty_max || null,
   }))
 }
 

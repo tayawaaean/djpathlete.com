@@ -11,7 +11,7 @@ export default async function ExercisesPage() {
 
   const totalExercises = exList.length
   const bodyweightCount = exList.filter((e) => e.is_bodyweight).length
-  const compoundCount = exList.filter((e) => e.is_compound).length
+  const compoundCount = exList.filter((e) => e.training_intent?.includes("build")).length
 
   // Count unique equipment types
   const equipmentSet = new Set<string>()
@@ -43,7 +43,7 @@ export default async function ExercisesPage() {
             <div className="flex size-8 sm:size-9 items-center justify-center rounded-lg bg-success/10">
               <Layers className="size-3.5 sm:size-4 text-success" />
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Compound</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Build</p>
           </div>
           <p className="text-xl sm:text-2xl font-semibold text-primary">{compoundCount}</p>
         </div>

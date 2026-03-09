@@ -155,8 +155,8 @@ export type ProgramCategory =
   | "strength"
   | "conditioning"
   | "hybrid"
-  | "sport_specific"
-  | "recovery"
+  | "power"
+  | "mobility"
 
 export type ProgramDifficulty =
   | "beginner"
@@ -186,7 +186,7 @@ export interface CompressedExercise {
   laterality: Laterality
   equipment_required: string[]
   is_bodyweight: boolean
-  is_compound: boolean
+  training_intent: ("build" | "shape" | "express")[]
 }
 
 // ─── AI Job types (Firestore) ────────────────────────────────────────────────

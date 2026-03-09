@@ -1,6 +1,7 @@
 export type UserRole = "admin" | "client"
 export type UserStatus = "active" | "inactive" | "suspended"
-export type ExerciseCategory = "strength" | "cardio" | "flexibility" | "plyometric" | "sport_specific" | "recovery"
+export type ExerciseCategory = "strength" | "speed" | "power" | "plyometric" | "flexibility" | "mobility" | "motor_control" | "strength_endurance" | "relative_strength"
+export type TrainingIntent = "build" | "shape" | "express"
 export type ExerciseDifficulty = "beginner" | "intermediate" | "advanced"
 export type ProgramCategory = "strength" | "conditioning" | "sport_specific" | "recovery" | "nutrition" | "hybrid"
 export type ProgramDifficulty = "beginner" | "intermediate" | "advanced" | "elite"
@@ -113,6 +114,7 @@ export interface Exercise {
   category: ExerciseCategory[]
   muscle_group: string | null
   difficulty: ExerciseDifficulty
+  difficulty_max: ExerciseDifficulty | null
   equipment: string | null
   video_url: string | null
   thumbnail_url: string | null
@@ -126,7 +128,7 @@ export interface Exercise {
   laterality: Laterality | null
   equipment_required: string[]
   is_bodyweight: boolean
-  is_compound: boolean
+  training_intent: TrainingIntent[]
   difficulty_score: number | null
   prerequisite_exercises: string[]
   progression_order: number | null

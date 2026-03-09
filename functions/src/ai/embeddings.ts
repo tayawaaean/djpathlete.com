@@ -41,7 +41,7 @@ export function exerciseToText(
     exercise.muscle_group ?? "",
     `primary: ${exercise.primary_muscles.join(", ")}`,
     `secondary: ${exercise.secondary_muscles.join(", ")}`,
-    exercise.is_compound ? "compound" : "isolation",
+    `Training intent: ${exercise.training_intent?.join(", ") || "build"}`,
     exercise.is_bodyweight ? "bodyweight" : "",
     exercise.equipment_required.join(", "),
   ]

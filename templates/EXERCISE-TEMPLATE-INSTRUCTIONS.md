@@ -15,7 +15,7 @@
 |--------|-------|---------------|---------|
 | A | **name** | Exercise name | Barbell Back Squat |
 | B | **description** | Short description of the exercise | A compound lower-body exercise targeting quads and glutes |
-| C | **category** | One or more from: `strength`, `cardio`, `flexibility`, `plyometric`, `sport_specific`, `recovery` (comma-separated if multiple) | strength |
+| C | **category** | One or more from: `strength`, `strength_endurance`, `flexibility`, `plyometric`, `power`, `mobility` (comma-separated if multiple) | strength |
 | D | **difficulty** | One of: `beginner`, `intermediate`, `advanced` | intermediate |
 | E | **equipment** | Free-text equipment needed | Barbell + Squat Rack |
 | F | **video_url** | YouTube link (optional, leave blank if none) | https://youtube.com/watch?v=... |
@@ -32,7 +32,7 @@
 | L | **laterality** | `bilateral`, `unilateral`, `alternating` |
 | M | **equipment_required** | Comma-separated from: `barbell`, `dumbbell`, `kettlebell`, `cable_machine`, `smith_machine`, `resistance_band`, `pull_up_bar`, `bench`, `squat_rack`, `leg_press`, `leg_curl_machine`, `lat_pulldown_machine`, `rowing_machine`, `treadmill`, `bike`, `box`, `plyo_box`, `medicine_ball`, `stability_ball`, `foam_roller`, `trx`, `landmine`, `sled`, `battle_ropes`, `agility_ladder`, `cones`, `yoga_mat` |
 | N | **is_bodyweight** | `TRUE` or `FALSE` |
-| O | **is_compound** | `TRUE` or `FALSE` |
+| O | **training_intent** | Comma-separated from: `build`, `shape`, `express` |
 
 ---
 

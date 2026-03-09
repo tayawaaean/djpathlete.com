@@ -41,12 +41,13 @@ function parseReps(reps: string | null): number | null {
  * Get the weight increment based on exercise characteristics.
  * Upper-body / isolation → 2.5kg, lower-body compound → 5kg
  */
-function getIncrement(exercise: Pick<Exercise, "movement_pattern" | "is_compound">): number {
+function getIncrement(exercise: Pick<Exercise, "movement_pattern" | "training_intent">): number {
   const lowerPatterns = ["squat", "hinge", "lunge", "carry"]
   const isLower = exercise.movement_pattern
     ? lowerPatterns.includes(exercise.movement_pattern)
     : false
-  return isLower && exercise.is_compound ? 5 : 2.5
+  const isCompoundLike = exercise.training_intent?.includes("shape") || exercise.training_intent?.includes("express")
+  return isLower && isCompoundLike ? 5 : 2.5
 }
 
 // ─── Starting Weight Estimation ─────────────────────────────────────────────
@@ -92,7 +93,7 @@ function roundTo2_5(kg: number): number {
  * Returns null if we can't make a reasonable estimate.
  */
 function estimateStartingWeight(
-  exercise: Pick<Exercise, "is_bodyweight" | "is_compound" | "movement_pattern">,
+  exercise: Pick<Exercise, "is_bodyweight" | "training_intent" | "movement_pattern">,
   client: ClientContext
 ): number | null {
   if (exercise.is_bodyweight) return null
@@ -103,7 +104,8 @@ function estimateStartingWeight(
   if (pattern === "isometric" || pattern === "locomotion") return null
 
   const multipliers = BW_MULTIPLIERS[pattern] ?? BW_MULTIPLIERS.push
-  const baseMult = exercise.is_compound ? multipliers.compound : multipliers.isolation
+  const isCompoundLike = exercise.training_intent?.includes("shape") || exercise.training_intent?.includes("express")
+  const baseMult = isCompoundLike ? multipliers.compound : multipliers.isolation
 
   // Gender factor: female starts ~65% of male estimate
   const genderFactor = client.gender === "female" ? 0.65 : 1.0
@@ -114,8 +116,8 @@ function estimateStartingWeight(
   const estimated = client.weight_kg * baseMult * genderFactor * expFactor
   const rounded = roundTo2_5(estimated)
 
-  // Floor at 5kg for barbell exercises, 2.5kg for others
-  return Math.max(exercise.is_compound ? 5 : 2.5, rounded)
+  // Floor at 5kg for compound-like exercises, 2.5kg for others
+  return Math.max(isCompoundLike ? 5 : 2.5, rounded)
 }
 
 /** Determine weight trend from recent history (newest first) */
@@ -139,7 +141,7 @@ function computeTrend(history: ExerciseProgress[]): Trend {
 
 export function getWeightRecommendation(
   history: ExerciseProgress[],
-  exercise: Pick<Exercise, "is_bodyweight" | "is_compound" | "movement_pattern" | "name" | "category">,
+  exercise: Pick<Exercise, "is_bodyweight" | "training_intent" | "movement_pattern" | "name" | "category">,
   prescription?: Pick<ProgramExercise, "sets" | "reps" | "intensity_pct" | "rpe_target"> | null,
   client?: ClientContext | null
 ): WeightRecommendation {

@@ -70,7 +70,7 @@ const newExercises = [
     instructions: "Set cable at highest position. Stand sideways to machine, feet shoulder-width apart. Grip handle with both hands. Pull diagonally across body from high to low, rotating through torso. Control the return.",
     movement_pattern: "rotation", force_type: "pull", laterality: "unilateral",
     primary_muscles: ["obliques", "core"], secondary_muscles: ["shoulders", "hip_flexors"],
-    equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["cable_machine"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.cable_woodchop_low_high,
@@ -81,7 +81,7 @@ const newExercises = [
     instructions: "Set cable at lowest position. Stand sideways to machine, feet shoulder-width apart. Grip handle with both hands at hip level. Drive diagonally across body from low to high, rotating through torso. Control the return.",
     movement_pattern: "rotation", force_type: "push", laterality: "unilateral",
     primary_muscles: ["obliques", "core"], secondary_muscles: ["shoulders", "glutes"],
-    equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["cable_machine"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.pallof_press,
@@ -92,7 +92,7 @@ const newExercises = [
     instructions: "Stand sideways to cable/band anchor at chest height. Hold handle at chest with both hands. Press arms straight out in front, resisting the pull to rotate. Hold briefly, return to chest. Keep hips and shoulders square throughout.",
     movement_pattern: "isometric", force_type: "push", laterality: "unilateral",
     primary_muscles: ["core", "obliques"], secondary_muscles: ["shoulders", "glutes"],
-    equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: false,
+    equipment_required: ["cable_machine"], is_bodyweight: false, training_intent: ["build"],
   },
   {
     id: RX.russian_twist,
@@ -103,7 +103,7 @@ const newExercises = [
     instructions: "Sit on floor with knees bent, feet slightly elevated. Lean back to 45 degrees. Rotate torso side to side, touching hands (or med ball) to floor beside each hip. Keep core braced throughout.",
     movement_pattern: "rotation", force_type: "dynamic", laterality: "bilateral",
     primary_muscles: ["obliques", "core"], secondary_muscles: ["hip_flexors"],
-    equipment_required: [], is_bodyweight: true, is_compound: false,
+    equipment_required: [], is_bodyweight: true, training_intent: ["build"],
   },
   {
     id: RX.rotational_mb_throw,
@@ -114,7 +114,7 @@ const newExercises = [
     instructions: "Stand sideways to wall, feet shoulder-width apart. Hold med ball at hip. Rotate explosively through hips and torso, releasing ball into wall. Catch and reset. Perform all reps on one side before switching.",
     movement_pattern: "rotation", force_type: "dynamic", laterality: "unilateral",
     primary_muscles: ["obliques", "core", "glutes"], secondary_muscles: ["shoulders", "hip_flexors"],
-    equipment_required: ["medicine_ball"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["medicine_ball"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.dead_bug,
@@ -125,7 +125,7 @@ const newExercises = [
     instructions: "Lie on back with arms extended toward ceiling, knees bent at 90 degrees. Slowly lower opposite arm and leg toward floor while pressing lower back into ground. Return to start and alternate sides.",
     movement_pattern: "isometric", force_type: "static", laterality: "bilateral",
     primary_muscles: ["core", "rectus_abdominis"], secondary_muscles: ["hip_flexors"],
-    equipment_required: [], is_bodyweight: true, is_compound: false,
+    equipment_required: [], is_bodyweight: true, training_intent: ["build"],
   },
   {
     id: RX.bird_dog,
@@ -136,7 +136,7 @@ const newExercises = [
     instructions: "Start on hands and knees, wrists under shoulders, knees under hips. Extend opposite arm and leg simultaneously until parallel with floor. Hold briefly, return with control. Alternate sides. Keep hips level throughout.",
     movement_pattern: "isometric", force_type: "static", laterality: "alternating",
     primary_muscles: ["core", "erector_spinae"], secondary_muscles: ["glutes", "shoulders"],
-    equipment_required: [], is_bodyweight: true, is_compound: false,
+    equipment_required: [], is_bodyweight: true, training_intent: ["build"],
   },
   {
     id: RX.side_plank,
@@ -147,7 +147,7 @@ const newExercises = [
     instructions: "Lie on side with forearm on ground, elbow under shoulder. Stack feet or stagger them. Lift hips off ground, forming a straight line from head to feet. Hold position, brace core. Switch sides.",
     movement_pattern: "isometric", force_type: "static", laterality: "unilateral",
     primary_muscles: ["obliques", "core"], secondary_muscles: ["glutes", "shoulders"],
-    equipment_required: [], is_bodyweight: true, is_compound: false,
+    equipment_required: [], is_bodyweight: true, training_intent: ["build"],
   },
   {
     id: RX.hk_cable_chop,
@@ -158,7 +158,7 @@ const newExercises = [
     instructions: "Kneel with inside knee down, outside foot forward. Set cable high. Grip handle with both hands. Chop diagonally from high to low across body, rotating through torso. Maintain tall kneeling posture throughout.",
     movement_pattern: "rotation", force_type: "pull", laterality: "unilateral",
     primary_muscles: ["obliques", "core"], secondary_muscles: ["shoulders", "glutes"],
-    equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["cable_machine"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.hk_cable_lift,
@@ -169,7 +169,7 @@ const newExercises = [
     instructions: "Kneel with inside knee down, outside foot forward. Set cable low. Grip handle with both hands at hip. Lift diagonally from low to high across body, rotating through torso. Keep hips stable and drive from core.",
     movement_pattern: "rotation", force_type: "push", laterality: "unilateral",
     primary_muscles: ["obliques", "core"], secondary_muscles: ["shoulders", "glutes"],
-    equipment_required: ["cable_machine"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["cable_machine"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.copenhagen_plank,
@@ -180,7 +180,7 @@ const newExercises = [
     instructions: "Lie on side with top foot on bench, bottom leg hanging free. Place forearm on ground under shoulder. Lift hips to create straight line from head to top foot. Hold position. For regression, bend top knee on bench.",
     movement_pattern: "isometric", force_type: "static", laterality: "unilateral",
     primary_muscles: ["obliques", "adductors"], secondary_muscles: ["core", "glutes"],
-    equipment_required: ["bench"], is_bodyweight: true, is_compound: false,
+    equipment_required: ["bench"], is_bodyweight: true, training_intent: ["build"],
   },
   {
     id: RX.goblet_squat,
@@ -191,7 +191,7 @@ const newExercises = [
     instructions: "Hold dumbbell/kettlebell at chest with both hands, elbows pointing down. Feet shoulder-width apart. Squat down keeping chest tall and weight in midfoot. Drive through feet to stand.",
     movement_pattern: "squat", force_type: "push", laterality: "bilateral",
     primary_muscles: ["quadriceps", "glutes"], secondary_muscles: ["core", "hamstrings"],
-    equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["dumbbells"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.sl_rdl,
@@ -202,7 +202,7 @@ const newExercises = [
     instructions: "Stand on one leg holding dumbbell in opposite hand. Hinge at hip, lowering weight toward floor while extending free leg behind. Keep back flat and hips square. Drive through standing leg to return to upright.",
     movement_pattern: "hinge", force_type: "pull", laterality: "unilateral",
     primary_muscles: ["hamstrings", "glutes"], secondary_muscles: ["core", "erector_spinae"],
-    equipment_required: ["dumbbells"], is_bodyweight: false, is_compound: true,
+    equipment_required: ["dumbbells"], is_bodyweight: false, training_intent: ["build", "shape"],
   },
   {
     id: RX.lateral_lunge,
@@ -213,7 +213,7 @@ const newExercises = [
     instructions: "Stand with feet together. Step wide to one side, pushing hips back and bending stepping knee. Keep trailing leg straight. Push off bent leg to return to start. Alternate sides or complete all reps on one side.",
     movement_pattern: "lunge", force_type: "push", laterality: "unilateral",
     primary_muscles: ["quadriceps", "glutes", "adductors"], secondary_muscles: ["hamstrings", "core"],
-    equipment_required: [], is_bodyweight: true, is_compound: true,
+    equipment_required: [], is_bodyweight: true, training_intent: ["build", "shape"],
   },
 ]
 
@@ -223,7 +223,7 @@ const program = {
   id: PROGRAM_ROTATIONAL,
   name: "Rotational Reboot",
   description: "Designed for athletes who play rotational sports — tennis, golf, lacrosse, soccer. 6 weeks of progressive core and rotational training to build power transfer, anti-rotation stability, and injury resilience.",
-  category: "sport_specific",
+  category: "power",
   difficulty: "beginner",
   duration_weeks: 6,
   sessions_per_week: 4,

@@ -376,7 +376,7 @@ Rules:
    - Choose warm-up exercises that ACTIVATE the muscles used in the session's main lifts
    - A push day warm-up should include band pull-aparts and shoulder activation, not just "bodyweight squats"
    - Cool-down slots: stretches and mobility work targeting muscles that were heavily loaded
-9. Prefer compound exercises (is_compound: true) for primary_compound and secondary_compound roles.
+9. Prefer exercises with training_intent including "shape" or "express" for primary_compound and secondary_compound roles. Prefer "build" intent exercises for isolation and accessory roles.
 10. Prefer isolation exercises for isolation roles — but choose isolations that address the client's specific needs (weak points, imbalances, goals) rather than generic choices.
 11. If no perfect match exists in the library, choose the closest available exercise and note it in substitution_notes. Explain WHY you chose the substitute and how it still serves the slot's purpose.
 12. Output ONLY the JSON object, no additional text or explanation.

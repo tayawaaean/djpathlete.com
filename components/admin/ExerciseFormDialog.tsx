@@ -26,6 +26,7 @@ import {
   exerciseFormSchema,
   EXERCISE_CATEGORIES,
   EXERCISE_DIFFICULTIES,
+  TRAINING_INTENTS,
   MOVEMENT_PATTERNS,
   FORCE_TYPES,
   LATERALITY_OPTIONS,
@@ -64,11 +65,20 @@ const stepVariants = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   strength: "Strength",
-  cardio: "Cardio",
-  flexibility: "Flexibility",
+  speed: "Speed",
+  power: "Power",
   plyometric: "Plyometric",
-  sport_specific: "Sport Specific",
-  recovery: "Recovery",
+  flexibility: "Flexibility",
+  mobility: "Mobility",
+  motor_control: "Motor Control",
+  strength_endurance: "Strength Endurance",
+  relative_strength: "Relative Strength",
+}
+
+const TRAINING_INTENT_LABELS: Record<string, string> = {
+  build: "Build",
+  shape: "Shape",
+  express: "Express",
 }
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -200,7 +210,8 @@ export function ExerciseFormDialog({
   const [secondaryMuscles, setSecondaryMuscles] = useState<string[]>(exercise?.secondary_muscles ?? [])
   const [equipmentRequired, setEquipmentRequired] = useState<string[]>(exercise?.equipment_required ?? [])
   const [isBodyweight, setIsBodyweight] = useState(exercise?.is_bodyweight ?? false)
-  const [isCompound, setIsCompound] = useState(exercise?.is_compound ?? true)
+  const [trainingIntent, setTrainingIntent] = useState<string[]>(exercise?.training_intent ?? ["build"])
+  const [difficultyMax, setDifficultyMax] = useState(exercise?.difficulty_max ?? "")
   const [difficultyScore, setDifficultyScore] = useState<number>(exercise?.difficulty_score ?? 5)
   const [progressionOrder, setProgressionOrder] = useState(exercise?.progression_order?.toString() ?? "")
   const [isAutoFilling, setIsAutoFilling] = useState(false)
@@ -224,7 +235,8 @@ export function ExerciseFormDialog({
     setSecondaryMuscles(initialExercise?.secondary_muscles ?? [])
     setEquipmentRequired(initialExercise?.equipment_required ?? [])
     setIsBodyweight(initialExercise?.is_bodyweight ?? false)
-    setIsCompound(initialExercise?.is_compound ?? true)
+    setTrainingIntent(initialExercise?.training_intent ?? ["build"])
+    setDifficultyMax(initialExercise?.difficulty_max ?? "")
     setDifficultyScore(initialExercise?.difficulty_score ?? 5)
     setProgressionOrder(initialExercise?.progression_order?.toString() ?? "")
     setStep(0)
@@ -336,7 +348,7 @@ export function ExerciseFormDialog({
       if (p.secondary_muscles?.length > 0 && (force || secondaryMuscles.length === 0)) setSecondaryMuscles(p.secondary_muscles)
       if (p.equipment_required?.length > 0 && (force || equipmentRequired.length === 0)) setEquipmentRequired(p.equipment_required)
       if (p.is_bodyweight !== undefined && (force || !autoFillApplied)) setIsBodyweight(p.is_bodyweight)
-      if (p.is_compound !== undefined && (force || !autoFillApplied)) setIsCompound(p.is_compound)
+      if (p.training_intent?.length > 0 && (force || !autoFillApplied)) setTrainingIntent(p.training_intent)
       if (p.difficulty_score && (force || difficultyScore === 5)) setDifficultyScore(p.difficulty_score)
 
       setAutoFillApplied(true)
@@ -369,7 +381,8 @@ export function ExerciseFormDialog({
       secondary_muscles: secondaryMuscles,
       equipment_required: equipmentRequired,
       is_bodyweight: isBodyweight,
-      is_compound: isCompound,
+      training_intent: trainingIntent,
+      difficulty_max: difficultyMax || null,
       difficulty_score: difficultyScore,
       progression_order: progressionOrder ? parseInt(progressionOrder) : null,
     }
@@ -535,8 +548,10 @@ export function ExerciseFormDialog({
                   toggleEquipment={(eq) => toggleItem(equipmentRequired, eq, setEquipmentRequired)}
                   isBodyweight={isBodyweight}
                   setIsBodyweight={setIsBodyweight}
-                  isCompound={isCompound}
-                  setIsCompound={setIsCompound}
+                  trainingIntent={trainingIntent}
+                  toggleTrainingIntent={(intent) => toggleItem(trainingIntent, intent, setTrainingIntent)}
+                  difficultyMax={difficultyMax}
+                  setDifficultyMax={setDifficultyMax}
                   difficultyScore={difficultyScore}
                   setDifficultyScore={setDifficultyScore}
                   progressionOrder={progressionOrder}
@@ -781,7 +796,8 @@ function StepAiMetadata({
   secondaryMuscles, toggleSecondary,
   equipmentRequired, toggleEquipment,
   isBodyweight, setIsBodyweight,
-  isCompound, setIsCompound,
+  trainingIntent, toggleTrainingIntent,
+  difficultyMax, setDifficultyMax,
   difficultyScore, setDifficultyScore,
   progressionOrder, setProgressionOrder,
   isAutoFilling, autoFillApplied, onAutoFill,
@@ -794,7 +810,8 @@ function StepAiMetadata({
   secondaryMuscles: string[]; toggleSecondary: (m: string) => void
   equipmentRequired: string[]; toggleEquipment: (eq: string) => void
   isBodyweight: boolean; setIsBodyweight: (v: boolean) => void
-  isCompound: boolean; setIsCompound: (v: boolean) => void
+  trainingIntent: string[]; toggleTrainingIntent: (intent: string) => void
+  difficultyMax: string; setDifficultyMax: (v: string) => void
   difficultyScore: number; setDifficultyScore: (v: number) => void
   progressionOrder: string; setProgressionOrder: (v: string) => void
   isAutoFilling: boolean; autoFillApplied: boolean; onAutoFill: (force?: boolean) => void
@@ -955,7 +972,7 @@ function StepAiMetadata({
         </div>
       </div>
 
-      {/* Bodyweight & Compound */}
+      {/* Bodyweight */}
       <div id="bodyweight_compound" className="flex gap-6">
         <label className="flex items-center gap-2 text-sm cursor-pointer">
           <input
@@ -967,16 +984,48 @@ function StepAiMetadata({
           />
           Bodyweight
         </label>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isCompound}
-            onChange={(e) => setIsCompound(e.target.checked)}
-            disabled={disabled}
-            className="rounded border-border"
-          />
-          Compound
-        </label>
+      </div>
+
+      {/* Training Intent */}
+      <div className="space-y-2">
+        <Label>Training Intent *</Label>
+        <p className="text-xs text-muted-foreground">How this exercise is used in programming (select one or more)</p>
+        <div className="flex flex-wrap gap-1.5">
+          {TRAINING_INTENTS.map((intent) => (
+            <button
+              key={intent}
+              type="button"
+              onClick={() => toggleTrainingIntent(intent)}
+              disabled={disabled}
+              className={cn(
+                "px-2.5 py-1 text-xs rounded-full border transition-colors",
+                trainingIntent.includes(intent)
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border text-muted-foreground hover:border-primary/50"
+              )}
+            >
+              {TRAINING_INTENT_LABELS[intent]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Difficulty Max */}
+      <div className="space-y-2">
+        <Label htmlFor="difficulty_max">Difficulty Ceiling</Label>
+        <select
+          id="difficulty_max"
+          value={difficultyMax}
+          onChange={(e) => setDifficultyMax(e.target.value)}
+          disabled={disabled}
+          className={selectClass}
+        >
+          <option value="">None (same as difficulty)</option>
+          {EXERCISE_DIFFICULTIES.map((diff) => (
+            <option key={diff} value={diff}>{DIFFICULTY_LABELS[diff]}</option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">Optional upper bound — useful for exercises that span a difficulty range</p>
       </div>
 
       {/* Difficulty Score */}

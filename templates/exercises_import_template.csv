@@ -1,4 +1,4 @@
-name,category,difficulty,muscle_group,equipment,description,instructions,video_url,movement_pattern,primary_muscles,secondary_muscles,force_type,laterality,equipment_required,is_bodyweight,is_compound
+name,category,difficulty,muscle_group,equipment,description,instructions,video_url,movement_pattern,primary_muscles,secondary_muscles,force_type,laterality,equipment_required,is_bodyweight,training_intent
 Barbell Back Squat,strength,intermediate,Quadriceps / Glutes,Barbell / Squat Rack,Compound lower body movement targeting quads and glutes,"1. Set bar on upper traps. 2. Unrack and step back. 3. Brace core, squat to parallel. 4. Drive through heels to stand.",,,,,,,,,
 Romanian Deadlift,strength,intermediate,Hamstrings / Glutes,Barbell,Hip hinge targeting posterior chain,"1. Hold barbell at hip height. 2. Push hips back, lowering bar along shins. 3. Feel stretch in hamstrings. 4. Drive hips forward to stand.",,,,,,,,,
 Dumbbell Bench Press,strength,beginner,Chest / Triceps,Dumbbells / Bench,Horizontal pressing movement for chest development,"1. Lie on bench holding dumbbells above chest. 2. Lower to chest level. 3. Press up to full extension.",,,,,,,,,

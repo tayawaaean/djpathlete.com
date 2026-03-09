@@ -33,7 +33,7 @@ const aiMetadataSchema = z.object({
   secondary_muscles: z.array(z.enum(MUSCLE_OPTIONS)),
   equipment_required: z.array(z.enum(EQUIPMENT_OPTIONS)),
   is_bodyweight: z.boolean(),
-  is_compound: z.boolean(),
+  training_intent: z.array(z.enum(["build", "shape", "express"])),
   difficulty_score: z.number(),
 })
 
@@ -48,7 +48,10 @@ Available values for each field:
 - primary_muscles / secondary_muscles: ${MUSCLE_OPTIONS.join(", ")}
 - equipment_required: ${EQUIPMENT_OPTIONS.join(", ")}
 - is_bodyweight: true if no external resistance is needed
-- is_compound: true if the exercise uses multiple joints/muscle groups
+- training_intent: array of one or more of ["build", "shape", "express"]:
+  - build = developing tissue capacity, isolated or focused work
+  - shape = movement control, neural challenge, dynamic, or compound
+  - express = speed, power, sport-specific components
 - difficulty_score: 1-10 scale (1-2 foundational, 3-4 beginner, 5-6 intermediate, 7-8 advanced, 9-10 elite)
 
 Rules:

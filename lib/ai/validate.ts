@@ -279,15 +279,22 @@ export function validateProgram(
       weekPull.set(slot.week, (weekPull.get(slot.week) ?? 0) + 1)
     }
 
-    // ── WARNING: Difficulty mismatch ──
+    // ── WARNING: Difficulty mismatch (accounts for difficulty_max range) ──
     const difficultyOrder = ["beginner", "intermediate", "advanced"]
     const clientIdx = difficultyOrder.indexOf(clientDifficulty)
-    const exerciseIdx = difficultyOrder.indexOf(exercise.difficulty)
-    if (clientIdx >= 0 && exerciseIdx >= 0 && exerciseIdx > clientIdx + 1) {
+    const exerciseMinIdx = difficultyOrder.indexOf(exercise.difficulty)
+    const exerciseMaxIdx = exercise.difficulty_max
+      ? difficultyOrder.indexOf(exercise.difficulty_max)
+      : exerciseMinIdx
+    // If exercise has a difficulty range (min to max), it's valid for any level in that range
+    // Only flag if the exercise's minimum difficulty is too far above the client
+    const effectiveMaxIdx = exerciseMaxIdx >= 0 ? exerciseMaxIdx : exerciseMinIdx
+    const clientInRange = clientIdx >= 0 && exerciseMinIdx >= 0 && clientIdx >= exerciseMinIdx && clientIdx <= effectiveMaxIdx
+    if (clientIdx >= 0 && exerciseMinIdx >= 0 && !clientInRange && exerciseMinIdx > clientIdx + 1) {
       issues.push({
         type: "warning",
         category: "difficulty_mismatch",
-        message: `${exercise.name} (${exercise.difficulty}) may be too advanced for a ${clientDifficulty} client`,
+        message: `${exercise.name} (${exercise.difficulty}${exercise.difficulty_max ? `-${exercise.difficulty_max}` : ""}) may be too advanced for a ${clientDifficulty} client`,
         slot_ref: assigned.slot_id,
       })
     }

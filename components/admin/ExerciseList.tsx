@@ -28,11 +28,14 @@ interface ExerciseListProps {
 
 const CATEGORY_LABELS: Record<string, string> = {
   strength: "Strength",
-  cardio: "Cardio",
-  flexibility: "Flexibility",
+  speed: "Speed",
+  power: "Power",
   plyometric: "Plyometric",
-  sport_specific: "Sport Specific",
-  recovery: "Recovery",
+  flexibility: "Flexibility",
+  mobility: "Mobility",
+  motor_control: "Motor Control",
+  strength_endurance: "Strength Endurance",
+  relative_strength: "Relative Strength",
 }
 
 const DIFFICULTY_LABELS: Record<string, string> = {
