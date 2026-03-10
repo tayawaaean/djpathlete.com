@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -51,6 +51,12 @@ export function ProgramBuilder({
   const router = useRouter()
   const [selectedWeek, setSelectedWeek] = useState(1)
 
+  // Optimistic local state — mirrors server props but updates instantly on drag
+  const [localExercises, setLocalExercises] = useState(programExercises)
+  useEffect(() => {
+    setLocalExercises(programExercises)
+  }, [programExercises])
+
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [addDialogDay, setAddDialogDay] = useState(1)
@@ -71,7 +77,7 @@ export function ProgramBuilder({
   const [isDuplicatingInPlace, setIsDuplicatingInPlace] = useState(false)
 
   // Group exercises for the selected week by day
-  const weekExercises = programExercises.filter(
+  const weekExercises = localExercises.filter(
     (pe) => pe.week_number === selectedWeek
   )
 
@@ -118,6 +124,9 @@ export function ProgramBuilder({
     const targetDay = getDayFromId(over.id)
     if (!targetDay) return
 
+    // Save snapshot for rollback on error
+    const snapshot = localExercises
+
     if (sourceDay === targetDay) {
       // Same-day reorder
       const dayExercises = getExercisesForDay(sourceDay)
@@ -127,6 +136,15 @@ export function ProgramBuilder({
       if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
 
       const reordered = arrayMove(dayExercises, oldIndex, newIndex)
+
+      // Optimistic update — apply new order immediately
+      setLocalExercises((prev) =>
+        prev.map((pe) => {
+          const idx = reordered.findIndex((r) => r.id === pe.id)
+          return idx !== -1 ? { ...pe, order_index: idx } : pe
+        })
+      )
+
       try {
         await Promise.all(
           reordered.map((pe, i) =>
@@ -139,19 +157,50 @@ export function ProgramBuilder({
         )
         router.refresh()
       } catch {
+        setLocalExercises(snapshot)
         toast.error("Failed to reorder exercises")
       }
     } else {
       // Cross-day move
       const targetDayExercises = getExercisesForDay(targetDay)
       const overExercise = targetDayExercises.find((pe) => pe.id === over.id)
-      // Insert at the position of the exercise being hovered, or at the end
       const insertIndex = overExercise
         ? targetDayExercises.indexOf(overExercise)
         : targetDayExercises.length
 
+      // Optimistic update — move exercise to target day instantly
+      setLocalExercises((prev) => {
+        const sourceDayItems = prev
+          .filter((pe) => pe.week_number === selectedWeek && pe.day_of_week === sourceDay && pe.id !== draggedExercise.id)
+          .sort((a, b) => a.order_index - b.order_index)
+
+        const targetDayItems = prev
+          .filter((pe) => pe.week_number === selectedWeek && pe.day_of_week === targetDay && pe.id !== draggedExercise.id)
+          .sort((a, b) => a.order_index - b.order_index)
+
+        // Insert dragged exercise at the target position
+        const movedExercise = { ...draggedExercise, day_of_week: targetDay, order_index: insertIndex }
+        targetDayItems.splice(insertIndex, 0, movedExercise)
+
+        // Build a map of id -> updated exercise for quick lookup
+        const updates = new Map<string, Partial<ProgramExerciseWithExercise>>()
+
+        // Re-index source day
+        sourceDayItems.forEach((pe, i) => updates.set(pe.id, { order_index: i }))
+        // Re-index target day
+        targetDayItems.forEach((pe, i) => updates.set(pe.id, { day_of_week: targetDay, order_index: i }))
+
+        return prev.map((pe) => {
+          const update = updates.get(pe.id)
+          return update ? { ...pe, ...update } : pe
+        })
+      })
+
+      const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+      toast.success(`Moved to ${DAY_NAMES[targetDay - 1]}`)
+
       try {
-        // 1. Move the dragged exercise to the target day at the insert position
+        // 1. Move the dragged exercise to the target day
         await fetch(`/api/admin/programs/${programId}/exercises/${draggedExercise.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -161,7 +210,7 @@ export function ProgramBuilder({
           }),
         })
 
-        // 2. Re-index remaining exercises in target day (shift items at/after insertIndex up by 1)
+        // 2. Re-index remaining exercises in target day
         const reindexTarget = targetDayExercises
           .filter((pe) => pe.id !== draggedExercise.id)
           .map((pe, _i) => {
@@ -194,13 +243,12 @@ export function ProgramBuilder({
 
         await Promise.all(updates)
         router.refresh()
-        const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        toast.success(`Moved to ${DAY_NAMES[targetDay - 1]}`)
       } catch {
+        setLocalExercises(snapshot)
         toast.error("Failed to move exercise")
       }
     }
-  }, [weekExercises, programId, router])
+  }, [weekExercises, localExercises, selectedWeek, programId, router])
 
   async function handleDuplicateInPlace(pe: ProgramExerciseWithExercise) {
     if (isDuplicatingInPlace) return
