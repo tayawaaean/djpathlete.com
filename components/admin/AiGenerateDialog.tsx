@@ -67,6 +67,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   parseProfileSummary,
+  hasQuestionnaireData,
   type ProfileSummary,
 } from "@/lib/profile-utils"
 import { useFormTour } from "@/hooks/use-form-tour"
@@ -283,12 +284,8 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         if (cancelled) return
 
         const summary = parseProfileSummary(data.profile)
-        const hasData =
-          summary.goals.length > 0 ||
-          summary.preferredTrainingDays !== null ||
-          summary.preferredSessionMinutes !== null
 
-        if (!hasData) {
+        if (!hasQuestionnaireData(data.profile)) {
           setProfileStatus("not_found")
           setProfileSummary(summary)
           return

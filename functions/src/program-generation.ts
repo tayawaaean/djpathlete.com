@@ -54,6 +54,8 @@ export async function handleProgramGeneration(jobId: string): Promise<void> {
       program_id: result.program_id,
       validation: {
         pass: result.validation.pass,
+        issues: result.validation.issues,
+        summary: result.validation.summary,
         warnings: result.validation.issues.filter((i) => i.type === "warning").length,
         errors: result.validation.issues.filter((i) => i.type === "error").length,
       },

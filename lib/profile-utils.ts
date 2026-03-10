@@ -113,6 +113,25 @@ export function hasQuestionnaireData(profile: ClientProfile): boolean {
     profile.training_years !== null ||
     profile.available_equipment.length > 0 ||
     profile.preferred_training_days !== null ||
-    profile.preferred_session_minutes !== null
+    profile.preferred_session_minutes !== null ||
+    !!profile.sport ||
+    !!profile.position ||
+    !!profile.date_of_birth ||
+    !!profile.gender ||
+    !!profile.injuries ||
+    profile.injury_details.length > 0 ||
+    !!profile.movement_confidence ||
+    !!profile.sleep_hours ||
+    !!profile.stress_level ||
+    !!profile.occupation_activity_level ||
+    !!profile.training_background ||
+    !!profile.exercise_likes ||
+    !!profile.exercise_dislikes ||
+    !!profile.additional_notes ||
+    !!profile.time_efficiency_preference ||
+    profile.preferred_techniques.length > 0 ||
+    profile.preferred_day_names.length > 0 ||
+    profile.height_cm !== null ||
+    profile.weight_kg !== null
   )
 }

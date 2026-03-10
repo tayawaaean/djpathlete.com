@@ -58,7 +58,7 @@ export interface AssessmentContext {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function deriveProgramCategory(goals: string[]): ProgramCategory {
+export function deriveProgramCategory(goals: string[]): ProgramCategory {
   const goalSet = new Set(goals.map((g) => g.toLowerCase()))
 
   if (goalSet.has("muscle_gain") && goalSet.has("endurance")) return "hybrid"
@@ -116,9 +116,9 @@ export async function runStep1(logId: string): Promise<void> {
 
   let age: number | null = null
   if (profile?.date_of_birth) {
-    const birthYear = parseInt(profile.date_of_birth, 10)
-    if (!isNaN(birthYear)) {
-      age = new Date().getFullYear() - birthYear
+    const birthDate = new Date(profile.date_of_birth)
+    if (!isNaN(birthDate.getTime())) {
+      age = new Date().getFullYear() - birthDate.getFullYear()
     }
   }
 

@@ -9,7 +9,8 @@ export function filterByDifficultyScore(
 ): CompressedExercise[] {
   if (maxDifficultyScore === undefined) return exercises
   return exercises.filter((ex) => {
-    if (ex.difficulty_score === null || ex.difficulty_score === undefined) return false
+    // Include exercises without a difficulty_score — only exclude those explicitly above the max
+    if (ex.difficulty_score === null || ex.difficulty_score === undefined) return true
     return ex.difficulty_score <= maxDifficultyScore
   })
 }

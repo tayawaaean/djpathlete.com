@@ -1,7 +1,10 @@
 "use client"
 
+import { forwardRef } from "react"
 import Image from "next/image"
-import { ChevronUp, ChevronDown, Pencil, Trash2, Copy } from "lucide-react"
+import { GripVertical, Pencil, Trash2, Copy } from "lucide-react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
 import { extractYouTubeId, getYouTubeThumbnailUrl } from "@/lib/youtube"
 import type { Exercise, ProgramExercise, TrainingTechnique } from "@/types/database"
@@ -14,10 +17,6 @@ const TECHNIQUE_BADGE_LABELS: Partial<Record<TrainingTechnique, string>> = {
 
 interface ExerciseCardProps {
   programExercise: ProgramExercise & { exercises: Exercise }
-  isFirst: boolean
-  isLast: boolean
-  onMoveUp: () => void
-  onMoveDown: () => void
   onEdit: () => void
   onRemove: () => void
   onDuplicate?: () => void
@@ -25,11 +24,14 @@ interface ExerciseCardProps {
 
 const CATEGORY_BORDER_COLORS: Record<string, string> = {
   strength: "border-l-primary",
-  cardio: "border-l-destructive",
-  flexibility: "border-l-success",
+  speed: "border-l-destructive",
+  power: "border-l-warning",
   plyometric: "border-l-warning",
-  sport_specific: "border-l-accent",
-  recovery: "border-l-muted-foreground",
+  flexibility: "border-l-success",
+  mobility: "border-l-success",
+  motor_control: "border-l-accent",
+  strength_endurance: "border-l-primary",
+  relative_strength: "border-l-primary",
 }
 
 export function ExerciseCard({

@@ -55,8 +55,8 @@ function deriveProgramCategory(goals: string[]): ProgramCategory {
   if (goalSet.has("muscle_gain") && goalSet.has("endurance")) return "hybrid"
   if (goalSet.has("muscle_gain") || goalSet.has("weight_loss")) return "strength"
   if (goalSet.has("endurance")) return "conditioning"
-  if (goalSet.has("sport_specific")) return "power"
-  if (goalSet.has("flexibility")) return "mobility"
+  if (goalSet.has("sport_specific")) return "sport_specific"
+  if (goalSet.has("flexibility")) return "recovery"
   if (goalSet.has("general_health")) return "hybrid"
   return "strength"
 }
@@ -227,8 +227,8 @@ export async function generateProgramSync(
 
     let age: number | null = null
     if (profile?.date_of_birth) {
-      const birthYear = parseInt(profile.date_of_birth, 10)
-      if (!isNaN(birthYear)) age = new Date().getFullYear() - birthYear
+      const birthDate = new Date(profile.date_of_birth)
+      if (!isNaN(birthDate.getTime())) age = new Date().getFullYear() - birthDate.getFullYear()
     }
 
     const profileContext = profile

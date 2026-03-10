@@ -154,9 +154,10 @@ export interface OrchestrationResult {
 export type ProgramCategory =
   | "strength"
   | "conditioning"
+  | "sport_specific"
+  | "recovery"
+  | "nutrition"
   | "hybrid"
-  | "power"
-  | "mobility"
 
 export type ProgramDifficulty =
   | "beginner"
