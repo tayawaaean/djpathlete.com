@@ -43,7 +43,7 @@ export async function POST(
     if (program.is_ai_generated) {
       // The generation_log_id might be stored on the program or we search by program_id
       // Try to get split_type and difficulty from the program itself
-      splitType = (program as Record<string, unknown>).split_type as string ?? null
+      splitType = (program as unknown as Record<string, unknown>).split_type as string ?? null
       difficulty = program.difficulty ?? null
     }
 
