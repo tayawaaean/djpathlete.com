@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
-import type { ZodSchema } from "zod"
+import { toJSONSchema, type ZodSchema } from "zod"
 import type { AgentCallResult } from "./types.js"
 import pRetry from "p-retry"
 import { jsonrepair } from "jsonrepair"
@@ -21,6 +21,20 @@ export function getClient(): Anthropic {
     })
   }
   return _client
+}
+
+// ─── Schema → JSON Schema for tool_use structured output ─────────────────────
+
+function toToolInputSchema(schema: ZodSchema): { type: "object"; [key: string]: unknown } | null {
+  try {
+    const raw = toJSONSchema(schema, { unrepresentable: "any" }) as Record<string, unknown>
+    // Strip $schema metadata — Anthropic expects a plain JSON Schema object
+    const { $schema: _, "~standard": _s, ...rest } = raw
+    if (rest.type === "object") return rest as { type: "object"; [key: string]: unknown }
+    return null
+  } catch {
+    return null
+  }
 }
 
 // ─── Transient error detection ───────────────────────────────────────────────
@@ -59,6 +73,8 @@ function callAgentWithModel<T>(
 ): Promise<AgentCallResult<T>> {
   const maxTokens = options?.maxTokens ?? DEFAULT_MAX_TOKENS
   const client = getClient()
+  const toolSchema = toToolInputSchema(schema)
+  if (toolSchema) console.log(`[callAgent] Using structured tool_use output (model: ${modelId})`)
 
   return pRetry(
     async () => {
@@ -68,50 +84,68 @@ function callAgentWithModel<T>(
         ...(options?.cacheSystemPrompt ? { cache_control: { type: "ephemeral" as const } } : {}),
       }]
 
-      // Request JSON output with the schema description
-      const schemaJson = JSON.stringify((schema as { _def?: { shape?: unknown } })._def?.shape ?? {})
-
-      const response = await client.messages.create({
-        model: modelId,
-        max_tokens: maxTokens,
-        system: systemContent,
-        messages: [{
-          role: "user",
-          content: userMessage + (schemaJson !== "{}" ? `\n\nYou MUST respond with valid JSON matching this schema. Output ONLY the JSON object.` : ""),
-        }],
-      })
-
-      // Extract text content
-      const textBlock = response.content.find((b) => b.type === "text")
-      if (!textBlock || textBlock.type !== "text") {
-        throw new Error("No text content in Anthropic response")
-      }
-
-      // Parse JSON from response (with repair for model mistakes)
-      const jsonStr = textBlock.text.trim()
-      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        // Throw SyntaxError so pRetry will retry this attempt
-        throw new SyntaxError("No JSON object found in response")
-      }
-
       let parsed: unknown
-      try {
-        parsed = JSON.parse(jsonMatch[0])
-      } catch {
-        // Model produced malformed JSON — attempt repair (handles missing
-        // commas, trailing commas, unquoted keys, truncated output, etc.)
-        const repaired = jsonrepair(jsonMatch[0])
-        parsed = JSON.parse(repaired)
+      let tokens_used: number
+
+      if (toolSchema) {
+        // ── Primary path: structured output via tool_use ──
+        const response = await client.messages.create({
+          model: modelId,
+          max_tokens: maxTokens,
+          system: systemContent,
+          tools: [{
+            name: "structured_output",
+            description: "Output the structured result matching the required schema",
+            input_schema: toolSchema,
+          }],
+          tool_choice: { type: "tool" as const, name: "structured_output" },
+          messages: [{ role: "user", content: userMessage }],
+        })
+
+        const toolBlock = response.content.find((b) => b.type === "tool_use")
+        if (!toolBlock || toolBlock.type !== "tool_use") {
+          throw new Error("No tool_use block in Anthropic response")
+        }
+
+        parsed = toolBlock.input
+        tokens_used = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0)
+      } else {
+        // ── Fallback: text-based JSON parsing ──
+        console.warn(`[callAgent] Falling back to text JSON parsing (model: ${modelId})`)
+
+        const response = await client.messages.create({
+          model: modelId,
+          max_tokens: maxTokens,
+          system: systemContent,
+          messages: [{
+            role: "user",
+            content: userMessage + "\n\nYou MUST respond with valid JSON matching this schema. Output ONLY the JSON object.",
+          }],
+        })
+
+        const textBlock = response.content.find((b) => b.type === "text")
+        if (!textBlock || textBlock.type !== "text") {
+          throw new Error("No text content in Anthropic response")
+        }
+
+        const jsonStr = textBlock.text.trim()
+        const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+        if (!jsonMatch) {
+          throw new SyntaxError("No JSON object found in response")
+        }
+
+        try {
+          parsed = JSON.parse(jsonMatch[0])
+        } catch {
+          const repaired = jsonrepair(jsonMatch[0])
+          parsed = JSON.parse(repaired)
+        }
+
+        tokens_used = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0)
       }
+
       const validated = schema.parse(parsed)
-
-      const tokens_used = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0)
-
-      return {
-        content: validated as T,
-        tokens_used,
-      }
+      return { content: validated as T, tokens_used }
     },
     {
       retries: 4,

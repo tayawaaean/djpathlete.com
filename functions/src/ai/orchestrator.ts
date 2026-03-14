@@ -305,6 +305,10 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
     const agent2Result = await callAgent<ProgramSkeleton>(PROGRAM_ARCHITECT_PROMPT, agent2UserMessage, programSkeletonSchema, { maxTokens: 16384, cacheSystemPrompt: true })
     tokenUsage.agent2 = agent2Result.tokens_used
     const skeleton = agent2Result.content
+    // Backfill total_sessions if the AI omitted it or returned 0
+    if (!skeleton.total_sessions) {
+      skeleton.total_sessions = skeleton.weeks.reduce((sum, w) => sum + w.days.length, 0)
+    }
     console.log("[orchestrator:sync] Agent 2 complete. Tokens:", agent2Result.tokens_used)
 
     saveConversationBatch([
@@ -336,12 +340,25 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       let feedbackSection = ""
+      let retryLibrary = exerciseLibrary
+      let retryFilteredCount = filtered.length
+
       if (attempt > 0 && validation !== null) {
         const errorIssues = validation.issues.filter((i) => i.type === "error")
         feedbackSection = `\n\nPREVIOUS ATTEMPT FAILED VALIDATION. Issues to fix:\n${JSON.stringify(errorIssues)}\n\nPlease fix ALL errors and try again.`
+
+        // Expand to full exercise library on retry if exercises were missing or equipment mismatched
+        const needsMoreExercises = errorIssues.some((i) =>
+          i.category === "missing_exercise" || i.category === "equipment_violation"
+        )
+        if (needsMoreExercises && filtered.length < compressed.length) {
+          retryLibrary = formatExerciseLibrary(compressed)
+          retryFilteredCount = compressed.length
+          console.log(`[orchestrator:sync] Expanding exercise library from ${filtered.length} to ${compressed.length} for retry`)
+        }
       }
 
-      const agent3UserMessage = `Program Skeleton:\n${JSON.stringify(skeleton)}\n\nConstraints:\n${constraintsContext}\n\nExercise Library (${filtered.length} exercises):\n${exerciseLibrary}${feedbackSection}`
+      const agent3UserMessage = `Program Skeleton:\n${JSON.stringify(skeleton)}\n\nConstraints:\n${constraintsContext}\n\nExercise Library (${retryFilteredCount} exercises):\n${retryLibrary}${feedbackSection}`
 
       try {
         const agent3Result: AgentCallResult<ExerciseAssignment> = await callAgent<ExerciseAssignment>(EXERCISE_SELECTOR_PROMPT, agent3UserMessage, exerciseAssignmentSchema, { maxTokens: 16384, cacheSystemPrompt: true })
