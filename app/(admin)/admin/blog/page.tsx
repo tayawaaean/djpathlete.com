@@ -1,6 +1,7 @@
-import { FileText, Send, Clock } from "lucide-react"
+import { FileText, Send, Clock, Sparkles } from "lucide-react"
 import { getBlogPosts } from "@/lib/db/blog-posts"
 import { BlogPostList } from "@/components/admin/blog/BlogPostList"
+import { BlogPageTabs } from "@/components/admin/blog/BlogPageTabs"
 import type { BlogPost } from "@/types/database"
 
 export const metadata = { title: "Blog" }
@@ -61,7 +62,7 @@ export default async function BlogPage() {
         </div>
       </div>
 
-      <BlogPostList posts={posts} />
+      <BlogPageTabs posts={posts} />
     </div>
   )
 }
