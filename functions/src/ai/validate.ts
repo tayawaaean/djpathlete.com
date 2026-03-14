@@ -195,6 +195,68 @@ export function validateProgram(
     }
   }
 
+  // Exercise diversity — accessories and isolation must rotate across weeks
+  if (skeleton.weeks.length >= 2) {
+    // Group assignments by a "slot signature" = day_of_week + order_index + role
+    // For compound slots: same exercise expected (progressive overload)
+    // For accessory/isolation: different exercises expected across week groups
+    const slotSignatureExercises = new Map<string, Map<number, string>>()
+
+    for (const assigned of assignment.assignments) {
+      const slot = slotMap.get(assigned.slot_id)
+      if (!slot) continue
+
+      // Only check accessory and isolation roles for rotation
+      if (slot.role !== "accessory" && slot.role !== "isolation") continue
+
+      // Build a signature from day + order position (comparable across weeks)
+      const sig = `d${slot.day}_${slot.role}_${slot.movement}`
+      const weekMap = slotSignatureExercises.get(sig) ?? new Map<number, string>()
+      weekMap.set(slot.week, assigned.exercise_id)
+      slotSignatureExercises.set(sig, weekMap)
+    }
+
+    for (const [sig, weekMap] of slotSignatureExercises) {
+      if (weekMap.size < 2) continue
+      const exerciseIds = Array.from(weekMap.values())
+      const uniqueExercises = new Set(exerciseIds)
+
+      // For programs with 2+ weeks, accessories should have at least 2 different exercises
+      // across the entire program for each slot signature
+      if (uniqueExercises.size === 1 && exerciseIds.length >= 3) {
+        const exerciseName = (() => {
+          const id = exerciseIds[0]
+          const ex = exerciseMap.get(id)
+          return ex?.name ?? id
+        })()
+        issues.push({
+          type: "error",
+          category: "insufficient_variety",
+          message: `"${exerciseName}" is used for every week in ${sig.split("_")[1]} slot (day ${sig.split("_")[0].replace("d", "")}). Accessories and isolation exercises must rotate across weeks for variety.`,
+        })
+      }
+    }
+
+    // Overall exercise diversity check across the whole program
+    const totalSlots = assignment.assignments.length
+    const uniqueExerciseIds = new Set(assignment.assignments.map((a) => a.exercise_id))
+    const diversityRatio = uniqueExerciseIds.size / totalSlots
+
+    if (totalSlots >= 10 && diversityRatio < 0.25) {
+      issues.push({
+        type: "error",
+        category: "insufficient_variety",
+        message: `Program uses only ${uniqueExerciseIds.size} unique exercises across ${totalSlots} slots (${(diversityRatio * 100).toFixed(0)}%). Minimum 25% unique exercises required for adequate variety.`,
+      })
+    } else if (totalSlots >= 10 && diversityRatio < 0.35) {
+      issues.push({
+        type: "warning",
+        category: "insufficient_variety",
+        message: `Program uses ${uniqueExerciseIds.size} unique exercises across ${totalSlots} slots (${(diversityRatio * 100).toFixed(0)}%). Consider more exercise variation for accessories and isolation.`,
+      })
+    }
+  }
+
   // Push/pull imbalance
   for (const week of weekPush.keys()) {
     const pushCount = weekPush.get(week) ?? 0

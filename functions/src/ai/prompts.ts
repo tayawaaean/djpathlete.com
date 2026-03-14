@@ -191,10 +191,10 @@ Given a profile analysis and training parameters, you must output a JSON object 
       ]
     }
   ],
-  "split_type": the split type used,
-  "periodization": the periodization scheme used,
-  "total_sessions": total number of training sessions in the program,
-  "notes": string (brief notes about the program design)
+  "split_type": "full_body" | "upper_lower" | "push_pull_legs" | "push_pull" | "body_part" | "movement_pattern" | "custom" (must be one of these exact snake_case values),
+  "periodization": "linear" | "undulating" | "block" | "reverse_linear" | "none" (must be one of these exact snake_case values),
+  "total_sessions": number (total number of training sessions in the entire program — count all days across all weeks),
+  "notes": string (brief notes about the program design rationale)
 }
 
 Rules:
@@ -359,12 +359,15 @@ Rules:
 4. Equipment constraints: only assign exercises whose equipment_required is available to the client. Be resourceful — if a cable machine isn't available, a resistance band variation of the same movement may exist in the library.
 5. Injury constraints: do not assign exercises that would aggravate known injuries. But think like a coach — find alternatives that train the same muscle group through a pain-free range of motion. A shoulder injury doesn't mean "no chest work" — it might mean "floor press instead of bench press" or "neutral grip instead of pronated."
 6. No duplicate exercises on the same day — each exercise_id should appear at most once per day.
-7. EXERCISE CONTINUITY vs ROTATION across weeks — this is a PRIMARY concern, NOT optional:
+7. EXERCISE CONTINUITY vs ROTATION across weeks — this is a PRIMARY concern, NOT optional. Programs that repeat the same exercises every week WILL BE REJECTED by validation:
    - PRIMARY COMPOUND and SECONDARY COMPOUND slots: assign the SAME exercise to matching slots across ALL weeks. If w1d1s2 and w2d1s2 are both "primary_compound / squat / [quadriceps, glutes]", they MUST get the same exercise (e.g., both get Barbell Back Squat). This is essential for progressive overload — the client tracks and progresses these lifts week over week.
-   - ACCESSORY and ISOLATION slots: assign DIFFERENT exercises across different week ranges. The skeleton may provide different movement_patterns or target_muscles for these slots across weeks — use that as your signal to select different exercises. Even when slot specs are similar, actively choose different exercises for variety:
-     * Weeks 1-2 accessories: one set of exercises (e.g., Dumbbell Lateral Raise, Tricep Pushdown)
-     * Weeks 3-4 accessories: different exercises for the same general area (e.g., Cable Lateral Raise, Overhead Tricep Extension)
-     * Prefer different equipment or angles when rotating (dumbbell → cable, flat → incline, bilateral → unilateral)
+   - ACCESSORY and ISOLATION slots: you MUST assign DIFFERENT exercise_id values across week groups. This is validated programmatically — if the same exercise_id appears in an accessory or isolation slot for 3+ consecutive weeks, the program FAILS validation and must be regenerated. Concretely:
+     * Split the program into 2-week rotation blocks
+     * Block 1 (weeks 1-2): one set of accessories (e.g., Dumbbell Lateral Raise id=abc, Tricep Pushdown id=def)
+     * Block 2 (weeks 3-4): DIFFERENT accessories for the same muscle targets (e.g., Cable Lateral Raise id=ghi, Overhead Tricep Extension id=jkl)
+     * When selecting the rotation, vary by: equipment (dumbbell → cable → machine), angle (flat → incline → decline), stance (bilateral → unilateral), or grip (overhand → neutral → underhand)
+     * NEVER assign the same exercise_id to an accessory/isolation slot across all weeks
+   - DIVERSITY METRIC: Your program must use at least 25% unique exercises relative to total slots. A 4-week program with 8 exercises per day = ~32 slots per week = ~128 total slots should use at least 32 unique exercises. More is better.
    - WARM-UP and COOL-DOWN: can stay consistent across all weeks.
    - For BLOCK periodization (different phases across weeks):
      * Hypertrophy phases: prefer exercises suited for higher reps — machines, cables, dumbbells, isolation work, exercises with good mind-muscle connection

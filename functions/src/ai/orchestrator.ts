@@ -347,9 +347,9 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
         const errorIssues = validation.issues.filter((i) => i.type === "error")
         feedbackSection = `\n\nPREVIOUS ATTEMPT FAILED VALIDATION. Issues to fix:\n${JSON.stringify(errorIssues)}\n\nPlease fix ALL errors and try again.`
 
-        // Expand to full exercise library on retry if exercises were missing or equipment mismatched
+        // Expand to full exercise library on retry if exercises were missing, equipment mismatched, or variety insufficient
         const needsMoreExercises = errorIssues.some((i) =>
-          i.category === "missing_exercise" || i.category === "equipment_violation"
+          i.category === "missing_exercise" || i.category === "equipment_violation" || i.category === "insufficient_variety"
         )
         if (needsMoreExercises && filtered.length < compressed.length) {
           retryLibrary = formatExerciseLibrary(compressed)

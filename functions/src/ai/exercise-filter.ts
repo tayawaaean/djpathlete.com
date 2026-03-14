@@ -65,8 +65,8 @@ function slotGroupKey(slot: ExerciseSlot): string {
   return `${slot.movement_pattern}|${muscles}`
 }
 
-const MIN_EXERCISES = 15
-const MAX_EXERCISES = 40
+const MIN_EXERCISES = 30
+const MAX_EXERCISES = 60
 
 export function scoreAndFilterExercises(
   exercises: CompressedExercise[], skeleton: ProgramSkeleton,
@@ -129,7 +129,7 @@ export async function semanticFilterExercises(
       const { data } = await supabase.rpc("match_exercise_embeddings", {
         query_embedding: JSON.stringify(queryEmbedding),
         match_threshold: 0.2,
-        match_count: 15,
+        match_count: 25,
       })
       for (const match of data ?? []) matchedIds.add(match.id)
     } catch (err) {
