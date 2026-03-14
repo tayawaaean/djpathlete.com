@@ -25,8 +25,11 @@ interface BlogGeneration {
     research_papers?: number
     research_source?: string
     user_refs_urls?: number
+    user_refs_url_list?: string[]
     user_refs_has_notes?: boolean
+    user_refs_notes_excerpt?: string
     user_refs_files?: number
+    user_refs_file_names?: string[]
   }
   output_summary: string | null
   error_message: string | null
@@ -196,35 +199,98 @@ function GenerationCard({ gen }: { gen: BlogGeneration }) {
           {/* References used */}
           {(params.research_papers ||
             params.user_refs_urls ||
+            params.user_refs_url_list?.length ||
             params.user_refs_has_notes ||
             params.user_refs_files) && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">
                 References Used
               </p>
-              <div className="flex flex-wrap gap-2">
-                {(params.user_refs_urls ?? 0) > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-xs text-primary">
-                    {params.user_refs_urls} URL{params.user_refs_urls !== 1 ? "s" : ""} crawled
-                  </span>
+              <div className="space-y-2">
+                {/* URLs */}
+                {((params.user_refs_url_list?.length ?? 0) > 0 || (params.user_refs_urls ?? 0) > 0) && (
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                      Links ({params.user_refs_url_list?.length ?? params.user_refs_urls})
+                    </p>
+                    {params.user_refs_url_list && params.user_refs_url_list.length > 0 ? (
+                      <div className="space-y-1">
+                        {params.user_refs_url_list.map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate"
+                          >
+                            <span className="size-1.5 rounded-full bg-primary/40 shrink-0" />
+                            {url}
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {params.user_refs_urls} URL{params.user_refs_urls !== 1 ? "s" : ""} crawled
+                      </p>
+                    )}
+                  </div>
                 )}
+
+                {/* Notes */}
                 {params.user_refs_has_notes && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-xs text-primary">
-                    Notes provided
-                  </span>
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                      Notes
+                    </p>
+                    {params.user_refs_notes_excerpt ? (
+                      <p className="text-xs text-muted-foreground bg-surface/50 rounded-md p-2">
+                        {params.user_refs_notes_excerpt}
+                        {params.user_refs_notes_excerpt.length >= 200 && "..."}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Notes provided</p>
+                    )}
+                  </div>
                 )}
+
+                {/* Files */}
                 {(params.user_refs_files ?? 0) > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-xs text-primary">
-                    {params.user_refs_files} file{params.user_refs_files !== 1 ? "s" : ""} uploaded
-                  </span>
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                      Documents ({params.user_refs_files})
+                    </p>
+                    {params.user_refs_file_names && params.user_refs_file_names.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {params.user_refs_file_names.map((name, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-xs text-primary"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {params.user_refs_files} file{params.user_refs_files !== 1 ? "s" : ""} uploaded
+                      </p>
+                    )}
+                  </div>
                 )}
+
+                {/* Auto-research */}
                 {(params.research_papers ?? 0) > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-xs text-blue-600">
-                    {params.research_papers} auto-research paper{params.research_papers !== 1 ? "s" : ""}
-                    {params.research_source
-                      ? ` via ${params.research_source}`
-                      : ""}
-                  </span>
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                      Auto-Research
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {params.research_papers} paper{params.research_papers !== 1 ? "s" : ""} found
+                      {params.research_source
+                        ? ` via ${params.research_source}`
+                        : ""}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

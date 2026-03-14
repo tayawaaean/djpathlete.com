@@ -245,7 +245,11 @@ function ExerciseCard({
 }) {
   const router = useRouter()
   const { unit, displayWeight, formatWeightCompact, toKg, unitLabel } = useWeightUnit()
-  const fields = getCategoryFields(exercise.category as ExerciseCategory[])
+  const baseFields = getCategoryFields(exercise.category as ExerciseCategory[])
+  // Bodyweight exercises don't need weight or RPE — reduce friction
+  const fields = exercise.is_bodyweight
+    ? { ...baseFields, showWeight: false, showRpe: false }
+    : baseFields
   const [expanded, setExpanded] = useState(false)
   const [loggedToday, setLoggedToday] = useState(initialLogged)
   const [submitting, setSubmitting] = useState(false)
