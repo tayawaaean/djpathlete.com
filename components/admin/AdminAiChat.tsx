@@ -51,6 +51,7 @@ interface StoredMessage {
 
 interface Conversation {
   id: string
+  sessionId: string
   title: string
   messages: Message[]
   createdAt: Date
@@ -59,10 +60,23 @@ interface Conversation {
 
 interface StoredConversation {
   id: string
+  sessionId?: string
   title: string
   messages: StoredMessage[]
   createdAt: string
   updatedAt: string
+}
+
+interface DbConversation {
+  session_id: string
+  title: string
+  messages: Array<{
+    role: string
+    content: string
+    created_at: string
+  }>
+  created_at: string
+  updated_at: string
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -88,7 +102,7 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
-function loadConversations(): Conversation[] {
+function loadConversationsFromStorage(): Conversation[] {
   try {
     const raw = localStorage.getItem(AI_CHAT_STORAGE_KEY)
     if (!raw) return []
@@ -96,6 +110,7 @@ function loadConversations(): Conversation[] {
     if (!Array.isArray(stored)) return []
     return stored.map((c) => ({
       ...c,
+      sessionId: c.sessionId ?? c.id,
       createdAt: new Date(c.createdAt),
       updatedAt: new Date(c.updatedAt),
       messages: c.messages.map((m) => ({
@@ -109,12 +124,39 @@ function loadConversations(): Conversation[] {
   }
 }
 
-function saveConversations(convos: Conversation[]) {
+async function loadConversationsFromDb(): Promise<Conversation[]> {
+  try {
+    const res = await fetch("/api/admin/ai-chat")
+    if (!res.ok) return []
+    const json = await res.json()
+    const dbConvos: DbConversation[] = json.conversations ?? []
+    return dbConvos.map((c) => ({
+      id: c.session_id,
+      sessionId: c.session_id,
+      title: c.title,
+      createdAt: new Date(c.created_at),
+      updatedAt: new Date(c.updated_at),
+      messages: c.messages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          timestamp: new Date(m.created_at),
+          status: "done" as const,
+        })),
+    }))
+  } catch {
+    return []
+  }
+}
+
+function saveConversationsToStorage(convos: Conversation[]) {
   try {
     const toStore: StoredConversation[] = convos
       .slice(0, AI_CHAT_MAX_CONVERSATIONS)
       .map((c) => ({
         id: c.id,
+        sessionId: c.sessionId,
         title: c.title,
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
@@ -281,24 +323,64 @@ export function AdminAiChat() {
   const activeConvo = conversations.find((c) => c.id === activeId)
   const messages = activeConvo?.messages ?? [WELCOME_MESSAGE]
 
-  // ── Init from localStorage ──────────────────────────────────────────────
+  // ── Init: load from DB, fall back to localStorage ──────────────────────
   useEffect(() => {
     if (initializedRef.current) return
     initializedRef.current = true
-    const restored = loadConversations()
-    setConversations(restored)
-    // Open the most recent conversation if any
-    if (restored.length > 0) {
-      setActiveId(restored[0].id)
+
+    async function init() {
+      // Start with localStorage for instant display
+      const local = loadConversationsFromStorage()
+      if (local.length > 0) {
+        setConversations(local)
+        setActiveId(local[0].id)
+      }
+
+      // Then fetch from DB (source of truth) and merge
+      const dbConvos = await loadConversationsFromDb()
+      if (dbConvos.length === 0) return // DB empty, keep localStorage data
+
+      // Build a map of local titles (user may have renamed, or localStorage has titles for older convos)
+      const localTitleMap = new Map<string, string>()
+      for (const c of local) {
+        localTitleMap.set(c.sessionId, c.title)
+      }
+
+      // Merge: DB is source of truth for messages, localStorage provides titles
+      const merged = dbConvos.map((db) => ({
+        ...db,
+        title: localTitleMap.get(db.sessionId) ?? db.title,
+      }))
+
+      // Add any localStorage-only conversations not in DB (e.g., conversations that failed to save)
+      const dbSessionIds = new Set(dbConvos.map((c) => c.sessionId))
+      for (const c of local) {
+        if (!dbSessionIds.has(c.sessionId) && c.messages.length > 1) {
+          merged.push(c)
+        }
+      }
+
+      // Sort by most recent
+      merged.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+
+      setConversations(merged)
+      if (merged.length > 0) {
+        setActiveId(merged[0].id)
+      }
+
+      // Update localStorage cache
+      saveConversationsToStorage(merged)
     }
+
+    init()
   }, [])
 
-  // ── Persist on change ───────────────────────────────────────────────────
+  // ── Persist on change (localStorage cache) ─────────────────────────────
   useEffect(() => {
     if (!initializedRef.current) return
     const hasStreaming = messages.some((m) => m.status === "streaming")
     if (!hasStreaming) {
-      saveConversations(conversations)
+      saveConversationsToStorage(conversations)
     }
   }, [conversations, messages])
 
@@ -414,8 +496,10 @@ export function AdminAiChat() {
     setIsStreaming(false)
     setInput("")
 
+    const id = generateId()
     const newConvo: Conversation = {
-      id: generateId(),
+      id,
+      sessionId: id,
       title: "New chat",
       messages: [{ ...WELCOME_MESSAGE, timestamp: new Date() }],
       createdAt: new Date(),
@@ -487,8 +571,10 @@ export function AdminAiChat() {
       // If no active conversation, create one
       let currentId = activeId
       if (!currentId) {
+        const id = generateId()
         const newConvo: Conversation = {
-          id: generateId(),
+          id,
+          sessionId: id,
           title: content.trim().slice(0, 60),
           messages: [{ ...WELCOME_MESSAGE, timestamp: new Date() }],
           createdAt: new Date(),
@@ -537,6 +623,10 @@ export function AdminAiChat() {
         )
       }
 
+      // Resolve session_id for this conversation
+      const currentConvo = conversations.find((c) => c.id === currentId)
+      const sessionId = currentConvo?.sessionId ?? currentId
+
       try {
         const res = await fetch("/api/admin/ai-chat", {
           method: "POST",
@@ -545,6 +635,7 @@ export function AdminAiChat() {
           body: JSON.stringify({
             messages: updatedMessages.map(({ role, content }) => ({ role, content })),
             model: modelPref,
+            session_id: sessionId,
           }),
         })
 
@@ -595,7 +686,7 @@ export function AdminAiChat() {
         textareaRef.current?.focus()
       }
     },
-    [messages, isStreaming, activeId, modelPref]
+    [messages, isStreaming, activeId, modelPref, conversations]
   )
 
   const retryLastMessage = useCallback(() => {
