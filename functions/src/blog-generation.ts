@@ -155,9 +155,9 @@ async function crawlUrl(url: string): Promise<string> {
     const raw = await res.text()
 
     if (contentType.includes("text/html") || raw.trimStart().startsWith("<")) {
-      return stripHtml(raw).slice(0, 5000)
+      return stripHtml(raw).slice(0, 15_000)
     }
-    return raw.slice(0, 5000)
+    return raw.slice(0, 15_000)
   } catch {
     return ""
   }
@@ -212,9 +212,12 @@ function formatUserReferences(
 
   return `
 
-── USER-PROVIDED RESEARCH & REFERENCES ──────────────────────
-The author has provided the following research material. Use these as PRIMARY sources for the blog post.
-Extract key findings, data points, and insights. Cite the provided URLs with inline <a href="..."> links where applicable.
+── USER-PROVIDED RESEARCH & REFERENCES (MANDATORY PRIMARY SOURCES) ──────
+CRITICAL: The author has provided specific research material below. You MUST base the blog post primarily on THIS content.
+- Extract and cite key findings, data points, statistics, and conclusions from these sources
+- Use the provided URLs as your inline <a href="..."> citations — these are your MAIN references
+- Do NOT substitute these with other research or papers you may know about
+- If auto-discovered research is also provided below, use it ONLY to supplement (not replace) these primary sources
 
 ${sections.join("\n\n")}
 ────────────────────────────────────────────────────────────────`
@@ -281,16 +284,22 @@ export async function handleBlogGeneration(jobId: string): Promise<void> {
     }
 
     // Step 1b: Fetch auto-discovered research papers for the topic
+    // Skip auto-research if user provided substantial references (URLs + notes/files)
     let researchBlock = ""
     let researchMeta = { papers: 0, source: "none", duration_ms: 0 }
+    const hasSubstantialUserRefs = userRefBlock.length > 500
 
-    try {
-      const research = await fetchResearchPapers(input.prompt)
-      researchBlock = formatResearchForPrompt(research.papers)
-      researchMeta = { papers: research.papers.length, source: research.source, duration_ms: research.duration_ms }
-      console.log(`[blog-generation] Found ${research.papers.length} papers via ${research.source} in ${research.duration_ms}ms`)
-    } catch (err) {
-      console.warn("[blog-generation] Research fetch failed, proceeding without:", err)
+    if (hasSubstantialUserRefs) {
+      console.log("[blog-generation] Skipping auto-research — user provided substantial references")
+    } else {
+      try {
+        const research = await fetchResearchPapers(input.prompt)
+        researchBlock = formatResearchForPrompt(research.papers)
+        researchMeta = { papers: research.papers.length, source: research.source, duration_ms: research.duration_ms }
+        console.log(`[blog-generation] Found ${research.papers.length} papers via ${research.source} in ${research.duration_ms}ms`)
+      } catch (err) {
+        console.warn("[blog-generation] Research fetch failed, proceeding without:", err)
+      }
     }
 
     // Step 2: Generate the blog post with all reference context
