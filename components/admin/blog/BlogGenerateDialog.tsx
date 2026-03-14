@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Sparkles, Loader2, AlertCircle } from "lucide-react"
+import { Sparkles, Loader2, AlertCircle, ChevronDown, X, Plus, Link, FileText } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -55,7 +55,13 @@ export function BlogGenerateDialog({
   const [submitting, setSubmitting] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [refsOpen, setRefsOpen] = useState(false)
+  const [urls, setUrls] = useState<string[]>([])
+  const [urlInput, setUrlInput] = useState("")
+  const [notes, setNotes] = useState("")
+  const [refFiles, setRefFiles] = useState<{ name: string; content: string }[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const aiJob = useAiJob(jobId)
 
@@ -98,8 +104,56 @@ export function BlogGenerateDialog({
     setSubmitting(false)
     setConfirmed(false)
     setElapsed(0)
+    setRefsOpen(false)
+    setUrls([])
+    setUrlInput("")
+    setNotes("")
+    setRefFiles([])
     aiJob.reset()
   }
+
+  function handleAddUrl() {
+    const trimmed = urlInput.trim()
+    if (!trimmed) return
+    try {
+      new URL(trimmed)
+    } catch {
+      toast.error("Please enter a valid URL")
+      return
+    }
+    if (urls.length >= 5) {
+      toast.error("Maximum 5 links allowed")
+      return
+    }
+    if (urls.includes(trimmed)) {
+      toast.error("This URL is already added")
+      return
+    }
+    setUrls((prev) => [...prev, trimmed])
+    setUrlInput("")
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const fileList = e.target.files
+    if (!fileList) return
+
+    for (const file of Array.from(fileList)) {
+      if (refFiles.length >= 3) {
+        toast.error("Maximum 3 files allowed")
+        break
+      }
+      if (file.size > 50 * 1024) {
+        toast.error(`${file.name} exceeds 50KB limit`)
+        continue
+      }
+      const content = await file.text()
+      setRefFiles((prev) => [...prev, { name: file.name, content }])
+    }
+
+    e.target.value = ""
+  }
+
+  const hasReferences = urls.length > 0 || notes.trim().length > 0 || refFiles.length > 0
 
   async function handleGenerate() {
     if (hasExistingContent && !confirmed) {
@@ -112,7 +166,20 @@ export function BlogGenerateDialog({
       const res = await fetch("/api/admin/blog/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, tone, length }),
+        body: JSON.stringify({
+          prompt,
+          tone,
+          length,
+          ...(hasReferences
+            ? {
+                references: {
+                  urls: urls.length > 0 ? urls : undefined,
+                  notes: notes.trim() || undefined,
+                  file_contents: refFiles.length > 0 ? refFiles : undefined,
+                },
+              }
+            : {}),
+        }),
       })
 
       if (!res.ok) {
@@ -140,7 +207,7 @@ export function BlogGenerateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg" showCloseButton={!isGenerating}>
+      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto" showCloseButton={!isGenerating}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="size-5 text-primary" />
@@ -204,6 +271,171 @@ export function BlogGenerateDialog({
               <p className="text-xs text-muted-foreground mt-1">
                 {prompt.length}/2000
               </p>
+            </div>
+
+            {/* References (collapsible) */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setRefsOpen(!refsOpen)}
+                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors w-full"
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform",
+                    !refsOpen && "-rotate-90"
+                  )}
+                />
+                Add research &amp; references
+                <span className="text-xs text-muted-foreground font-normal">
+                  (optional)
+                </span>
+                {hasReferences && (
+                  <span className="ml-auto text-xs text-primary font-medium">
+                    {urls.length + refFiles.length + (notes.trim() ? 1 : 0)} added
+                  </span>
+                )}
+              </button>
+
+              {refsOpen && (
+                <div className="mt-2 space-y-3 border border-border rounded-lg p-3 bg-surface/50">
+                  <p className="text-xs text-muted-foreground">
+                    Add links, notes, or documents for the AI to reference. If
+                    left empty, the AI will auto-research from PubMed and
+                    Semantic Scholar.
+                  </p>
+
+                  {/* URLs */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-foreground mb-1">
+                      <Link className="size-3.5" />
+                      Links
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="url"
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            handleAddUrl()
+                          }
+                        }}
+                        placeholder="https://pubmed.ncbi.nlm.nih.gov/..."
+                        className="flex-1 px-2.5 py-1.5 rounded-md border border-border bg-white text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddUrl}
+                        disabled={!urlInput.trim()}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border text-xs font-medium hover:bg-surface transition-colors disabled:opacity-40"
+                      >
+                        <Plus className="size-3" />
+                        Add
+                      </button>
+                    </div>
+                    {urls.length > 0 && (
+                      <div className="mt-1.5 space-y-1">
+                        {urls.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-border text-xs group"
+                          >
+                            <Link className="size-3 text-muted-foreground shrink-0" />
+                            <span className="truncate flex-1 text-muted-foreground">
+                              {url}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setUrls((prev) =>
+                                  prev.filter((_, i) => i !== idx)
+                                )
+                              }
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="size-3.5 text-muted-foreground hover:text-red-500" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-foreground mb-1">
+                      <FileText className="size-3.5" />
+                      Notes &amp; excerpts
+                    </label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Paste research excerpts, study findings, key points..."
+                      rows={3}
+                      className="w-full px-2.5 py-1.5 rounded-md border border-border bg-white text-xs resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {notes.length}/10,000
+                    </p>
+                  </div>
+
+                  {/* File upload */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-foreground mb-1">
+                      <FileText className="size-3.5" />
+                      Documents
+                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".txt,.md,.csv"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={refFiles.length >= 3}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-xs text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40"
+                    >
+                      <Plus className="size-3" />
+                      Upload .txt, .md, or .csv
+                    </button>
+                    {refFiles.length > 0 && (
+                      <div className="mt-1.5 space-y-1">
+                        {refFiles.map((file, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-border text-xs group"
+                          >
+                            <FileText className="size-3 text-muted-foreground shrink-0" />
+                            <span className="truncate flex-1">
+                              {file.name}
+                            </span>
+                            <span className="text-muted-foreground text-[10px] shrink-0">
+                              {(file.content.length / 1024).toFixed(1)}KB
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setRefFiles((prev) =>
+                                  prev.filter((_, i) => i !== idx)
+                                )
+                              }
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="size-3.5 text-muted-foreground hover:text-red-500" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Tone */}

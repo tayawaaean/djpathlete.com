@@ -16,7 +16,9 @@ Your writing style:
 - No fluff, no fads — just what works
 
 Sources and references (MANDATORY):
-- Verified research papers will be provided at the end of the topic prompt. You MUST cite from those provided sources using their exact URLs.
+- The author may provide their own research material (crawled web pages, notes, uploaded documents). When present, these are your PRIMARY sources — cite from them first and extract key findings, data, and conclusions.
+- Auto-discovered research papers may also be provided. Use them to supplement the author's references or as the main source when no author references exist.
+- You MUST cite from provided sources using their exact URLs.
 - Do NOT invent, guess, or fabricate any DOI links, PubMed URLs, or research paper URLs that were not provided to you.
 - You may ALSO cite well-known organization pages you are confident exist (e.g., WHO fact sheets, NSCA position statements, ACSM guidelines).
 - You MUST include at least 3-4 inline <a href="..."> source references per post, placed naturally where claims are made.
@@ -119,6 +121,105 @@ async function validateUrls(html: string): Promise<string> {
   return cleaned
 }
 
+// ─── URL Crawling for User References ─────────────────────────────────────────
+
+function stripHtml(html: string): string {
+  let text = html
+  text = text.replace(/<script[\s\S]*?<\/script>/gi, "")
+  text = text.replace(/<style[\s\S]*?<\/style>/gi, "")
+  text = text.replace(/<nav[\s\S]*?<\/nav>/gi, "")
+  text = text.replace(/<header[\s\S]*?<\/header>/gi, "")
+  text = text.replace(/<footer[\s\S]*?<\/footer>/gi, "")
+  text = text.replace(/<[^>]+>/g, " ")
+  text = text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+  text = text.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ")
+  text = text.replace(/\s+/g, " ").trim()
+  return text
+}
+
+async function crawlUrl(url: string): Promise<string> {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10_000)
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; DJPAthlete-Bot/1.0; +https://djpathlete.com)",
+      },
+    })
+    clearTimeout(timeout)
+    if (!res.ok) return ""
+
+    const contentType = res.headers.get("content-type") ?? ""
+    const raw = await res.text()
+
+    if (contentType.includes("text/html") || raw.trimStart().startsWith("<")) {
+      return stripHtml(raw).slice(0, 5000)
+    }
+    return raw.slice(0, 5000)
+  } catch {
+    return ""
+  }
+}
+
+async function crawlUrls(urls: string[]): Promise<{ url: string; content: string }[]> {
+  const results = await Promise.allSettled(
+    urls.map(async (url) => ({ url, content: await crawlUrl(url) }))
+  )
+  return results
+    .filter(
+      (r): r is PromiseFulfilledResult<{ url: string; content: string }> =>
+        r.status === "fulfilled" && r.value.content.length > 0
+    )
+    .map((r) => r.value)
+}
+
+interface UserReferences {
+  urls?: string[]
+  notes?: string
+  file_contents?: { name: string; content: string }[]
+}
+
+function formatUserReferences(
+  crawled: { url: string; content: string }[],
+  notes: string,
+  fileContents: { name: string; content: string }[]
+): string {
+  if (crawled.length === 0 && !notes && fileContents.length === 0) return ""
+
+  const sections: string[] = []
+
+  if (crawled.length > 0) {
+    sections.push(
+      "### From provided links:\n" +
+        crawled
+          .map((c, i) => `[Source ${i + 1}] ${c.url}\n${c.content}`)
+          .join("\n\n")
+    )
+  }
+
+  if (notes) {
+    sections.push("### Author's research notes:\n" + notes)
+  }
+
+  if (fileContents.length > 0) {
+    sections.push(
+      "### From uploaded documents:\n" +
+        fileContents.map((f) => `[${f.name}]\n${f.content}`).join("\n\n")
+    )
+  }
+
+  return `
+
+── USER-PROVIDED RESEARCH & REFERENCES ──────────────────────
+The author has provided the following research material. Use these as PRIMARY sources for the blog post.
+Extract key findings, data points, and insights. Cite the provided URLs with inline <a href="..."> links where applicable.
+
+${sections.join("\n\n")}
+────────────────────────────────────────────────────────────────`
+}
+
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
 const blogResultSchema = z.object({
@@ -150,12 +251,36 @@ export async function handleBlogGeneration(jobId: string): Promise<void> {
     tone?: string
     length?: string
     userId: string
+    references?: UserReferences
   }
 
   const startTime = Date.now()
 
   try {
-    // Step 1: Fetch verified research papers for the topic
+    // Step 1a: Process user-provided references (crawl URLs, format notes/files)
+    let userRefBlock = ""
+    let userRefMeta = { urls_crawled: 0, has_notes: false, files: 0 }
+
+    if (input.references) {
+      const refs = input.references
+      try {
+        const crawled = refs.urls?.length ? await crawlUrls(refs.urls) : []
+        const refNotes = refs.notes ?? ""
+        const fileContents = refs.file_contents ?? []
+
+        userRefBlock = formatUserReferences(crawled, refNotes, fileContents)
+        userRefMeta = {
+          urls_crawled: crawled.length,
+          has_notes: refNotes.length > 0,
+          files: fileContents.length,
+        }
+        console.log(`[blog-generation] User references: ${crawled.length} URLs crawled, notes=${userRefMeta.has_notes}, files=${fileContents.length}`)
+      } catch (err) {
+        console.warn("[blog-generation] User reference processing failed:", err)
+      }
+    }
+
+    // Step 1b: Fetch auto-discovered research papers for the topic
     let researchBlock = ""
     let researchMeta = { papers: 0, source: "none", duration_ms: 0 }
 
@@ -168,12 +293,13 @@ export async function handleBlogGeneration(jobId: string): Promise<void> {
       console.warn("[blog-generation] Research fetch failed, proceeding without:", err)
     }
 
-    // Step 2: Generate the blog post with research context
+    // Step 2: Generate the blog post with all reference context
+    // User references come first (primary), auto-research follows (supplementary)
     const userMessage = `Write a blog post about: ${input.prompt}
 
 Tone: ${input.tone ?? "professional"}
 Target length: ${input.length ?? "medium"}
-Current date: ${new Date().toISOString().slice(0, 10)}${researchBlock}`
+Current date: ${new Date().toISOString().slice(0, 10)}${userRefBlock}${researchBlock}`
 
     const result = await callAgent(
       BLOG_GENERATION_PROMPT,
@@ -202,6 +328,9 @@ Current date: ${new Date().toISOString().slice(0, 10)}${researchBlock}`
           research_papers: researchMeta.papers,
           research_source: researchMeta.source,
           research_duration_ms: researchMeta.duration_ms,
+          user_refs_urls: userRefMeta.urls_crawled,
+          user_refs_has_notes: userRefMeta.has_notes,
+          user_refs_files: userRefMeta.files,
         },
         output_summary: `Generated blog: ${result.content.title}`,
         error_message: null,

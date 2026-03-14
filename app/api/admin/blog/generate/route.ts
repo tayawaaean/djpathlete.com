@@ -36,6 +36,22 @@ const blogGenerateSchema = z.object({
     .enum(["short", "medium", "long"])
     .optional()
     .default("medium"),
+  references: z
+    .object({
+      urls: z.array(z.string().url()).max(5).optional().default([]),
+      notes: z.string().max(10_000).optional().default(""),
+      file_contents: z
+        .array(
+          z.object({
+            name: z.string(),
+            content: z.string().max(50_000),
+          })
+        )
+        .max(3)
+        .optional()
+        .default([]),
+    })
+    .optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -68,7 +84,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { prompt, tone, length } = parsed.data
+    const { prompt, tone, length, references } = parsed.data
 
     const db = getAdminFirestore()
     const jobRef = db.collection("ai_jobs").doc()
@@ -76,7 +92,7 @@ export async function POST(request: NextRequest) {
     await jobRef.set({
       type: "blog_generation",
       status: "pending",
-      input: { prompt, tone, length, userId },
+      input: { prompt, tone, length, userId, ...(references ? { references } : {}) },
       result: null,
       error: null,
       userId,
