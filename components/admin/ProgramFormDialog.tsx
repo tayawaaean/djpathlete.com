@@ -216,6 +216,12 @@ export function ProgramFormDialog({
       if (!weeks || weeks < 1) { toast.error("Duration must be at least 1 week"); return false }
       if (!sessions || sessions < 1) { toast.error("Sessions per week must be at least 1"); return false }
     }
+    if (s === 2) {
+      if (audience === "targeted" && !targetUserId) {
+        toast.error("Please select a client for targeted programs")
+        return false
+      }
+    }
     return true
   }
 
