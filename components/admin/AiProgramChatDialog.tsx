@@ -578,7 +578,7 @@ export function AiProgramChatDialog({
     }
   }, [currentJobId, aiJob.chunks, nextId, router])
 
-  // Handle job failure from status
+  // Handle job failure or cancellation from status
   useEffect(() => {
     if (!currentJobId) return
     if (aiJob.status === "failed" && aiJob.error) {
@@ -598,6 +598,20 @@ export function AiProgramChatDialog({
       ])
       setCurrentJobId(null)
       prevChunkCountRef.current = 0
+    } else if (aiJob.status === "cancelled") {
+      setIsGenerating(false)
+      setIsStreaming(false)
+      setCurrentJobId(null)
+      prevChunkCountRef.current = 0
+      // Finalize any in-progress assistant message
+      const assistantId = jobAssistantIdRef.current
+      setItems((prev) =>
+        prev.map((item) =>
+          item.kind === "message" && item.data.id === assistantId && item.data.status === "streaming"
+            ? { ...item, data: { ...item.data, status: "done" as const } }
+            : item
+        )
+      )
     }
   }, [currentJobId, aiJob.status, aiJob.error, nextId])
 
@@ -744,7 +758,9 @@ export function AiProgramChatDialog({
     }
   }
 
-  function handleStop() {
+  async function handleStop() {
+    const jobId = currentJobId
+
     // Stop listening and reset streaming state
     setCurrentJobId(null)
     setIsStreaming(false)
@@ -760,6 +776,19 @@ export function AiProgramChatDialog({
           : item
       )
     )
+
+    // Cancel the backend job so it stops processing
+    if (jobId) {
+      try {
+        await fetch("/api/admin/programs/generate/cancel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId }),
+        })
+      } catch {
+        // Non-critical — the job will eventually time out
+      }
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {

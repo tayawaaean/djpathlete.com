@@ -122,6 +122,13 @@ export async function handleProgramChat(jobId: string): Promise<void> {
   const job = jobSnap.data()!
   if (job.status !== "pending") return
 
+  // Double-check not cancelled between creation and pickup
+  const freshSnap = await jobRef.get()
+  if (freshSnap.data()?.status === "cancelled") {
+    console.log(`[program-chat] Job ${jobId} was cancelled before processing`)
+    return
+  }
+
   await jobRef.update({ status: "streaming", updatedAt: FieldValue.serverTimestamp() })
 
   const input = job.input as {
@@ -180,8 +187,26 @@ export async function handleProgramChat(jobId: string): Promise<void> {
       console.log(`[program-chat] New session ${sessionId} with ${apiMessages.length} messages`)
     }
 
+    // Helper to check if the job was cancelled
+    async function isCancelled(): Promise<boolean> {
+      const snap = await jobRef.get()
+      return snap.data()?.status === "cancelled"
+    }
+
     // Tool use loop
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+      // Check for cancellation between rounds
+      if (round > 0 && await isCancelled()) {
+        console.log(`[program-chat] Job ${jobId} cancelled between tool rounds`)
+        await chunksRef.doc(String(chunkIndex++).padStart(6, "0")).set({
+          index: chunkIndex - 1,
+          type: "done",
+          data: {},
+          createdAt: FieldValue.serverTimestamp(),
+        })
+        return
+      }
+
       const response = await createWithRetry(client, {
         max_tokens: 4096,
         system: systemPrompt,
@@ -277,6 +302,18 @@ export async function handleProgramChat(jobId: string): Promise<void> {
                 break
               }
               case "generate_program": {
+                // Check cancellation before starting the expensive generation
+                if (await isCancelled()) {
+                  console.log(`[program-chat] Job ${jobId} cancelled before program generation`)
+                  await chunksRef.doc(String(chunkIndex++).padStart(6, "0")).set({
+                    index: chunkIndex - 1,
+                    type: "done",
+                    data: {},
+                    createdAt: FieldValue.serverTimestamp(),
+                  })
+                  return
+                }
+
                 const rawArgs = toolUse.input as Record<string, unknown>
                 // Sanitize client_id: model may pass "null", "", or an invalid value
                 let clientId: string | null = typeof rawArgs.client_id === "string" ? rawArgs.client_id.trim() : null
@@ -285,7 +322,7 @@ export async function handleProgramChat(jobId: string): Promise<void> {
                 }
                 const args: AiGenerationRequest = { ...rawArgs, client_id: clientId } as AiGenerationRequest
                 try {
-                  const genResult = await generateProgramSync(args, userId)
+                  const genResult = await generateProgramSync(args, userId, undefined, undefined, jobId)
                   toolResult = {
                     success: true,
                     program_id: genResult.program_id,
