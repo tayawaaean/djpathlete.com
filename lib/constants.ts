@@ -19,7 +19,7 @@ export const NAV_ITEMS: NavGroup[] = [
       { label: "Assessment", href: "/assessment", description: "Return-to-performance testing" },
     ],
   },
-  { label: "Programs", href: "/programs" },
+  { label: "Resources", href: "/resources" },
   { label: "Education", href: "/education" },
   { label: "Blog", href: "/blog" },
   { label: "Shop", href: "/shop" },

@@ -338,10 +338,10 @@ export default async function HomePage() {
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
-              href="/programs"
+              href="/resources"
               className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-accent transition-colors group"
             >
-              Browse Programs
+              Browse Resources
               <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
