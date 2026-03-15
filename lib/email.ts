@@ -1613,3 +1613,103 @@ export async function sendInquiryEmail({
     throw new Error("Failed to send inquiry email")
   }
 }
+
+const BOOKING_LINK = "https://api.leadconnectorhq.com/widget/booking/p9XdK6uz9EC3JKUhpzdA"
+
+export async function sendContactAutoReply({
+  to,
+  firstName,
+}: {
+  to: string
+  firstName: string
+}) {
+  const html = emailLayout(`
+    ${heroBanner("Thank You", `We&rsquo;ve received your message, ${firstName}.`)}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:48px 48px 52px;">
+
+          <p style="margin:0 0 24px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#5c5750; line-height:1.8;">
+            Thanks for reaching out to DJP Athlete. We&rsquo;ve received your message and will get back to you within 24 hours.
+          </p>
+
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#5c5750; line-height:1.8;">
+            Want to skip the wait? Book a call directly and let&rsquo;s talk about how we can help you perform at your best.
+          </p>
+
+          ${ctaButton(BOOKING_LINK, "Book a Call")}
+
+          <p style="margin:36px 0 0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#a09b94; line-height:1.7;">
+            Speak soon,<br />
+            <strong style="color:#0E3F50;">Coach Darren</strong><br />
+            DJP Athlete
+          </p>
+
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Thanks for reaching out — DJP Athlete",
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send contact auto-reply:", error)
+    throw new Error("Failed to send contact auto-reply")
+  }
+}
+
+export async function sendInquiryAutoReply({
+  to,
+  firstName,
+  serviceLabel,
+}: {
+  to: string
+  firstName: string
+  serviceLabel: string
+}) {
+  const html = emailLayout(`
+    ${heroBanner("Application Received", `We&rsquo;re excited to hear from you, ${firstName}.`)}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:48px 48px 52px;">
+
+          <p style="margin:0 0 24px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#5c5750; line-height:1.8;">
+            Thanks for applying for <strong style="color:#0E3F50;">${serviceLabel}</strong>. We&rsquo;ve received your application and our team will review it shortly.
+          </p>
+
+          <p style="margin:0 0 32px; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:16px; color:#5c5750; line-height:1.8;">
+            The next step is to schedule a consultation call so we can learn more about your goals and create a plan tailored to you.
+          </p>
+
+          ${ctaButton(BOOKING_LINK, "Schedule Your Consultation")}
+
+          <p style="margin:36px 0 0; font-family:'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:14px; color:#a09b94; line-height:1.7;">
+            Looking forward to working with you,<br />
+            <strong style="color:#0E3F50;">Coach Darren</strong><br />
+            DJP Athlete
+          </p>
+
+        </td>
+      </tr>
+    </table>
+  `)
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Your ${serviceLabel} application — DJP Athlete`,
+    html,
+  })
+
+  if (error) {
+    console.error("Failed to send inquiry auto-reply:", error)
+    throw new Error("Failed to send inquiry auto-reply")
+  }
+}

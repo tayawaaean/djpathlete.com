@@ -19,6 +19,7 @@ import {
   Star,
   Video,
   ClipboardCheck,
+  CalendarCheck,
   Settings,
   LogOut,
 } from "lucide-react"
@@ -72,6 +73,7 @@ const navSections: NavSection[] = [
   {
     title: "Business",
     items: [
+      { label: "Bookings", href: "/admin/bookings", icon: CalendarCheck },
       { label: "Payments", href: "/admin/payments", icon: CreditCard },
       { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
       { label: "Reviews", href: "/admin/reviews", icon: Star },

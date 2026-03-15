@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { inquiryFormSchema, SERVICE_LABELS } from "@/lib/validators/inquiry"
 import { createServiceRoleClient } from "@/lib/supabase"
 import { ghlCreateContact, ghlTriggerWorkflow } from "@/lib/ghl"
-import { sendInquiryEmail } from "@/lib/email"
+import { sendInquiryEmail, sendInquiryAutoReply } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -64,6 +64,13 @@ export async function POST(request: Request) {
       })
     } catch {
       console.error("Failed to send inquiry email — continuing")
+    }
+
+    // Auto-reply to the person with booking link (non-blocking)
+    try {
+      await sendInquiryAutoReply({ to: email, firstName: name.split(" ")[0], serviceLabel })
+    } catch {
+      console.error("Failed to send inquiry auto-reply — continuing")
     }
 
     // Sync to GoHighLevel (non-blocking)

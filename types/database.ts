@@ -7,6 +7,7 @@ export type ProgramCategory = "strength" | "conditioning" | "sport_specific" | "
 export type ProgramDifficulty = "beginner" | "intermediate" | "advanced" | "elite"
 export type ProgramTier = "generalize" | "premium"
 export type AssignmentStatus = "active" | "paused" | "completed" | "cancelled"
+export type BookingStatus = "scheduled" | "completed" | "cancelled" | "no_show"
 export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded"
 export type NotificationType = "info" | "success" | "warning" | "error"
 export type BlogPostStatus = "draft" | "published"
@@ -211,6 +212,22 @@ export interface ExerciseProgress {
   set_details: SetDetail[] | null
   ai_next_weight_kg: number | null
   created_at: string
+}
+
+export interface Booking {
+  id: string
+  contact_name: string
+  contact_email: string
+  contact_phone: string | null
+  booking_date: string
+  duration_minutes: number
+  status: BookingStatus
+  source: string
+  notes: string | null
+  ghl_contact_id: string | null
+  ghl_appointment_id: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface Payment {

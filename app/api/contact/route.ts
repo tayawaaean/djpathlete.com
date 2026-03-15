@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { contactFormSchema } from "@/lib/validators/contact"
 import { createServiceRoleClient } from "@/lib/supabase"
 import { ghlCreateContact, ghlTriggerWorkflow } from "@/lib/ghl"
-import { sendContactFormEmail } from "@/lib/email"
+import { sendContactFormEmail, sendContactAutoReply } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -56,6 +56,13 @@ export async function POST(request: Request) {
       await sendContactFormEmail({ name, email, subject, message })
     } catch {
       console.error("Failed to send contact form email — continuing")
+    }
+
+    // Auto-reply to the person with booking link (non-blocking)
+    try {
+      await sendContactAutoReply({ to: email, firstName: name.split(" ")[0] })
+    } catch {
+      console.error("Failed to send contact auto-reply — continuing")
     }
 
     // Sync to GoHighLevel (non-blocking)
