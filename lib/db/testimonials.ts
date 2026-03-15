@@ -33,3 +33,55 @@ export async function getFeaturedTestimonials() {
   if (error) throw error
   return data as Testimonial[]
 }
+
+export async function getTestimonialById(id: string) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("testimonials")
+    .select("*")
+    .eq("id", id)
+    .single()
+
+  if (error) throw error
+  return data as Testimonial
+}
+
+export async function createTestimonial(
+  input: Omit<Testimonial, "id" | "created_at" | "updated_at" | "user_id">
+) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("testimonials")
+    .insert(input)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Testimonial
+}
+
+export async function updateTestimonial(
+  id: string,
+  updates: Partial<Omit<Testimonial, "id" | "created_at">>
+) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("testimonials")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Testimonial
+}
+
+export async function deleteTestimonial(id: string) {
+  const supabase = getClient()
+  const { error } = await supabase
+    .from("testimonials")
+    .delete()
+    .eq("id", id)
+
+  if (error) throw error
+}

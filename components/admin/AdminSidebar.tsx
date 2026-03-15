@@ -16,6 +16,7 @@ import {
   Brain,
   Lightbulb,
   Star,
+  MessageSquareQuote,
   Video,
   ClipboardCheck,
   Settings,
@@ -57,6 +58,7 @@ const navSections: NavSection[] = [
     title: "Content",
     items: [
       { label: "Blog", href: "/admin/blog", icon: FileText },
+      { label: "Testimonials", href: "/admin/testimonials", icon: MessageSquareQuote },
       { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
     ],
   },
