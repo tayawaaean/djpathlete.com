@@ -1,8 +1,8 @@
 /**
  * Seeds 10 test clients, each with:
  *  - User account (testN@client.com / password123)
- *  - Client profile
- *  - 1 program with exercises
+ *  - Client profile (complete data)
+ *  - 1 program built from REAL exercises in the DB
  *  - Program assignment (active)
  *  - Completed initial assessment
  *
@@ -34,45 +34,6 @@ const ADMIN_ID = "00000000-0000-0000-0000-000000000001"
 const PASSWORD_HASH = "$2b$12$iPa7C.O5i1QC7Z/.jufFWO6unJYCfBOCfdERL4ogheRgRdbHuKosa"
 
 const today = new Date().toISOString().slice(0, 10)
-
-// Exercise IDs from main seed
-const EX = {
-  back_squat:       "10000000-0000-0000-0000-000000000001",
-  bench_press:      "10000000-0000-0000-0000-000000000002",
-  deadlift:         "10000000-0000-0000-0000-000000000003",
-  pull_up:          "10000000-0000-0000-0000-000000000004",
-  overhead_press:   "10000000-0000-0000-0000-000000000005",
-  rdl:              "10000000-0000-0000-0000-000000000006",
-  bulgarian_split:  "10000000-0000-0000-0000-000000000007",
-  barbell_row:      "10000000-0000-0000-0000-000000000008",
-  box_jump:         "10000000-0000-0000-0000-000000000009",
-  med_ball_slam:    "10000000-0000-0000-0000-000000000010",
-  sprint_intervals: "10000000-0000-0000-0000-000000000011",
-  kb_swing:         "10000000-0000-0000-0000-000000000013",
-  plank:            "10000000-0000-0000-0000-000000000014",
-  hip_flexor:       "10000000-0000-0000-0000-000000000015",
-  agility_ladder:   "10000000-0000-0000-0000-000000000017",
-  sled_push:        "10000000-0000-0000-0000-000000000019",
-  lat_pulldown:     "10000000-0000-0000-0000-000000000021",
-  db_curl:          "10000000-0000-0000-0000-000000000022",
-  tricep_pushdown:  "10000000-0000-0000-0000-000000000023",
-  leg_press:        "10000000-0000-0000-0000-000000000024",
-  leg_curl:         "10000000-0000-0000-0000-000000000025",
-  face_pull:        "10000000-0000-0000-0000-000000000026",
-  db_lateral_raise: "10000000-0000-0000-0000-000000000027",
-  push_up:          "10000000-0000-0000-0000-000000000028",
-  hip_thrust:       "10000000-0000-0000-0000-000000000029",
-  farmers_carry:    "10000000-0000-0000-0000-000000000030",
-  db_bench_press:   "10000000-0000-0000-0000-000000000031",
-  db_ohp:           "10000000-0000-0000-0000-000000000032",
-  db_row:           "10000000-0000-0000-0000-000000000033",
-  db_lunge:         "10000000-0000-0000-0000-000000000034",
-  goblet_squat:     "10000000-0000-0000-0000-000000000036",
-  dips:             "10000000-0000-0000-0000-000000000046",
-  inverted_row:     "10000000-0000-0000-0000-000000000047",
-  glute_bridge:     "10000000-0000-0000-0000-000000000048",
-  bw_squat:         "10000000-0000-0000-0000-000000000052",
-}
 
 // ─── Helper to generate deterministic UUIDs per client index ────────────────
 
@@ -124,8 +85,10 @@ interface ClientDef {
   // Assessment
   assessment_levels: Record<string, string>
   max_difficulty: number
-  // Which movement screen answers are "yes" (order_index based)
+  // Which movement screen order_index values answer "yes"
   movement_yes: number[]
+  // Exercise selection preferences (movement patterns to prioritize)
+  preferred_patterns: string[]
 }
 
 const clients: ClientDef[] = [
@@ -146,7 +109,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "sport_specific"], program_difficulty: "intermediate", program_weeks: 4, program_sessions: 4,
     program_split: "upper_lower", program_periodization: "undulating",
     assessment_levels: { overall: "intermediate", squat: "intermediate", push: "beginner", pull: "beginner", hinge: "beginner" },
-    max_difficulty: 6, movement_yes: [1, 2, 4, 6, 8],
+    max_difficulty: 6, movement_yes: [1, 2, 4],
+    preferred_patterns: ["push", "pull", "squat", "hinge"],
   },
   {
     first_name: "Mia", last_name: "Chen", email: "test2@client.com",
@@ -164,7 +128,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "recovery"], program_difficulty: "beginner", program_weeks: 6, program_sessions: 3,
     program_split: "full_body", program_periodization: "linear",
     assessment_levels: { overall: "beginner", squat: "beginner", push: "beginner", pull: "beginner", hinge: "beginner" },
-    max_difficulty: 3, movement_yes: [1, 4, 8],
+    max_difficulty: 3, movement_yes: [1, 4],
+    preferred_patterns: ["squat", "lunge", "isometric", "push"],
   },
   {
     first_name: "Liam", last_name: "O'Brien", email: "test3@client.com",
@@ -183,7 +148,8 @@ const clients: ClientDef[] = [
     program_category: ["strength"], program_difficulty: "advanced", program_weeks: 8, program_sessions: 5,
     program_split: "push_pull_legs", program_periodization: "block",
     assessment_levels: { overall: "advanced", squat: "advanced", push: "advanced", pull: "advanced", hinge: "advanced" },
-    max_difficulty: 9, movement_yes: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    max_difficulty: 9, movement_yes: [1, 2, 3, 4],
+    preferred_patterns: ["push", "pull", "squat", "hinge", "lunge"],
   },
   {
     first_name: "Priya", last_name: "Patel", email: "test4@client.com",
@@ -202,7 +168,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "sport_specific"], program_difficulty: "intermediate", program_weeks: 6, program_sessions: 4,
     program_split: "upper_lower", program_periodization: "undulating",
     assessment_levels: { overall: "intermediate", squat: "beginner", push: "beginner", pull: "intermediate", hinge: "intermediate" },
-    max_difficulty: 5, movement_yes: [1, 4, 6, 8, 9],
+    max_difficulty: 5, movement_yes: [1, 4],
+    preferred_patterns: ["pull", "rotation", "isometric", "hinge"],
   },
   {
     first_name: "Noah", last_name: "Williams", email: "test5@client.com",
@@ -220,7 +187,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "sport_specific", "conditioning"], program_difficulty: "advanced", program_weeks: 4, program_sessions: 5,
     program_split: "upper_lower", program_periodization: "undulating",
     assessment_levels: { overall: "advanced", squat: "advanced", push: "advanced", pull: "advanced", hinge: "advanced" },
-    max_difficulty: 9, movement_yes: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    max_difficulty: 9, movement_yes: [1, 2, 3, 4],
+    preferred_patterns: ["push", "pull", "squat", "hinge", "locomotion", "carry"],
   },
   {
     first_name: "Chloe", last_name: "Kim", email: "test6@client.com",
@@ -238,7 +206,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "recovery"], program_difficulty: "beginner", program_weeks: 8, program_sessions: 3,
     program_split: "full_body", program_periodization: "linear",
     assessment_levels: { overall: "beginner", squat: "beginner", push: "beginner", pull: "beginner", hinge: "beginner" },
-    max_difficulty: 2, movement_yes: [1, 8],
+    max_difficulty: 2, movement_yes: [1],
+    preferred_patterns: ["squat", "lunge", "hinge", "isometric"],
   },
   {
     first_name: "Ethan", last_name: "Brooks", email: "test7@client.com",
@@ -257,7 +226,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "conditioning"], program_difficulty: "intermediate", program_weeks: 6, program_sessions: 3,
     program_split: "full_body", program_periodization: "linear",
     assessment_levels: { overall: "intermediate", squat: "beginner", push: "intermediate", pull: "beginner", hinge: "intermediate" },
-    max_difficulty: 5, movement_yes: [1, 4, 5, 6, 8],
+    max_difficulty: 5, movement_yes: [1, 2, 4],
+    preferred_patterns: ["hinge", "isometric", "rotation", "push"],
   },
   {
     first_name: "Sophie", last_name: "Martinez", email: "test8@client.com",
@@ -276,7 +246,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "conditioning", "sport_specific"], program_difficulty: "advanced", program_weeks: 6, program_sessions: 5,
     program_split: "push_pull_legs", program_periodization: "undulating",
     assessment_levels: { overall: "advanced", squat: "advanced", push: "intermediate", pull: "advanced", hinge: "intermediate" },
-    max_difficulty: 8, movement_yes: [1, 2, 3, 4, 6, 7, 8, 9],
+    max_difficulty: 8, movement_yes: [1, 2, 3, 4],
+    preferred_patterns: ["squat", "pull", "hinge", "push", "locomotion"],
   },
   {
     first_name: "Daniel", last_name: "Foster", email: "test9@client.com",
@@ -295,7 +266,8 @@ const clients: ClientDef[] = [
     program_category: ["strength", "recovery", "sport_specific"], program_difficulty: "beginner", program_weeks: 8, program_sessions: 3,
     program_split: "full_body", program_periodization: "linear",
     assessment_levels: { overall: "beginner", squat: "beginner", push: "beginner", pull: "beginner", hinge: "beginner" },
-    max_difficulty: 3, movement_yes: [1, 4],
+    max_difficulty: 3, movement_yes: [1],
+    preferred_patterns: ["rotation", "isometric", "push", "pull"],
   },
   {
     first_name: "Zara", last_name: "Hassan", email: "test10@client.com",
@@ -314,13 +286,23 @@ const clients: ClientDef[] = [
     program_category: ["strength", "sport_specific"], program_difficulty: "intermediate", program_weeks: 6, program_sessions: 4,
     program_split: "upper_lower", program_periodization: "block",
     assessment_levels: { overall: "intermediate", squat: "intermediate", push: "beginner", pull: "beginner", hinge: "intermediate" },
-    max_difficulty: 6, movement_yes: [1, 2, 4, 6, 8, 9],
+    max_difficulty: 6, movement_yes: [1, 2, 4],
+    preferred_patterns: ["hinge", "squat", "locomotion", "push", "pull"],
   },
 ]
 
-// ─── Program exercise templates (keyed by split type) ───────────────────────
+// ─── Exercise pool type ─────────────────────────────────────────────────────
 
-type ProgramExerciseRow = {
+interface DBExercise {
+  id: string
+  name: string
+  movement_pattern: string
+  difficulty: string
+}
+
+// ─── Build program exercises dynamically from DB exercises ──────────────────
+
+interface ProgramExerciseRow {
   program_id: string
   exercise_id: string
   day_of_week: number
@@ -337,101 +319,142 @@ type ProgramExerciseRow = {
   duration_seconds?: number
 }
 
-function buildExercises(pid: string, split: string, difficulty: string): ProgramExerciseRow[] {
-  if (split === "full_body") {
-    if (difficulty === "beginner") {
-      return [
-        // Day 1
-        { program_id: pid, exercise_id: EX.goblet_squat,    day_of_week: 1, week_number: 1, order_index: 0, sets: 3, reps: "10",    rest_seconds: 90,  notes: "Sit between heels, chest up",       rpe_target: 6, tempo: "3010", technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.push_up,         day_of_week: 1, week_number: 1, order_index: 1, sets: 3, reps: "8-12",  rest_seconds: 60,  notes: "Knees or toes — full range",        rpe_target: 6, tempo: "2010", technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.db_row,          day_of_week: 1, week_number: 1, order_index: 2, sets: 3, reps: "10/arm",rest_seconds: 60,  notes: "Pull to hip, squeeze back",         rpe_target: 6, tempo: "2011", technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.glute_bridge,    day_of_week: 1, week_number: 1, order_index: 3, sets: 3, reps: "12",    rest_seconds: 60,  notes: "Squeeze glutes at top",             rpe_target: 5, technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.plank,           day_of_week: 1, week_number: 1, order_index: 4, sets: 3, reps: null,    rest_seconds: 45,  notes: "Brace core, breathe", duration_seconds: 20, rpe_target: null, technique: "straight_set" },
-        // Day 2
-        { program_id: pid, exercise_id: EX.db_lunge,        day_of_week: 3, week_number: 1, order_index: 0, sets: 3, reps: "8/leg", rest_seconds: 60,  notes: "Step forward, knee tracks toe",     rpe_target: 6, technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.db_bench_press,  day_of_week: 3, week_number: 1, order_index: 1, sets: 3, reps: "10",    rest_seconds: 60,  notes: "Control the weight down",           rpe_target: 6, tempo: "3010", technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.lat_pulldown,    day_of_week: 3, week_number: 1, order_index: 2, sets: 3, reps: "10-12", rest_seconds: 60,  notes: "Drive elbows down",                 rpe_target: 6, tempo: "2011", technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.db_ohp,          day_of_week: 3, week_number: 1, order_index: 3, sets: 3, reps: "10",    rest_seconds: 60,  notes: "Press straight up, core tight",     rpe_target: 6, technique: "straight_set" },
-        // Day 3
-        { program_id: pid, exercise_id: EX.bw_squat,        day_of_week: 5, week_number: 1, order_index: 0, sets: 3, reps: "15",    rest_seconds: 45,  notes: "Depth and control",                 rpe_target: 5, tempo: "3010", technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.inverted_row,    day_of_week: 5, week_number: 1, order_index: 1, sets: 3, reps: "8-10",  rest_seconds: 60,  notes: "Keep body straight, pull to chest", rpe_target: 6, technique: "straight_set" },
-        { program_id: pid, exercise_id: EX.db_curl,         day_of_week: 5, week_number: 1, order_index: 2, sets: 2, reps: "12",    rest_seconds: 45,  notes: "Controlled — no swinging",          rpe_target: 5, group_tag: "A1", technique: "superset" },
-        { program_id: pid, exercise_id: EX.tricep_pushdown, day_of_week: 5, week_number: 1, order_index: 3, sets: 2, reps: "12",    rest_seconds: 45,  notes: "Superset with curls",               rpe_target: 5, group_tag: "A2", technique: "superset" },
-        { program_id: pid, exercise_id: EX.hip_flexor,      day_of_week: 5, week_number: 1, order_index: 4, sets: 2, reps: null,    rest_seconds: 0,   notes: "30s per side", duration_seconds: 30, rpe_target: null, technique: "straight_set" },
-      ]
-    }
-    // intermediate/advanced full body
-    return [
-      { program_id: pid, exercise_id: EX.back_squat,      day_of_week: 1, week_number: 1, order_index: 0, sets: 3, reps: "6-8",   rest_seconds: 120, notes: "Brace hard, full depth",           rpe_target: 7, tempo: "3010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.bench_press,      day_of_week: 1, week_number: 1, order_index: 1, sets: 3, reps: "6-8",   rest_seconds: 120, notes: "Retract scapula",                  rpe_target: 7, tempo: "3010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.barbell_row,      day_of_week: 1, week_number: 1, order_index: 2, sets: 3, reps: "8-10",  rest_seconds: 90,  notes: "Squeeze at the top",               rpe_target: 7, tempo: "2011", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.kb_swing,         day_of_week: 1, week_number: 1, order_index: 3, sets: 3, reps: "15",    rest_seconds: 60,  notes: "Snap hips, tight core",            rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.plank,            day_of_week: 1, week_number: 1, order_index: 4, sets: 3, reps: null,    rest_seconds: 45,  notes: "Brace everything", duration_seconds: 30, rpe_target: null, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.deadlift,         day_of_week: 3, week_number: 1, order_index: 0, sets: 3, reps: "5",     rest_seconds: 150, notes: "Reset each rep",                   rpe_target: 8, tempo: "2010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.db_ohp,           day_of_week: 3, week_number: 1, order_index: 1, sets: 3, reps: "8-10",  rest_seconds: 90,  notes: "Press to full lockout",            rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.lat_pulldown,     day_of_week: 3, week_number: 1, order_index: 2, sets: 3, reps: "10-12", rest_seconds: 60,  notes: "Full stretch at top",              rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.farmers_carry,    day_of_week: 3, week_number: 1, order_index: 3, sets: 3, reps: "30m",   rest_seconds: 60,  notes: "Stand tall, packed shoulders",     rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.rdl,              day_of_week: 5, week_number: 1, order_index: 0, sets: 3, reps: "8-10",  rest_seconds: 120, notes: "Flat back, feel hamstrings",       rpe_target: 7, tempo: "3010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.push_up,          day_of_week: 5, week_number: 1, order_index: 1, sets: 3, reps: "AMRAP", rest_seconds: 60,  notes: "Full range",                       rpe_target: 8, technique: "amrap" },
-      { program_id: pid, exercise_id: EX.db_row,           day_of_week: 5, week_number: 1, order_index: 2, sets: 3, reps: "10/arm",rest_seconds: 60,  notes: "Pull to hip",                      rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.face_pull,        day_of_week: 5, week_number: 1, order_index: 3, sets: 3, reps: "15-20", rest_seconds: 45,  notes: "Shoulder health",                  rpe_target: 6, technique: "straight_set" },
-    ]
-  }
+/** Pick a random exercise from pool matching the pattern + difficulty preference */
+function pickExercise(
+  pool: Map<string, DBExercise[]>,
+  pattern: string,
+  difficulty: string,
+  used: Set<string>
+): DBExercise | null {
+  const candidates = pool.get(pattern)?.filter(e => !used.has(e.id)) ?? []
 
-  if (split === "push_pull_legs") {
-    return [
-      // Push
-      { program_id: pid, exercise_id: EX.bench_press,      day_of_week: 1, week_number: 1, order_index: 0, sets: 4, reps: "5",     rest_seconds: 180, notes: "Heavy — controlled descent",       rpe_target: 8, tempo: "2010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.overhead_press,   day_of_week: 1, week_number: 1, order_index: 1, sets: 3, reps: "6-8",   rest_seconds: 150, notes: "Strict form, no leg drive",        rpe_target: 8, tempo: "2010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.db_bench_press,   day_of_week: 1, week_number: 1, order_index: 2, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Deep stretch at bottom",           rpe_target: 7, tempo: "3010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.db_lateral_raise, day_of_week: 1, week_number: 1, order_index: 3, sets: 3, reps: "15",    rest_seconds: 60,  notes: "Light, controlled",                rpe_target: 6, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.tricep_pushdown,  day_of_week: 1, week_number: 1, order_index: 4, sets: 3, reps: "12-15", rest_seconds: 60,  notes: "Lock out each rep",                rpe_target: 6, technique: "straight_set" },
-      // Pull
-      { program_id: pid, exercise_id: EX.deadlift,         day_of_week: 2, week_number: 1, order_index: 0, sets: 4, reps: "3-5",   rest_seconds: 240, notes: "Full reset each rep",              rpe_target: 9, tempo: "1010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.pull_up,          day_of_week: 2, week_number: 1, order_index: 1, sets: 4, reps: "6-10",  rest_seconds: 120, notes: "Add weight if needed",             rpe_target: 8, tempo: "2010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.barbell_row,      day_of_week: 2, week_number: 1, order_index: 2, sets: 4, reps: "6-8",   rest_seconds: 120, notes: "Strict — no body English",         rpe_target: 8, tempo: "2011", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.face_pull,        day_of_week: 2, week_number: 1, order_index: 3, sets: 3, reps: "15-20", rest_seconds: 60,  notes: "External rotate at end",           rpe_target: 6, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.db_curl,          day_of_week: 2, week_number: 1, order_index: 4, sets: 3, reps: "12",    rest_seconds: 60,  notes: "No swinging",                      rpe_target: 6, technique: "straight_set" },
-      // Legs
-      { program_id: pid, exercise_id: EX.back_squat,       day_of_week: 4, week_number: 1, order_index: 0, sets: 4, reps: "5",     rest_seconds: 180, notes: "Belt up, full depth",              rpe_target: 8, tempo: "3010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.rdl,              day_of_week: 4, week_number: 1, order_index: 1, sets: 3, reps: "8",     rest_seconds: 120, notes: "Slow eccentric, pause at stretch", rpe_target: 7, tempo: "3010", technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.bulgarian_split,  day_of_week: 4, week_number: 1, order_index: 2, sets: 3, reps: "8/leg", rest_seconds: 90,  notes: "DBs at sides, front foot flat",    rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.leg_curl,         day_of_week: 4, week_number: 1, order_index: 3, sets: 3, reps: "12",    rest_seconds: 60,  notes: "Control the negative",             rpe_target: 6, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.hip_thrust,       day_of_week: 4, week_number: 1, order_index: 4, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Full lockout, squeeze 1s",         rpe_target: 7, technique: "straight_set" },
-      // Push 2
-      { program_id: pid, exercise_id: EX.dips,             day_of_week: 5, week_number: 1, order_index: 0, sets: 3, reps: "8-12",  rest_seconds: 90,  notes: "Lean forward for chest",           rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.db_ohp,           day_of_week: 5, week_number: 1, order_index: 1, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Lighter, higher reps",             rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.lat_pulldown,     day_of_week: 5, week_number: 1, order_index: 2, sets: 3, reps: "10-12", rest_seconds: 60,  notes: "Full stretch",                     rpe_target: 7, technique: "straight_set" },
-      { program_id: pid, exercise_id: EX.sled_push,        day_of_week: 5, week_number: 1, order_index: 3, sets: 4, reps: "20m",   rest_seconds: 90,  notes: "Low position, drive hard",         rpe_target: 8, technique: "straight_set" },
-    ]
-  }
+  // Prefer matching difficulty, fall back to any
+  const preferred = candidates.filter(e => e.difficulty === difficulty)
+  const list = preferred.length > 0 ? preferred : candidates
+  if (list.length === 0) return null
 
-  // Default: upper_lower
-  return [
-    // Upper 1
-    { program_id: pid, exercise_id: EX.bench_press,      day_of_week: 1, week_number: 1, order_index: 0, sets: 4, reps: "6-8",   rest_seconds: 180, notes: "Retract scapula, controlled eccentric", rpe_target: 7, tempo: "3010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.barbell_row,      day_of_week: 1, week_number: 1, order_index: 1, sets: 4, reps: "8-10",  rest_seconds: 120, notes: "Squeeze at the top",                   rpe_target: 7, tempo: "2011", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.overhead_press,   day_of_week: 1, week_number: 1, order_index: 2, sets: 3, reps: "8-10",  rest_seconds: 120, notes: "Brace core, press to lockout",         rpe_target: 7, tempo: "2010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.lat_pulldown,     day_of_week: 1, week_number: 1, order_index: 3, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Drive elbows to hips",                  rpe_target: 7, tempo: "2011", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.db_curl,          day_of_week: 1, week_number: 1, order_index: 4, sets: 3, reps: "12-15", rest_seconds: 60,  notes: "Superset with pushdowns",               rpe_target: 6, group_tag: "A1", technique: "superset" },
-    { program_id: pid, exercise_id: EX.tricep_pushdown,  day_of_week: 1, week_number: 1, order_index: 5, sets: 3, reps: "12-15", rest_seconds: 60,  notes: "Superset with curls",                   rpe_target: 6, group_tag: "A2", technique: "superset" },
-    // Lower 1
-    { program_id: pid, exercise_id: EX.back_squat,       day_of_week: 2, week_number: 1, order_index: 0, sets: 4, reps: "5",     rest_seconds: 180, notes: "Hip crease below knee, brace hard",    rpe_target: 8, tempo: "3010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.rdl,              day_of_week: 2, week_number: 1, order_index: 1, sets: 3, reps: "8-10",  rest_seconds: 120, notes: "Feel hamstring stretch, flat back",    rpe_target: 7, tempo: "3010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.leg_press,        day_of_week: 2, week_number: 1, order_index: 2, sets: 3, reps: "10-12", rest_seconds: 120, notes: "Feet shoulder width, full ROM",         rpe_target: 7, tempo: "3010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.leg_curl,         day_of_week: 2, week_number: 1, order_index: 3, sets: 3, reps: "12",    rest_seconds: 60,  notes: "Slow eccentric",                       rpe_target: 6, technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.plank,            day_of_week: 2, week_number: 1, order_index: 4, sets: 3, reps: null,    rest_seconds: 60,  notes: "Squeeze everything", duration_seconds: 30, rpe_target: null, technique: "straight_set" },
-    // Upper 2
-    { program_id: pid, exercise_id: EX.pull_up,          day_of_week: 4, week_number: 1, order_index: 0, sets: 4, reps: "6-10",  rest_seconds: 120, notes: "Full dead hang, chin over bar",        rpe_target: 8, tempo: "2010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.db_bench_press,   day_of_week: 4, week_number: 1, order_index: 1, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Deep stretch at bottom",              rpe_target: 7, tempo: "3010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.face_pull,        day_of_week: 4, week_number: 1, order_index: 2, sets: 3, reps: "15-20", rest_seconds: 60,  notes: "External rotate at end range",         rpe_target: 6, technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.db_ohp,           day_of_week: 4, week_number: 1, order_index: 3, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Moderate weight, strict form",         rpe_target: 7, technique: "straight_set" },
-    // Lower 2
-    { program_id: pid, exercise_id: EX.deadlift,         day_of_week: 5, week_number: 1, order_index: 0, sets: 3, reps: "5",     rest_seconds: 180, notes: "Reset each rep, no touch-and-go",      rpe_target: 8, tempo: "2010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.bulgarian_split,  day_of_week: 5, week_number: 1, order_index: 1, sets: 3, reps: "10/leg",rest_seconds: 120, notes: "Hold DBs at sides",                   rpe_target: 7, tempo: "2010", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.hip_thrust,       day_of_week: 5, week_number: 1, order_index: 2, sets: 3, reps: "10-12", rest_seconds: 90,  notes: "Full lockout, 1s squeeze",             rpe_target: 7, tempo: "2011", technique: "straight_set" },
-    { program_id: pid, exercise_id: EX.leg_curl,         day_of_week: 5, week_number: 1, order_index: 3, sets: 3, reps: "12-15", rest_seconds: 60,  notes: "Control the negative",                 rpe_target: 6, technique: "straight_set" },
+  const pick = list[Math.floor(Math.random() * list.length)]
+  used.add(pick.id)
+  return pick
+}
+
+/** RPE and rest defaults by difficulty */
+function defaults(difficulty: string) {
+  if (difficulty === "beginner") return { sets: 3, rpe: 6, rest: 60, tempo: "3010" }
+  if (difficulty === "advanced") return { sets: 4, rpe: 8, rest: 120, tempo: "2010" }
+  return { sets: 3, rpe: 7, rest: 90, tempo: "2010" }
+}
+
+/** Build exercises for a full_body split (3 days) */
+function buildFullBody(pid: string, diff: string, patterns: string[], pool: Map<string, DBExercise[]>): ProgramExerciseRow[] {
+  const d = defaults(diff)
+  const rows: ProgramExerciseRow[] = []
+  const used = new Set<string>()
+  const days = [1, 3, 5]
+
+  for (const dayOfWeek of days) {
+    // 4-5 exercises per day from preferred patterns
+    const dayPatterns = [...patterns, "isometric"].slice(0, 5)
+    dayPatterns.forEach((pat, idx) => {
+      const ex = pickExercise(pool, pat, diff, used)
+      if (!ex) return
+      const isIso = pat === "isometric"
+      rows.push({
+        program_id: pid, exercise_id: ex.id,
+        day_of_week: dayOfWeek, week_number: 1, order_index: idx,
+        sets: isIso ? 3 : d.sets,
+        reps: isIso ? null : (diff === "beginner" ? "10-12" : "6-8"),
+        rest_seconds: isIso ? 45 : d.rest,
+        notes: ex.name,
+        rpe_target: isIso ? null : d.rpe,
+        tempo: isIso ? undefined : d.tempo,
+        technique: "straight_set",
+        duration_seconds: isIso ? 30 : undefined,
+      })
+    })
+  }
+  return rows
+}
+
+/** Build exercises for an upper_lower split (4 days) */
+function buildUpperLower(pid: string, diff: string, patterns: string[], pool: Map<string, DBExercise[]>): ProgramExerciseRow[] {
+  const d = defaults(diff)
+  const rows: ProgramExerciseRow[] = []
+  const used = new Set<string>()
+
+  // Day 1: Upper — push + pull focused
+  const upper1 = ["push", "pull", "push", "pull", "isometric"]
+  // Day 2: Lower — squat + hinge focused
+  const lower1 = ["squat", "hinge", "lunge", "squat", "isometric"]
+  // Day 4: Upper 2
+  const upper2 = ["pull", "push", "rotation", "pull"]
+  // Day 5: Lower 2
+  const lower2 = ["hinge", "squat", "lunge", "locomotion"]
+
+  const dayTemplates: [number, string[]][] = [[1, upper1], [2, lower1], [4, upper2], [5, lower2]]
+
+  for (const [dayOfWeek, dayPatterns] of dayTemplates) {
+    dayPatterns.forEach((pat, idx) => {
+      const ex = pickExercise(pool, pat, diff, used)
+      if (!ex) return
+      const isIso = pat === "isometric"
+      rows.push({
+        program_id: pid, exercise_id: ex.id,
+        day_of_week: dayOfWeek, week_number: 1, order_index: idx,
+        sets: isIso ? 3 : d.sets,
+        reps: isIso ? null : (diff === "advanced" ? "3-5" : diff === "beginner" ? "10-12" : "6-8"),
+        rest_seconds: isIso ? 45 : d.rest,
+        notes: ex.name,
+        rpe_target: isIso ? null : d.rpe,
+        tempo: isIso ? undefined : d.tempo,
+        technique: "straight_set",
+        duration_seconds: isIso ? 30 : undefined,
+      })
+    })
+  }
+  return rows
+}
+
+/** Build exercises for a push_pull_legs split (5 days) */
+function buildPPL(pid: string, diff: string, patterns: string[], pool: Map<string, DBExercise[]>): ProgramExerciseRow[] {
+  const d = defaults(diff)
+  const rows: ProgramExerciseRow[] = []
+  const used = new Set<string>()
+
+  const dayTemplates: [number, string[]][] = [
+    [1, ["push", "push", "push", "push", "isometric"]],       // Push
+    [2, ["pull", "pull", "pull", "pull", "rotation"]],         // Pull
+    [3, ["squat", "hinge", "lunge", "squat", "isometric"]],    // Legs
+    [4, ["push", "pull", "push", "pull"]],                     // Upper
+    [5, ["hinge", "squat", "lunge", "locomotion", "carry"]],   // Lower
   ]
+
+  for (const [dayOfWeek, dayPatterns] of dayTemplates) {
+    dayPatterns.forEach((pat, idx) => {
+      const ex = pickExercise(pool, pat, diff, used)
+      if (!ex) return
+      const isIso = pat === "isometric"
+      rows.push({
+        program_id: pid, exercise_id: ex.id,
+        day_of_week: dayOfWeek, week_number: 1, order_index: idx,
+        sets: isIso ? 3 : d.sets,
+        reps: isIso ? null : (diff === "advanced" ? "3-5" : "6-8"),
+        rest_seconds: isIso ? 45 : (diff === "advanced" ? 150 : d.rest),
+        notes: ex.name,
+        rpe_target: isIso ? null : d.rpe,
+        tempo: isIso ? undefined : d.tempo,
+        technique: "straight_set",
+        duration_seconds: isIso ? 30 : undefined,
+      })
+    })
+  }
+  return rows
+}
+
+function buildExercises(pid: string, split: string, difficulty: string, patterns: string[], pool: Map<string, DBExercise[]>): ProgramExerciseRow[] {
+  if (split === "full_body") return buildFullBody(pid, difficulty, patterns, pool)
+  if (split === "push_pull_legs") return buildPPL(pid, difficulty, patterns, pool)
+  return buildUpperLower(pid, difficulty, patterns, pool)
 }
 
 // ─── Execute ────────────────────────────────────────────────────────────────
@@ -439,7 +462,28 @@ function buildExercises(pid: string, split: string, difficulty: string): Program
 async function seed() {
   console.log("🌱 Seeding 10 test clients...\n")
 
-  // Fetch assessment questions once
+  // ── Load exercises from DB ──────────────────────────────────────────────
+  console.log("  Loading exercises from database...")
+  const { data: allExercises, error: exErr } = await supabase
+    .from("exercises")
+    .select("id, name, movement_pattern, difficulty")
+    .eq("is_active", true)
+  if (exErr) throw new Error(`Fetching exercises: ${exErr.message}`)
+
+  // Group by movement_pattern
+  const exercisePool = new Map<string, DBExercise[]>()
+  for (const e of allExercises ?? []) {
+    const mp = e.movement_pattern || "unknown"
+    if (!exercisePool.has(mp)) exercisePool.set(mp, [])
+    exercisePool.get(mp)!.push(e as DBExercise)
+  }
+
+  const patternCounts = Array.from(exercisePool.entries())
+    .map(([k, v]) => `${k}(${v.length})`)
+    .join(", ")
+  console.log(`  ✓ ${allExercises!.length} exercises loaded: ${patternCounts}\n`)
+
+  // ── Load assessment questions ───────────────────────────────────────────
   const { data: questions, error: qErr } = await supabase
     .from("assessment_questions")
     .select("id, section, movement_pattern, question_text, order_index")
@@ -526,8 +570,9 @@ async function seed() {
     })
     if (progErr) throw new Error(`Program ${n}: ${progErr.message}`)
 
-    // Program exercises
-    const exercises = buildExercises(pid, c.program_split, c.program_difficulty)
+    // Program exercises — built dynamically from real DB exercises
+    const exercises = buildExercises(pid, c.program_split, c.program_difficulty, c.preferred_patterns, exercisePool)
+    if (exercises.length === 0) throw new Error(`No exercises generated for client ${n} — check exercise pool`)
     const { error: peErr } = await supabase.from("program_exercises").insert(exercises)
     if (peErr) throw new Error(`Program exercises ${n}: ${peErr.message}`)
 
