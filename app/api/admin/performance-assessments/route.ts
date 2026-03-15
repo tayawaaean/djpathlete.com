@@ -54,6 +54,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const parsed = createSchema.safeParse(body)
     if (!parsed.success) {
+      console.error("[assessment-create] Validation error:", JSON.stringify(parsed.error.flatten(), null, 2))
+      console.error("[assessment-create] Body:", JSON.stringify(body, null, 2))
       return NextResponse.json(
         { error: "Invalid data", details: parsed.error.flatten() },
         { status: 400 }

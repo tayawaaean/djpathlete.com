@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, X, Loader2, GripVertical, Youtube } from "lucide-react"
+import { Plus, X, Loader2, GripVertical, Youtube, User, FileText, Dumbbell } from "lucide-react"
 import { toast } from "sonner"
 
 interface Client {
@@ -78,6 +78,8 @@ export function CreatePerformanceAssessmentForm({
     return exercises.filter((e) => e.name.toLowerCase().includes(search)).slice(0, 20)
   }
 
+  const selectedClient = clients.find((c) => c.id === clientId)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -86,7 +88,6 @@ export function CreatePerformanceAssessmentForm({
       return
     }
 
-    // Validate each row has either exercise_id or custom_name
     for (const row of rows) {
       if (!row.exercise_id && !row.custom_name.trim()) {
         toast.error("Each exercise must have a name or be selected from the library")
@@ -128,177 +129,237 @@ export function CreatePerformanceAssessmentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-      {/* Client */}
-      <div className="space-y-2">
-        <Label>Client *</Label>
-        <Select value={clientId} onValueChange={setClientId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a client" />
-          </SelectTrigger>
-          <SelectContent>
-            {clients.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.first_name} {c.last_name} ({c.email})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Assessment Details Card */}
+      <div className="bg-white rounded-xl border border-border overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-surface/30">
+          <div className="flex items-center gap-2">
+            <FileText className="size-4 text-primary" />
+            <h2 className="text-sm font-semibold text-primary">Assessment Details</h2>
+          </div>
+        </div>
+        <div className="p-6 space-y-5">
+          {/* Client & Title row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <User className="size-3.5 text-muted-foreground" />
+                Client *
+              </Label>
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select a client..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.first_name} {c.last_name} ({c.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedClient && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedClient.email}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. March 2026 Movement Assessment"
+                maxLength={200}
+                className="h-11"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes for Client (optional)</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any overall instructions for the client — what to prepare, what to focus on..."
+              maxLength={5000}
+              rows={3}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Title */}
-      <div className="space-y-2">
-        <Label htmlFor="title">Title *</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. March 2026 Movement Assessment"
-          maxLength={200}
-        />
-      </div>
-
-      {/* Notes */}
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes (optional)</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Any overall instructions for the client..."
-          maxLength={5000}
-          rows={3}
-        />
-      </div>
-
-      {/* Exercises */}
-      <div className="space-y-3">
+      {/* Exercises Section */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label>Exercises *</Label>
+          <div className="flex items-center gap-2">
+            <Dumbbell className="size-4 text-primary" />
+            <h2 className="text-sm font-semibold text-primary">
+              Exercises ({rows.length})
+            </h2>
+          </div>
           <Button type="button" variant="outline" size="sm" onClick={addRow}>
-            <Plus className="size-3.5 mr-1" />
+            <Plus className="size-3.5 mr-1.5" />
             Add Exercise
           </Button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {rows.map((row, index) => (
             <div
               key={row.key}
-              className="bg-white rounded-xl border border-border p-4 space-y-3"
+              className="bg-white rounded-xl border border-border overflow-hidden"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <GripVertical className="size-4" />
-                  <span className="font-medium">Exercise {index + 1}</span>
+              {/* Exercise header */}
+              <div className="px-5 py-3 border-b border-border bg-surface/30 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <GripVertical className="size-4 text-muted-foreground/50" />
+                  <span className="text-sm font-medium text-primary">
+                    Exercise {index + 1}
+                  </span>
+                  {row.exercise_id && (
+                    <span className="text-xs text-muted-foreground bg-primary/5 px-2 py-0.5 rounded-full">
+                      From Library
+                    </span>
+                  )}
+                  {!row.exercise_id && row.custom_name && (
+                    <span className="text-xs text-muted-foreground bg-accent/10 px-2 py-0.5 rounded-full">
+                      Custom
+                    </span>
+                  )}
                 </div>
                 {rows.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeRow(row.key)}
-                    className="p-1 rounded hover:bg-muted text-muted-foreground"
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <X className="size-4" />
                   </button>
                 )}
               </div>
 
-              {/* Exercise selection or custom name */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">From Library</Label>
-                  <Select
-                    value={row.exercise_id ?? ""}
-                    onValueChange={(val) =>
-                      updateRow(row.key, {
-                        exercise_id: val || null,
-                        custom_name: val ? "" : row.custom_name,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="Select exercise..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="px-2 pb-2">
-                        <Input
-                          placeholder="Search exercises..."
-                          value={exerciseSearch[row.key] ?? ""}
-                          onChange={(e) =>
-                            setExerciseSearch((prev) => ({ ...prev, [row.key]: e.target.value }))
-                          }
-                          className="h-8 text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                      {getFilteredExercises(row.key).map((ex) => (
-                        <SelectItem key={ex.id} value={ex.id}>
-                          {ex.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="p-5 space-y-4">
+                {/* Exercise selection */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Select from Library</Label>
+                    <Select
+                      value={row.exercise_id ?? ""}
+                      onValueChange={(val) =>
+                        updateRow(row.key, {
+                          exercise_id: val || null,
+                          custom_name: val ? "" : row.custom_name,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Search and select exercise..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="px-2 pb-2">
+                          <Input
+                            placeholder="Type to search..."
+                            value={exerciseSearch[row.key] ?? ""}
+                            onChange={(e) =>
+                              setExerciseSearch((prev) => ({ ...prev, [row.key]: e.target.value }))
+                            }
+                            className="h-8 text-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        {getFilteredExercises(row.key).map((ex) => (
+                          <SelectItem key={ex.id} value={ex.id}>
+                            {ex.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Or Enter Custom Name</Label>
+                    <Input
+                      value={row.custom_name}
+                      onChange={(e) =>
+                        updateRow(row.key, {
+                          custom_name: e.target.value,
+                          exercise_id: e.target.value ? null : row.exercise_id,
+                        })
+                      }
+                      placeholder="e.g. Single Leg RDL"
+                      maxLength={200}
+                      disabled={!!row.exercise_id}
+                      className="h-10"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Or Custom Name</Label>
-                  <Input
-                    value={row.custom_name}
-                    onChange={(e) =>
-                      updateRow(row.key, {
-                        custom_name: e.target.value,
-                        exercise_id: e.target.value ? null : row.exercise_id,
-                      })
-                    }
-                    placeholder="e.g. Single Leg RDL"
-                    maxLength={200}
-                    disabled={!!row.exercise_id}
-                    className="text-sm"
-                  />
+
+                {/* YouTube & Notes row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <Youtube className="size-3.5 text-red-500" />
+                      YouTube Example (optional)
+                    </Label>
+                    <Input
+                      value={row.youtube_url}
+                      onChange={(e) => updateRow(row.key, { youtube_url: e.target.value })}
+                      placeholder="https://youtube.com/watch?v=..."
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Coach Notes (optional)</Label>
+                    <Textarea
+                      value={row.admin_notes}
+                      onChange={(e) => updateRow(row.key, { admin_notes: e.target.value })}
+                      placeholder="What to focus on, cues, form reminders..."
+                      maxLength={2000}
+                      rows={2}
+                    />
+                  </div>
                 </div>
-              </div>
-
-              {/* YouTube URL */}
-              <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1.5">
-                  <Youtube className="size-3.5 text-red-500" />
-                  YouTube Example (optional)
-                </Label>
-                <Input
-                  value={row.youtube_url}
-                  onChange={(e) => updateRow(row.key, { youtube_url: e.target.value })}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="text-sm"
-                />
-              </div>
-
-              {/* Admin notes */}
-              <div className="space-y-1.5">
-                <Label className="text-xs">Coach Notes (optional)</Label>
-                <Textarea
-                  value={row.admin_notes}
-                  onChange={(e) => updateRow(row.key, { admin_notes: e.target.value })}
-                  placeholder="What to focus on, cues, etc."
-                  maxLength={2000}
-                  rows={2}
-                  className="text-sm"
-                />
               </div>
             </div>
           ))}
         </div>
+
+        {/* Add more button at bottom */}
+        <button
+          type="button"
+          onClick={addRow}
+          className="w-full py-3 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors flex items-center justify-center gap-2"
+        >
+          <Plus className="size-4" />
+          Add Another Exercise
+        </button>
       </div>
 
       {/* Submit */}
-      <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
-        {submitting ? (
-          <>
-            <Loader2 className="size-4 mr-2 animate-spin" />
-            Creating...
-          </>
-        ) : (
-          "Create Assessment"
-        )}
-      </Button>
+      <div className="flex items-center gap-3 pt-2">
+        <Button type="submit" disabled={submitting} size="lg">
+          {submitting ? (
+            <>
+              <Loader2 className="size-4 mr-2 animate-spin" />
+              Creating Assessment...
+            </>
+          ) : (
+            "Create Assessment"
+          )}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={() => router.back()}
+        >
+          Cancel
+        </Button>
+      </div>
     </form>
   )
 }
