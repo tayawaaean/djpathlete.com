@@ -29,6 +29,13 @@ export async function handleProgramGeneration(jobId: string): Promise<void> {
     return
   }
 
+  // Double-check not cancelled between creation and pickup
+  const freshSnap = await jobRef.get()
+  if (freshSnap.data()?.status === "cancelled") {
+    console.log(`[program-generation] Job ${jobId} was cancelled before processing`)
+    return
+  }
+
   // Mark as processing in both Firestore and RTDB
   await jobRef.update({ status: "processing", updatedAt: FieldValue.serverTimestamp() })
   await updateRtdb(jobId, { status: "processing" })

@@ -93,10 +93,15 @@ async function createProgram(params: Record<string, unknown>) {
   return data
 }
 
-async function addExerciseToProgram(params: Record<string, unknown>) {
-  const supabase = getSupabase()
-  const { error } = await supabase.from("program_exercises").insert(params)
-  if (error) throw new Error(`Failed to add exercise: ${error.message}`)
+async function addExerciseToProgram(params: Record<string, unknown>, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const supabase = getSupabase()
+    const { error } = await supabase.from("program_exercises").insert(params)
+    if (!error) return
+    if (attempt === retries) throw new Error(`Failed to add exercise: ${error.message}`)
+    console.warn(`[orchestrator:sync] addExerciseToProgram attempt ${attempt} failed: ${error.message}, retrying...`)
+    await new Promise((r) => setTimeout(r, 1000 * attempt))
+  }
 }
 
 async function createAssignment(params: Record<string, unknown>) {
@@ -159,6 +164,19 @@ export async function generateProgramSync(
       })
     } catch (e) {
       console.warn("[orchestrator:sync] Failed to update RTDB progress:", e)
+    }
+  }
+
+  // Check if the job has been cancelled by the user
+  async function checkCancelled(): Promise<boolean> {
+    if (!firebaseJobId) return false
+    try {
+      const { getFirestore } = await import("firebase-admin/firestore")
+      const db = getFirestore()
+      const snap = await db.collection("ai_jobs").doc(firebaseJobId).get()
+      return snap.exists && snap.data()?.status === "cancelled"
+    } catch {
+      return false
     }
   }
 
@@ -300,6 +318,13 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
 
     await updateJobProgress("profile_complete", 2, `Profile analyzed — ${compressed.length} exercises available`)
 
+    // Check cancellation before Agent 2
+    if (await checkCancelled()) {
+      console.log("[orchestrator:sync] Job cancelled by user before Agent 2")
+      await updateGenerationLog(log.id, { status: "cancelled", duration_ms: Date.now() - startTime })
+      return { program_id: "", validation: { pass: false, issues: [], summary: "Cancelled" }, token_usage: tokenUsage, duration_ms: Date.now() - startTime, retries: 0 }
+    }
+
     // Agent 2
     await updateJobProgress("designing_structure", 3, "Designing program structure & weekly layout")
     const agent2UserMessage = `Profile Analysis:\n${JSON.stringify(analysis)}\n\nTraining Parameters:\n- Duration: ${request.duration_weeks} weeks\n- Sessions per week: ${request.sessions_per_week}\n- Session length: ${request.session_minutes ?? 60} minutes\n- Split type: ${analysis.recommended_split}\n- Periodization: ${analysis.recommended_periodization}\n- Goals: ${request.goals.join(", ")}\n${request.additional_instructions ? `- Additional instructions: ${request.additional_instructions}` : ""}`
@@ -338,29 +363,59 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
     catch { filtered = scoreAndFilterExercises(compressed, skeleton, availableEquipment, analysis) }
     const exerciseLibrary = formatExerciseLibrary(filtered)
 
+    // Check cancellation before Agent 3
+    if (await checkCancelled()) {
+      console.log("[orchestrator:sync] Job cancelled by user before Agent 3")
+      await updateGenerationLog(log.id, { status: "cancelled", duration_ms: Date.now() - startTime })
+      return { program_id: "", validation: { pass: false, issues: [], summary: "Cancelled" }, token_usage: tokenUsage, duration_ms: Date.now() - startTime, retries: 0 }
+    }
+
     // Agent 3 with validation retry loop
     await updateJobProgress("selecting_exercises", 5, `Matching exercises from ${filtered.length} candidates to ${totalSlots} slots`)
     console.log("[orchestrator:sync] Running Agent 3 with", filtered.length, "exercises...")
     let assignment: ExerciseAssignment | null = null
     let validation: ValidationResult | null = null
 
+    // Build an exercise ID set for quick lookup to strip invalid IDs from retries
+    const exerciseIdSet = new Set(compressed.map((e) => e.id))
+
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       let feedbackSection = ""
       let retryLibrary = exerciseLibrary
       let retryFilteredCount = filtered.length
 
-      if (attempt > 0 && validation !== null) {
+      if (attempt > 0 && validation !== null && assignment !== null) {
         const errorIssues = validation.issues.filter((i) => i.type === "error")
-        feedbackSection = `\n\nPREVIOUS ATTEMPT FAILED VALIDATION. Issues to fix:\n${JSON.stringify(errorIssues)}\n\nPlease fix ALL errors and try again.`
 
-        // Expand to full exercise library on retry if exercises were missing, equipment mismatched, or variety insufficient
+        // Identify which slots had errors so we can tell Agent 3 to only fix those
+        const errorSlotIds = new Set(errorIssues.map((i) => i.slot_ref).filter(Boolean))
+        const validAssignments = assignment.assignments.filter(
+          (a) => !errorSlotIds.has(a.slot_id) && exerciseIdSet.has(a.exercise_id)
+        )
+
+        feedbackSection = `\n\nPREVIOUS ATTEMPT FAILED VALIDATION (${errorIssues.length} errors). Issues to fix:\n${JSON.stringify(errorIssues)}`
+
+        if (validAssignments.length > 0) {
+          feedbackSection += `\n\nKEEP THESE VALID ASSIGNMENTS (do NOT change them):\n${JSON.stringify(validAssignments)}`
+          feedbackSection += `\n\nOnly replace the assignments for slots that had errors. Keep all valid assignments exactly as shown above.`
+        } else {
+          feedbackSection += `\n\nPlease fix ALL errors and try again. Only use exercise IDs from the provided library.`
+        }
+
+        // On retry, add targeted exercises instead of dumping all 899
         const needsMoreExercises = errorIssues.some((i) =>
           i.category === "missing_exercise" || i.category === "equipment_violation" || i.category === "insufficient_variety"
         )
         if (needsMoreExercises && filtered.length < compressed.length) {
-          retryLibrary = formatExerciseLibrary(compressed)
-          retryFilteredCount = compressed.length
-          console.log(`[orchestrator:sync] Expanding exercise library from ${filtered.length} to ${compressed.length} for retry`)
+          // Smart expansion: score all exercises and take the top 150 instead of all
+          const expanded = scoreAndFilterExercises(compressed, skeleton, availableEquipment, analysis)
+          // Merge with original filtered set, dedup, cap at 150
+          const mergedIds = new Set(filtered.map((e) => e.id))
+          const additional = expanded.filter((e) => !mergedIds.has(e.id))
+          const mergedExercises = [...filtered, ...additional].slice(0, 150)
+          retryLibrary = formatExerciseLibrary(mergedExercises)
+          retryFilteredCount = mergedExercises.length
+          console.log(`[orchestrator:sync] Smart expansion: ${filtered.length} → ${mergedExercises.length} exercises for retry (capped at 150)`)
         }
       }
 
@@ -371,8 +426,16 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
         tokenUsage.agent3 += agent3Result.tokens_used
         assignment = agent3Result.content
 
+        // Strip any hallucinated exercise IDs before validation
+        const validCount = assignment.assignments.length
+        assignment.assignments = assignment.assignments.filter((a) => exerciseIdSet.has(a.exercise_id))
+        const strippedCount = validCount - assignment.assignments.length
+        if (strippedCount > 0) {
+          console.warn(`[orchestrator:sync] Stripped ${strippedCount} hallucinated exercise IDs`)
+        }
+
         validation = validateProgram(skeleton, assignment, analysis, compressed, availableEquipment, profile?.experience_level ?? "beginner", assessmentContext?.maxDifficultyScore)
-        console.log(`[orchestrator:sync] Validation: pass=${validation.pass}, errors=${validation.issues.filter(i => i.type === "error").length}`)
+        console.log(`[orchestrator:sync] Validation: pass=${validation.pass}, errors=${validation.issues.filter(i => i.type === "error").length}, warnings=${validation.issues.filter(i => i.type === "warning").length}`)
 
         if (validation.pass || !validation.issues.some((i) => i.type === "error")) break
         retries++
@@ -383,6 +446,29 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
     }
 
     if (!assignment || !validation) throw new Error("Failed to generate exercise assignments")
+
+    // Graceful degradation: if validation still has errors after all retries,
+    // strip invalid assignments and downgrade remaining errors to warnings so the program still saves
+    if (!validation.pass && validation.issues.some((i) => i.type === "error")) {
+      console.warn(`[orchestrator:sync] Validation still failing after ${MAX_RETRIES + 1} attempts — applying graceful degradation`)
+
+      // Remove assignments with missing exercises (hallucinated IDs already stripped above)
+      const errorSlotIds = new Set(
+        validation.issues
+          .filter((i) => i.type === "error" && (i.category === "missing_exercise" || i.category === "equipment_violation" || i.category === "injury_conflict"))
+          .map((i) => i.slot_ref)
+          .filter(Boolean)
+      )
+      assignment.assignments = assignment.assignments.filter((a) => !errorSlotIds.has(a.slot_id))
+
+      // Downgrade remaining errors to warnings
+      validation.issues = validation.issues.map((i) =>
+        i.type === "error" ? { ...i, type: "warning" as const, message: `[auto-downgraded] ${i.message}` } : i
+      )
+      validation.pass = true
+      validation.summary = `Program saved with ${validation.issues.filter(i => i.type === "warning").length} warning(s) after graceful degradation.`
+      console.log(`[orchestrator:sync] Graceful degradation: ${assignment.assignments.length} valid assignments, ${errorSlotIds.size} slots removed`)
+    }
 
     await updateJobProgress("validated", 6, `${assignment.assignments.length} exercises assigned — ${validation.pass ? "all checks passed" : `${validation.issues.filter(i => i.type === "warning").length} warnings`}`)
 

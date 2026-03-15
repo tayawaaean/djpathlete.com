@@ -220,6 +220,8 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
 
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null)
   const [progressStep, setProgressStep] = useState(0)
   const [progressDetail, setProgressDetail] = useState<string | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -383,6 +385,8 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     setError(null)
     setShowAssign(false)
     setIsGenerating(false)
+    setIsCancelling(false)
+    setActiveJobId(null)
     setProgressStep(0)
     setProgressDetail(null)
     setElapsedSeconds(0)
@@ -393,6 +397,33 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   function handleOpenChange(newOpen: boolean) {
     if (!newOpen && !isGenerating) resetForm()
     if (!isGenerating) onOpenChange(newOpen)
+  }
+
+  async function handleCancel() {
+    if (!activeJobId || isCancelling) return
+    setIsCancelling(true)
+    try {
+      const res = await fetch("/api/admin/programs/generate/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: activeJobId }),
+      })
+      if (res.ok) {
+        stopListening()
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+        setIsGenerating(false)
+        setError(null)
+        toast.info("Program generation cancelled")
+        resetForm()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || "Failed to cancel")
+      }
+    } catch {
+      toast.error("Failed to cancel generation")
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
   function toggleGoal(goal: string) {
@@ -470,6 +501,8 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
       }
 
       if (response.status === 202 && data.jobId) {
+        // Store jobId for cancellation
+        setActiveJobId(data.jobId)
         // Start elapsed timer
         setElapsedSeconds(0)
         timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000)
@@ -514,6 +547,11 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               setError(jobData.error || "Program generation failed")
               setIsGenerating(false)
               toast.error("Program generation failed")
+            } else if (jobData.status === "cancelled") {
+              stopListening()
+              stopTimer()
+              setIsGenerating(false)
+              toast.info("Program generation cancelled")
             }
           },
           (err) => {
@@ -742,6 +780,22 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
                 )
               })}
             </div>
+
+            {/* Cancel button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isCancelling}
+              className="w-full text-muted-foreground hover:text-destructive hover:border-destructive/30"
+            >
+              {isCancelling ? (
+                <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <XCircle className="size-3.5 mr-1.5" />
+              )}
+              {isCancelling ? "Cancelling..." : "Cancel Generation"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
