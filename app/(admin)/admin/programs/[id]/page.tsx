@@ -9,6 +9,7 @@ import { getActiveUserIdsForProgram } from "@/lib/db/assignments"
 import { Badge } from "@/components/ui/badge"
 import { ProgramHeader } from "@/components/admin/ProgramHeader"
 import { ProgramBuilder } from "@/components/admin/ProgramBuilder"
+import { ProgramFeedbackForm } from "@/components/admin/ProgramFeedbackForm"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   try {
@@ -63,6 +64,10 @@ export default async function ProgramBuilderPage({
         programExercises={programExercises}
         exercises={exercises}
       />
+
+      {program.is_ai_generated && (
+        <ProgramFeedbackForm programId={program.id} />
+      )}
     </div>
   )
 }

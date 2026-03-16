@@ -386,6 +386,8 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
 
       if (attempt > 0 && validation !== null && assignment !== null) {
         const errorIssues = validation.issues.filter((i) => i.type === "error")
+        const warningIssues = validation.issues.filter((i) => i.type === "warning")
+        const allIssues = [...errorIssues, ...warningIssues]
 
         // Identify which slots had errors so we can tell Agent 3 to only fix those
         const errorSlotIds = new Set(errorIssues.map((i) => i.slot_ref).filter(Boolean))
@@ -393,7 +395,7 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
           (a) => !errorSlotIds.has(a.slot_id) && exerciseIdSet.has(a.exercise_id)
         )
 
-        feedbackSection = `\n\nPREVIOUS ATTEMPT FAILED VALIDATION (${errorIssues.length} errors). Issues to fix:\n${JSON.stringify(errorIssues)}`
+        feedbackSection = `\n\nPREVIOUS ATTEMPT FAILED VALIDATION (${errorIssues.length} errors, ${warningIssues.length} warnings). Issues to fix:\n${JSON.stringify(allIssues)}`
 
         if (validAssignments.length > 0) {
           feedbackSection += `\n\nKEEP THESE VALID ASSIGNMENTS (do NOT change them):\n${JSON.stringify(validAssignments)}`
@@ -403,8 +405,9 @@ IMPORTANT: Only select exercises with difficulty_score <= ${assessmentContext.ma
         }
 
         // On retry, add targeted exercises instead of dumping all 899
-        const needsMoreExercises = errorIssues.some((i) =>
-          i.category === "missing_exercise" || i.category === "equipment_violation" || i.category === "insufficient_variety"
+        // Check both errors and warnings for variety/pattern issues
+        const needsMoreExercises = allIssues.some((i) =>
+          i.category === "missing_exercise" || i.category === "equipment_violation" || i.category === "insufficient_variety" || i.category === "missing_movement_pattern" || i.category === "muscle_imbalance"
         )
         if (needsMoreExercises && filtered.length < compressed.length) {
           // Smart expansion: score all exercises and take the top 150 instead of all

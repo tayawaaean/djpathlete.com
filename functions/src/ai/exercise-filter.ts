@@ -126,7 +126,7 @@ export async function semanticFilterExercises(
     try {
       const queryText = slotToText(slot)
       const queryEmbedding = await embedText(queryText)
-      const { data } = await supabase.rpc("match_exercise_embeddings", {
+      const { data } = await supabase.rpc("match_exercises", {
         query_embedding: JSON.stringify(queryEmbedding),
         match_threshold: 0.2,
         match_count: 25,
