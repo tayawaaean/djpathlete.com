@@ -12,7 +12,7 @@ import {
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type AiJobStatus = "pending" | "processing" | "streaming" | "completed" | "failed"
+export type AiJobStatus = "pending" | "processing" | "streaming" | "completed" | "failed" | "cancelled"
 
 export interface AiJobChunk {
   index: number
