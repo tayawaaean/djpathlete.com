@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, X, Loader2, GripVertical, Youtube, User, FileText, Dumbbell } from "lucide-react"
+import { Plus, X, Loader2, GripVertical, Youtube, User, FileText, Dumbbell, Ruler } from "lucide-react"
 import { toast } from "sonner"
 
 interface Client {
@@ -34,6 +34,7 @@ interface ExerciseRow {
   custom_name: string
   youtube_url: string
   admin_notes: string
+  result_unit: string
 }
 
 interface CreatePerformanceAssessmentFormProps {
@@ -50,7 +51,7 @@ export function CreatePerformanceAssessmentForm({
   const [title, setTitle] = useState("")
   const [notes, setNotes] = useState("")
   const [rows, setRows] = useState<ExerciseRow[]>([
-    { key: crypto.randomUUID(), exercise_id: null, custom_name: "", youtube_url: "", admin_notes: "" },
+    { key: crypto.randomUUID(), exercise_id: null, custom_name: "", youtube_url: "", admin_notes: "", result_unit: "" },
   ])
   const [submitting, setSubmitting] = useState(false)
   const [exerciseSearch, setExerciseSearch] = useState<Record<string, string>>({})
@@ -58,7 +59,7 @@ export function CreatePerformanceAssessmentForm({
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { key: crypto.randomUUID(), exercise_id: null, custom_name: "", youtube_url: "", admin_notes: "" },
+      { key: crypto.randomUUID(), exercise_id: null, custom_name: "", youtube_url: "", admin_notes: "", result_unit: "" },
     ])
   }
 
@@ -109,6 +110,7 @@ export function CreatePerformanceAssessmentForm({
             custom_name: row.exercise_id ? null : row.custom_name.trim(),
             youtube_url: row.youtube_url.trim() || null,
             admin_notes: row.admin_notes.trim() || null,
+            result_unit: row.result_unit.trim() || null,
           })),
         }),
       })
@@ -298,8 +300,8 @@ export function CreatePerformanceAssessmentForm({
                   </div>
                 </div>
 
-                {/* YouTube & Notes row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* YouTube, Notes & Unit row */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium flex items-center gap-1.5">
                       <Youtube className="size-3.5 text-red-500" />
@@ -309,6 +311,19 @@ export function CreatePerformanceAssessmentForm({
                       value={row.youtube_url}
                       onChange={(e) => updateRow(row.key, { youtube_url: e.target.value })}
                       placeholder="https://youtube.com/watch?v=..."
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <Ruler className="size-3.5" />
+                      Result Unit (optional)
+                    </Label>
+                    <Input
+                      value={row.result_unit}
+                      onChange={(e) => updateRow(row.key, { result_unit: e.target.value })}
+                      placeholder="e.g. inches, seconds, cm"
+                      maxLength={50}
                       className="h-10"
                     />
                   </div>

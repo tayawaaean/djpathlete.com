@@ -15,12 +15,15 @@ const exerciseSchema = z.object({
   custom_name: z.string().max(200).nullable(),
   youtube_url: z.string().url().nullable().optional(),
   admin_notes: z.string().max(2000).nullable().optional(),
+  result_unit: z.string().max(50).nullable().optional(),
 }).refine((d) => d.exercise_id || d.custom_name, {
   message: "Either exercise_id or custom_name is required",
 })
 
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+
 const createSchema = z.object({
-  client_user_id: z.string().uuid(),
+  client_user_id: z.string().regex(uuidRegex, "Invalid UUID"),
   title: z.string().min(1).max(200),
   notes: z.string().max(5000).nullable().optional(),
   exercises: z.array(exerciseSchema).min(1, "At least one exercise is required"),
@@ -82,6 +85,8 @@ export async function POST(request: Request) {
         youtube_url: ex.youtube_url ?? null,
         video_path: null,
         admin_notes: ex.admin_notes ?? null,
+        result_value: null,
+        result_unit: ex.result_unit ?? null,
         order_index: i,
       }))
     )

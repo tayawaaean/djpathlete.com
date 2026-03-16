@@ -525,6 +525,8 @@ export interface PerformanceAssessmentExercise {
   youtube_url: string | null
   video_path: string | null
   admin_notes: string | null
+  result_value: number | null
+  result_unit: string | null
   order_index: number
   created_at: string
   updated_at: string

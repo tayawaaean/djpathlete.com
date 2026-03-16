@@ -146,6 +146,8 @@ export async function POST(
       youtube_url: parsed.data.youtube_url ?? null,
       video_path: null,
       admin_notes: parsed.data.admin_notes ?? null,
+      result_value: null,
+      result_unit: null,
       order_index: maxOrder + 1,
     })
 

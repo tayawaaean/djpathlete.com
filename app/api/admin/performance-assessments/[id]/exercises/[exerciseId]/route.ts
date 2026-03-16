@@ -10,6 +10,8 @@ const updateSchema = z.object({
   video_path: z.string().nullable().optional(),
   admin_notes: z.string().max(2000).nullable().optional(),
   youtube_url: z.string().url().nullable().optional(),
+  result_value: z.number().nullable().optional(),
+  result_unit: z.string().max(50).nullable().optional(),
 })
 
 export async function PATCH(

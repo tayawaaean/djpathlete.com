@@ -6,6 +6,7 @@ import { VideoPlayer } from "@/components/shared/VideoPlayer"
 import { YouTubeEmbed } from "@/components/shared/YouTubeEmbed"
 import { AssessmentExerciseThread } from "@/components/shared/AssessmentExerciseThread"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   CheckCircle2,
   Clock,
@@ -18,6 +19,8 @@ import {
   Youtube,
   Video,
   Trash2,
+  Ruler,
+  Save,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -30,6 +33,8 @@ interface AssessmentExercise {
   youtube_url: string | null
   video_path: string | null
   admin_notes: string | null
+  result_value: number | null
+  result_unit: string | null
   order_index: number
   exercises?: { id: string; name: string } | null
 }
@@ -92,6 +97,19 @@ export function PerformanceAssessmentDetail({
   const [expandedExercises, setExpandedExercises] = useState<Set<string>>(
     new Set(exercises.map((e) => e.id))
   )
+  const [results, setResults] = useState<Record<string, { value: string; unit: string }>>(
+    () => {
+      const initial: Record<string, { value: string; unit: string }> = {}
+      for (const ex of exercises) {
+        initial[ex.id] = {
+          value: ex.result_value != null ? String(ex.result_value) : "",
+          unit: ex.result_unit ?? "",
+        }
+      }
+      return initial
+    }
+  )
+  const [savingResult, setSavingResult] = useState<string | null>(null)
 
   const config = statusConfig[status]
   const StatusIcon = config.icon
@@ -136,6 +154,32 @@ export function PerformanceAssessmentDetail({
       toast.error("Failed to delete assessment")
     } finally {
       setDeleting(false)
+    }
+  }
+
+  async function saveResult(exerciseId: string) {
+    const r = results[exerciseId]
+    if (!r) return
+
+    setSavingResult(exerciseId)
+    try {
+      const res = await fetch(
+        `/api/admin/performance-assessments/${assessment.id}/exercises/${exerciseId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            result_value: r.value ? parseFloat(r.value) : null,
+            result_unit: r.unit.trim() || null,
+          }),
+        }
+      )
+      if (!res.ok) throw new Error("Failed to save result")
+      toast.success("Result saved")
+    } catch {
+      toast.error("Failed to save result")
+    } finally {
+      setSavingResult(null)
     }
   }
 
@@ -266,6 +310,11 @@ export function PerformanceAssessmentDetail({
                   {hasVideo && (
                     <Video className="size-4 text-green-600" />
                   )}
+                  {exercise.result_value != null && (
+                    <span className="text-xs bg-accent/15 text-accent-foreground px-1.5 py-0.5 rounded-full font-medium">
+                      {exercise.result_value}{exercise.result_unit ? ` ${exercise.result_unit}` : ""}
+                    </span>
+                  )}
                   {messages.length > 0 && (
                     <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
                       {messages.length} {messages.length === 1 ? "message" : "messages"}
@@ -291,6 +340,65 @@ export function PerformanceAssessmentDetail({
                       </p>
                     </div>
                   )}
+
+                  {/* Result input */}
+                  <div className="bg-surface rounded-lg p-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Ruler className="size-3.5" />
+                      Result
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Value"
+                        value={results[exercise.id]?.value ?? ""}
+                        onChange={(e) =>
+                          setResults((prev) => ({
+                            ...prev,
+                            [exercise.id]: {
+                              ...prev[exercise.id],
+                              value: e.target.value,
+                            },
+                          }))
+                        }
+                        className="h-9 w-28"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Unit (e.g. inches, seconds)"
+                        value={results[exercise.id]?.unit ?? ""}
+                        onChange={(e) =>
+                          setResults((prev) => ({
+                            ...prev,
+                            [exercise.id]: {
+                              ...prev[exercise.id],
+                              unit: e.target.value,
+                            },
+                          }))
+                        }
+                        className="h-9 w-48"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => saveResult(exercise.id)}
+                        disabled={savingResult === exercise.id}
+                        className="h-9"
+                      >
+                        {savingResult === exercise.id ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <Save className="size-3.5" />
+                        )}
+                      </Button>
+                    </div>
+                    {exercise.result_value != null && (
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Current: <span className="font-medium text-foreground">{exercise.result_value}{exercise.result_unit ? ` ${exercise.result_unit}` : ""}</span>
+                      </p>
+                    )}
+                  </div>
 
                   {/* YouTube example */}
                   {exercise.youtube_url && (

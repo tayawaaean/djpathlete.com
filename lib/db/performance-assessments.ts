@@ -121,7 +121,7 @@ export async function getAssessmentExercises(assessmentId: string) {
 
 export async function updateAssessmentExercise(
   id: string,
-  updates: Partial<Pick<PerformanceAssessmentExercise, "video_path" | "admin_notes" | "youtube_url">>
+  updates: Partial<Pick<PerformanceAssessmentExercise, "video_path" | "admin_notes" | "youtube_url" | "result_value" | "result_unit">>
 ) {
   const supabase = getClient()
   const { data, error } = await supabase
@@ -180,6 +180,43 @@ export async function createAssessmentMessage(
     .insert(message)
     .select("*, users(first_name, last_name, avatar_url, role)")
     .single()
+  if (error) throw error
+  return data
+}
+
+// ---------------------------------------------------------------------------
+// Exercise Result History (for progress tracking)
+// ---------------------------------------------------------------------------
+
+export async function getExerciseResultHistory(
+  clientUserId: string,
+  exerciseIdentifier: { exercise_id?: string; custom_name?: string }
+) {
+  const supabase = getClient()
+  let query = supabase
+    .from("performance_assessment_exercises")
+    .select(`
+      id,
+      result_value,
+      result_unit,
+      custom_name,
+      exercise_id,
+      exercises(id, name),
+      assessment_id,
+      performance_assessments!inner(id, title, created_at, client_user_id, status)
+    `)
+    .eq("performance_assessments.client_user_id", clientUserId)
+    .neq("performance_assessments.status", "draft")
+    .not("result_value", "is", null)
+    .order("created_at", { ascending: true })
+
+  if (exerciseIdentifier.exercise_id) {
+    query = query.eq("exercise_id", exerciseIdentifier.exercise_id)
+  } else if (exerciseIdentifier.custom_name) {
+    query = query.eq("custom_name", exerciseIdentifier.custom_name)
+  }
+
+  const { data, error } = await query
   if (error) throw error
   return data
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { VideoPlayer } from "@/components/shared/VideoPlayer"
 import { YouTubeEmbed } from "@/components/shared/YouTubeEmbed"
 import { AssessmentExerciseThread } from "@/components/shared/AssessmentExerciseThread"
@@ -15,6 +15,10 @@ import {
   Upload,
   Loader2,
   X,
+  Ruler,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -29,6 +33,8 @@ interface AssessmentExercise {
   youtube_url: string | null
   video_path: string | null
   admin_notes: string | null
+  result_value: number | null
+  result_unit: string | null
   order_index: number
   exercises?: { id: string; name: string } | null
 }
@@ -78,6 +84,50 @@ export function PerformanceAssessmentClientDetail({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadedVideos, setUploadedVideos] = useState<Record<string, string>>(videoUrlsMap)
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({})
+
+  const [resultHistory, setResultHistory] = useState<
+    Record<string, Array<{ result_value: number; result_unit: string | null; assessment_title: string; assessment_date: string }>>
+  >({})
+  const [loadingHistory, setLoadingHistory] = useState<Set<string>>(new Set())
+
+  const fetchResultHistory = useCallback(async (exercise: AssessmentExercise) => {
+    if (exercise.result_value == null) return
+    const key = exercise.exercise_id || exercise.custom_name || ""
+    if (resultHistory[key]) return
+
+    setLoadingHistory((prev) => new Set(prev).add(key))
+    try {
+      const params = exercise.exercise_id
+        ? `exercise_id=${exercise.exercise_id}`
+        : `custom_name=${encodeURIComponent(exercise.custom_name || "")}`
+      const res = await fetch(`/api/client/performance-assessments/results?${params}`)
+      if (!res.ok) return
+      const data = await res.json()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapped = data.map((d: any) => ({
+        result_value: d.result_value,
+        result_unit: d.result_unit,
+        assessment_title: d.performance_assessments?.title ?? "",
+        assessment_date: d.performance_assessments?.created_at ?? "",
+      }))
+      setResultHistory((prev) => ({ ...prev, [key]: mapped }))
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingHistory((prev) => {
+        const next = new Set(prev)
+        next.delete(key)
+        return next
+      })
+    }
+  }, [resultHistory])
+
+  // Fetch history for exercises that have results
+  useEffect(() => {
+    for (const ex of exercises) {
+      if (ex.result_value != null) fetchResultHistory(ex)
+    }
+  }, [exercises, fetchResultHistory])
 
   const isInProgress = assessment.status === "in_progress"
 
@@ -247,6 +297,11 @@ export function PerformanceAssessmentClientDetail({
                   {(exercise.video_path || uploadedVideos[exercise.id]) && (
                     <Video className="size-4 text-green-600" />
                   )}
+                  {exercise.result_value != null && (
+                    <span className="text-xs bg-accent/15 text-accent-foreground px-1.5 py-0.5 rounded-full font-medium">
+                      {exercise.result_value}{exercise.result_unit ? ` ${exercise.result_unit}` : ""}
+                    </span>
+                  )}
                   {messages.length > 0 && (
                     <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
                       {messages.length}
@@ -272,6 +327,90 @@ export function PerformanceAssessmentClientDetail({
                       </p>
                     </div>
                   )}
+
+                  {/* Result display */}
+                  {exercise.result_value != null && (() => {
+                    const historyKey = exercise.exercise_id || exercise.custom_name || ""
+                    const history = resultHistory[historyKey]
+                    const isLoading = loadingHistory.has(historyKey)
+
+                    return (
+                      <div className="bg-surface rounded-lg p-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                          <Ruler className="size-3.5" />
+                          Result
+                        </p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {exercise.result_value}
+                          {exercise.result_unit && (
+                            <span className="text-sm font-normal text-muted-foreground ml-1">
+                              {exercise.result_unit}
+                            </span>
+                          )}
+                        </p>
+
+                        {/* Progress history */}
+                        {isLoading && (
+                          <p className="text-xs text-muted-foreground mt-2">Loading history...</p>
+                        )}
+                        {history && history.length > 1 && (
+                          <div className="mt-3 border-t border-border pt-3">
+                            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                              <TrendingUp className="size-3.5" />
+                              Progress History
+                            </p>
+                            <div className="space-y-1.5">
+                              {history.map((entry, i) => {
+                                const prev = i > 0 ? history[i - 1].result_value : null
+                                const diff = prev != null ? entry.result_value - prev : null
+
+                                return (
+                                  <div
+                                    key={`${entry.assessment_date}-${i}`}
+                                    className="flex items-center justify-between text-xs"
+                                  >
+                                    <span className="text-muted-foreground">
+                                      {new Date(entry.assessment_date).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-foreground">
+                                        {entry.result_value}{entry.result_unit ? ` ${entry.result_unit}` : ""}
+                                      </span>
+                                      {diff != null && diff !== 0 && (
+                                        <span
+                                          className={cn(
+                                            "flex items-center gap-0.5 font-medium",
+                                            diff > 0 ? "text-green-600" : "text-red-500"
+                                          )}
+                                        >
+                                          {diff > 0 ? (
+                                            <TrendingUp className="size-3" />
+                                          ) : (
+                                            <TrendingDown className="size-3" />
+                                          )}
+                                          {diff > 0 ? "+" : ""}{Math.round(diff * 100) / 100}
+                                        </span>
+                                      )}
+                                      {diff === 0 && (
+                                        <span className="flex items-center gap-0.5 text-muted-foreground">
+                                          <Minus className="size-3" />
+                                          0
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                   {/* YouTube example */}
                   {exercise.youtube_url && (
