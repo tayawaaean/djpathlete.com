@@ -1,0 +1,207 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { Sparkles, Loader2, CheckCircle2, XCircle } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { useAiJob } from "@/hooks/use-ai-job"
+
+interface GenerateWeekDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  programId: string
+  assignmentId: string
+  clientId: string
+  currentWeekCount: number
+  onWeekGenerated: (newWeekNumber: number) => void
+}
+
+export function GenerateWeekDialog({
+  open,
+  onOpenChange,
+  programId,
+  assignmentId,
+  clientId,
+  currentWeekCount,
+  onWeekGenerated,
+}: GenerateWeekDialogProps) {
+  const router = useRouter()
+  const [instructions, setInstructions] = useState("")
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { status, result, error, reset } = useAiJob(jobId)
+
+  const isGenerating = jobId !== null && (status === "pending" || status === "processing")
+  const isComplete = status === "completed"
+  const isFailed = status === "failed"
+
+  async function handleSubmit() {
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/admin/programs/${programId}/generate-week`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignment_id: assignmentId,
+          client_id: clientId,
+          admin_instructions: instructions || undefined,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to start week generation")
+      }
+
+      const data = await response.json()
+      setJobId(data.jobId)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate week")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  function handleClose() {
+    if (isGenerating) return // Don't close while generating
+    if (isComplete && result) {
+      const newWeekNumber = (result as { new_week_number?: number }).new_week_number ?? currentWeekCount + 1
+      onWeekGenerated(newWeekNumber)
+      router.refresh()
+    }
+    // Reset state
+    setJobId(null)
+    setInstructions("")
+    reset()
+    onOpenChange(false)
+  }
+
+  function getProgressMessage(): string {
+    if (status === "pending") return "Queued..."
+    if (status === "processing") return "Generating week..."
+    if (status === "completed") {
+      const r = result as { new_week_number?: number; exercises_added?: number } | null
+      return `Week ${r?.new_week_number ?? currentWeekCount + 1} generated with ${r?.exercises_added ?? 0} exercises!`
+    }
+    if (status === "failed") return error ?? "Generation failed"
+    return ""
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="size-4 text-accent" />
+            AI Generate Week {currentWeekCount + 1}
+          </DialogTitle>
+          <DialogDescription>
+            Generate a new week based on the existing program structure and the
+            client&apos;s workout logs. The AI will apply appropriate progression.
+          </DialogDescription>
+        </DialogHeader>
+
+        {!isGenerating && !isComplete && !isFailed && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="instructions">Coach Instructions (optional)</Label>
+              <Textarea
+                id="instructions"
+                placeholder="e.g., Make it a deload week, increase squat volume, add more posterior chain work..."
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                rows={3}
+                maxLength={2000}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank for automatic progression based on performance data.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {(isGenerating || isComplete || isFailed) && (
+          <div className="flex flex-col items-center gap-3 py-4">
+            {isGenerating && (
+              <Loader2 className="size-8 text-accent animate-spin" />
+            )}
+            {isComplete && (
+              <CheckCircle2 className="size-8 text-success" />
+            )}
+            {isFailed && (
+              <XCircle className="size-8 text-destructive" />
+            )}
+            <p className="text-sm text-center text-muted-foreground">
+              {getProgressMessage()}
+            </p>
+          </div>
+        )}
+
+        <DialogFooter>
+          {!isGenerating && !isComplete && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="gap-1.5"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-3.5" />
+                    Generate
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+          {isComplete && (
+            <Button onClick={handleClose}>
+              View Week {(result as { new_week_number?: number })?.new_week_number ?? currentWeekCount + 1}
+            </Button>
+          )}
+          {isFailed && (
+            <>
+              <Button variant="outline" onClick={handleClose}>
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setJobId(null)
+                  reset()
+                }}
+              >
+                Try Again
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}

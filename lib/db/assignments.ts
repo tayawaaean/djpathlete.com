@@ -60,6 +60,21 @@ export async function getActiveUserIdsForProgram(programId: string): Promise<str
   return (data ?? []).map((r) => r.user_id)
 }
 
+/** Get the first active assignment for a program (for AI week generation). */
+export async function getFirstActiveAssignmentForProgram(programId: string) {
+  const supabase = getClient()
+  const { data, error } = await supabase
+    .from("program_assignments")
+    .select("id, user_id, current_week, total_weeks")
+    .eq("program_id", programId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
 /** Get the user's active assignment (most recent). */
 export async function getActiveAssignment(userId: string) {
   const supabase = getClient()

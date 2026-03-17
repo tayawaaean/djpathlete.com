@@ -145,6 +145,27 @@ export const newsletterSend = onDocumentCreated(
   }
 )
 
+// ─── Week Generation ────────────────────────────────────────────────────────
+// Triggered when a new ai_jobs doc is created with type "week_generation"
+// Generates a single new week for an existing assigned program
+
+export const weekGeneration = onDocumentCreated(
+  {
+    document: "ai_jobs/{jobId}",
+    timeoutSeconds: 300,
+    memory: "1GiB",
+    region: "us-central1",
+    secrets: allSecrets,
+  },
+  async (event) => {
+    const data = event.data?.data()
+    if (!data || data.type !== "week_generation") return
+
+    const { handleWeekGeneration } = await import("./week-generation.js")
+    await handleWeekGeneration(event.params.jobId)
+  }
+)
+
 export const aiCoach = onDocumentCreated(
   {
     document: "ai_jobs/{jobId}",

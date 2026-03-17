@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy } from "lucide-react"
+import { Copy, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface WeekSelectorProps {
@@ -8,6 +8,8 @@ interface WeekSelectorProps {
   selectedWeek: number
   onSelectWeek: (week: number) => void
   onDuplicateWeek: () => void
+  onGenerateWeek?: () => void
+  canGenerateWeek?: boolean
 }
 
 export function WeekSelector({
@@ -15,6 +17,8 @@ export function WeekSelector({
   selectedWeek,
   onSelectWeek,
   onDuplicateWeek,
+  onGenerateWeek,
+  canGenerateWeek = false,
 }: WeekSelectorProps) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -37,6 +41,18 @@ export function WeekSelector({
         <Copy className="size-3.5" />
         Duplicate Week
       </Button>
+      {canGenerateWeek && onGenerateWeek && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onGenerateWeek}
+          title="AI generate the next week based on client performance"
+          className="text-accent border-accent/30 hover:bg-accent/10"
+        >
+          <Sparkles className="size-3.5" />
+          AI Generate Week
+        </Button>
+      )}
     </div>
   )
 }

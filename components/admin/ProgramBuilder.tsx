@@ -31,15 +31,22 @@ import { DayColumn } from "@/components/admin/DayColumn"
 import { AddExerciseDialog } from "@/components/admin/AddExerciseDialog"
 import { EditExerciseDialog } from "@/components/admin/EditExerciseDialog"
 import { ExerciseCard } from "@/components/admin/ExerciseCard"
+import { GenerateWeekDialog } from "@/components/admin/GenerateWeekDialog"
 import type { Exercise, ProgramExercise } from "@/types/database"
 
 type ProgramExerciseWithExercise = ProgramExercise & { exercises: Exercise }
+
+interface AssignmentInfo {
+  assignmentId: string
+  clientId: string
+}
 
 interface ProgramBuilderProps {
   programId: string
   totalWeeks: number
   programExercises: ProgramExerciseWithExercise[]
   exercises: Exercise[]
+  assignmentInfo?: AssignmentInfo | null
 }
 
 export function ProgramBuilder({
@@ -47,15 +54,20 @@ export function ProgramBuilder({
   totalWeeks,
   programExercises,
   exercises,
+  assignmentInfo,
 }: ProgramBuilderProps) {
   const router = useRouter()
   const [selectedWeek, setSelectedWeek] = useState(1)
+  const [localTotalWeeks, setLocalTotalWeeks] = useState(totalWeeks)
 
   // Optimistic local state — mirrors server props but updates instantly on drag
   const [localExercises, setLocalExercises] = useState(programExercises)
   useEffect(() => {
     setLocalExercises(programExercises)
   }, [programExercises])
+  useEffect(() => {
+    setLocalTotalWeeks(totalWeeks)
+  }, [totalWeeks])
 
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -67,6 +79,9 @@ export function ProgramBuilder({
   // Duplicate week dialog
   const [duplicateOpen, setDuplicateOpen] = useState(false)
   const [isDuplicating, setIsDuplicating] = useState(false)
+
+  // AI Generate week dialog
+  const [generateWeekOpen, setGenerateWeekOpen] = useState(false)
 
   // Active drag item (for overlay)
   const [activeExercise, setActiveExercise] = useState<ProgramExerciseWithExercise | null>(null)
@@ -426,10 +441,12 @@ export function ProgramBuilder({
     <div className="space-y-4">
       {/* Week selector */}
       <WeekSelector
-        totalWeeks={totalWeeks}
+        totalWeeks={localTotalWeeks}
         selectedWeek={selectedWeek}
         onSelectWeek={setSelectedWeek}
         onDuplicateWeek={() => setDuplicateOpen(true)}
+        onGenerateWeek={() => setGenerateWeekOpen(true)}
+        canGenerateWeek={!!assignmentInfo}
       />
 
       {/* Day grid */}
@@ -530,9 +547,9 @@ export function ProgramBuilder({
                 name="targetWeek"
                 type="number"
                 min={1}
-                max={totalWeeks}
+                max={localTotalWeeks}
                 required
-                defaultValue={selectedWeek < totalWeeks ? selectedWeek + 1 : 1}
+                defaultValue={selectedWeek < localTotalWeeks ? selectedWeek + 1 : 1}
                 disabled={isDuplicating}
               />
             </div>
@@ -571,7 +588,7 @@ export function ProgramBuilder({
                   name="targetWeek"
                   type="number"
                   min={1}
-                  max={totalWeeks}
+                  max={localTotalWeeks}
                   required
                   defaultValue={selectedWeek}
                   disabled={isDuplicatingEx}
@@ -609,6 +626,22 @@ export function ProgramBuilder({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* AI Generate Week Dialog */}
+      {assignmentInfo && (
+        <GenerateWeekDialog
+          open={generateWeekOpen}
+          onOpenChange={setGenerateWeekOpen}
+          programId={programId}
+          assignmentId={assignmentInfo.assignmentId}
+          clientId={assignmentInfo.clientId}
+          currentWeekCount={localTotalWeeks}
+          onWeekGenerated={(newWeekNumber) => {
+            setLocalTotalWeeks(newWeekNumber)
+            setSelectedWeek(newWeekNumber)
+          }}
+        />
+      )}
     </div>
   )
 }
