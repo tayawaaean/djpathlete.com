@@ -106,6 +106,40 @@ export async function duplicateWeekExercises(
   return data as ProgramExercise[]
 }
 
+export async function deleteWeekExercises(
+  programId: string,
+  weekNumber: number
+) {
+  const supabase = getClient()
+
+  // Delete all exercises in the target week
+  const { error: deleteError } = await supabase
+    .from("program_exercises")
+    .delete()
+    .eq("program_id", programId)
+    .eq("week_number", weekNumber)
+  if (deleteError) throw deleteError
+
+  // Shift subsequent weeks down by 1
+  const { data: laterExercises, error: fetchError } = await supabase
+    .from("program_exercises")
+    .select("id, week_number")
+    .eq("program_id", programId)
+    .gt("week_number", weekNumber)
+  if (fetchError) throw fetchError
+
+  if (laterExercises && laterExercises.length > 0) {
+    await Promise.all(
+      laterExercises.map((ex: { id: string; week_number: number }) =>
+        supabase
+          .from("program_exercises")
+          .update({ week_number: ex.week_number - 1 })
+          .eq("id", ex.id)
+      )
+    )
+  }
+}
+
 export async function duplicateProgramExercises(
   sourceProgramId: string,
   targetProgramId: string

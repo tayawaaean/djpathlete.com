@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, Plus, Sparkles } from "lucide-react"
+import { Copy, Plus, Sparkles, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface WeekSelectorProps {
@@ -10,6 +10,8 @@ interface WeekSelectorProps {
   onDuplicateWeek: () => void
   onAddWeek: () => void
   isAddingWeek?: boolean
+  onDeleteWeek: () => void
+  isDeletingWeek?: boolean
   onGenerateWeek?: () => void
   canGenerateWeek?: boolean
 }
@@ -21,6 +23,8 @@ export function WeekSelector({
   onDuplicateWeek,
   onAddWeek,
   isAddingWeek = false,
+  onDeleteWeek,
+  isDeletingWeek = false,
   onGenerateWeek,
   canGenerateWeek = false,
 }: WeekSelectorProps) {
@@ -55,6 +59,19 @@ export function WeekSelector({
         <Copy className="size-3.5" />
         Duplicate Week
       </Button>
+      {totalWeeks > 1 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDeleteWeek}
+          disabled={isDeletingWeek}
+          title="Remove this week and all its exercises"
+          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3.5" />
+          {isDeletingWeek ? "Removing..." : "Remove Week"}
+        </Button>
+      )}
       {canGenerateWeek && onGenerateWeek && (
         <Button
           variant="outline"

@@ -86,6 +86,10 @@ export function ProgramBuilder({
   // Add blank week
   const [isAddingWeek, setIsAddingWeek] = useState(false)
 
+  // Delete week
+  const [deleteWeekOpen, setDeleteWeekOpen] = useState(false)
+  const [isDeletingWeek, setIsDeletingWeek] = useState(false)
+
   async function handleAddWeek() {
     if (isAddingWeek) return
     setIsAddingWeek(true)
@@ -107,6 +111,36 @@ export function ProgramBuilder({
       toast.error(err instanceof Error ? err.message : "Failed to add week")
     } finally {
       setIsAddingWeek(false)
+    }
+  }
+
+  async function handleDeleteWeek() {
+    if (isDeletingWeek) return
+    setIsDeletingWeek(true)
+    try {
+      const response = await fetch(`/api/admin/programs/${programId}/delete-week`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weekNumber: selectedWeek }),
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to delete week")
+      }
+      const data = await response.json()
+      const newTotal = data.new_total_weeks as number
+      setLocalTotalWeeks(newTotal)
+      // Move to the previous week if we deleted the last one
+      if (selectedWeek > newTotal) {
+        setSelectedWeek(newTotal)
+      }
+      toast.success(`Week ${selectedWeek} removed`)
+      setDeleteWeekOpen(false)
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete week")
+    } finally {
+      setIsDeletingWeek(false)
     }
   }
 
@@ -474,6 +508,8 @@ export function ProgramBuilder({
         onDuplicateWeek={() => setDuplicateOpen(true)}
         onAddWeek={handleAddWeek}
         isAddingWeek={isAddingWeek}
+        onDeleteWeek={() => setDeleteWeekOpen(true)}
+        isDeletingWeek={isDeletingWeek}
         onGenerateWeek={() => setGenerateWeekOpen(true)}
         canGenerateWeek={!!assignmentInfo}
       />
@@ -554,6 +590,35 @@ export function ProgramBuilder({
               disabled={isDeleting}
             >
               {isDeleting ? "Removing..." : "Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Week Confirmation Dialog */}
+      <Dialog open={deleteWeekOpen} onOpenChange={setDeleteWeekOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Week {selectedWeek}</DialogTitle>
+            <DialogDescription>
+              This will permanently delete Week {selectedWeek} and all its exercises.
+              {selectedWeek < localTotalWeeks && " Subsequent weeks will be renumbered."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteWeekOpen(false)}
+              disabled={isDeletingWeek}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteWeek}
+              disabled={isDeletingWeek}
+            >
+              {isDeletingWeek ? "Removing..." : "Remove Week"}
             </Button>
           </DialogFooter>
         </DialogContent>
