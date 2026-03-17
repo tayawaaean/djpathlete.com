@@ -40,7 +40,8 @@ export async function POST(request: Request) {
     let text = ""
 
     if (file.type === "application/pdf") {
-      const pdfParse = (await import("pdf-parse")).default
+      // Import inner lib to avoid pdf-parse's default test file read
+      const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default
       const result = await pdfParse(buffer)
       text = result.text
     } else {
