@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
 import { importSubscribers } from "@/lib/db/newsletter"
+import { ghlCreateContact } from "@/lib/ghl"
 
 const importSchema = z.object({
   emails: z
@@ -33,6 +34,15 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await importSubscribers(parsed.data.emails)
+
+    // Sync new subscribers to GHL (fire-and-forget)
+    for (const email of parsed.data.emails) {
+      ghlCreateContact({
+        email,
+        tags: ["newsletter"],
+        source: "admin-import",
+      })
+    }
 
     return NextResponse.json({
       success: true,
