@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, Sparkles } from "lucide-react"
+import { Copy, Plus, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface WeekSelectorProps {
@@ -8,6 +8,8 @@ interface WeekSelectorProps {
   selectedWeek: number
   onSelectWeek: (week: number) => void
   onDuplicateWeek: () => void
+  onAddWeek: () => void
+  isAddingWeek?: boolean
   onGenerateWeek?: () => void
   canGenerateWeek?: boolean
 }
@@ -17,6 +19,8 @@ export function WeekSelector({
   selectedWeek,
   onSelectWeek,
   onDuplicateWeek,
+  onAddWeek,
+  isAddingWeek = false,
   onGenerateWeek,
   canGenerateWeek = false,
 }: WeekSelectorProps) {
@@ -32,6 +36,16 @@ export function WeekSelector({
           Week {week}
         </Button>
       ))}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onAddWeek}
+        disabled={isAddingWeek}
+        title="Add a new blank week"
+      >
+        <Plus className="size-3.5" />
+        {isAddingWeek ? "Adding..." : "Add Week"}
+      </Button>
       <Button
         variant="outline"
         size="sm"

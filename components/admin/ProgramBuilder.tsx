@@ -83,6 +83,33 @@ export function ProgramBuilder({
   // AI Generate week dialog
   const [generateWeekOpen, setGenerateWeekOpen] = useState(false)
 
+  // Add blank week
+  const [isAddingWeek, setIsAddingWeek] = useState(false)
+
+  async function handleAddWeek() {
+    if (isAddingWeek) return
+    setIsAddingWeek(true)
+    try {
+      const response = await fetch(`/api/admin/programs/${programId}/add-week`, {
+        method: "POST",
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to add week")
+      }
+      const data = await response.json()
+      const newWeek = data.new_week_number as number
+      setLocalTotalWeeks(newWeek)
+      setSelectedWeek(newWeek)
+      toast.success(`Week ${newWeek} added`)
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add week")
+    } finally {
+      setIsAddingWeek(false)
+    }
+  }
+
   // Active drag item (for overlay)
   const [activeExercise, setActiveExercise] = useState<ProgramExerciseWithExercise | null>(null)
 
@@ -445,6 +472,8 @@ export function ProgramBuilder({
         selectedWeek={selectedWeek}
         onSelectWeek={setSelectedWeek}
         onDuplicateWeek={() => setDuplicateOpen(true)}
+        onAddWeek={handleAddWeek}
+        isAddingWeek={isAddingWeek}
         onGenerateWeek={() => setGenerateWeekOpen(true)}
         canGenerateWeek={!!assignmentInfo}
       />
