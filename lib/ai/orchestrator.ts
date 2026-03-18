@@ -390,6 +390,9 @@ export async function runStep3(logId: string): Promise<void> {
   const { analysis, compressed, client_name: clientName, experience_level: clientDifficulty, available_equipment: availableEquipment } = step1Data
   const { skeleton } = step2Data
 
+  // Read feedback patterns from step1 (coach feedback from past generations)
+  const feedbackPatterns = (step1Data as Record<string, unknown>).feedback_patterns as string | undefined
+
   // Build variation constraints (may have been saved in step2, rebuild if missing)
   const variationConstraints = step2Data.variation_constraints ?? buildVariationConstraints(skeleton)
   const variationRulesText = formatVariationRulesForPrompt(variationConstraints)
@@ -488,7 +491,7 @@ ${variationRulesText}
 
 ${graphContext}
 
-${priorContext.prompt_text}${feedbackSection}${dedupFeedback}`
+${priorContext.prompt_text}${feedbackPatterns ? `\n\n${feedbackPatterns}` : ""}${feedbackSection}${dedupFeedback}`
 
       try {
         const agent3Result: AgentCallResult<ExerciseAssignment> = await callAgent<ExerciseAssignment>(
@@ -1139,7 +1142,7 @@ ${variationRulesText}
 
 ${graphContext}
 
-${priorContext.prompt_text}${feedbackSection}${dedupFeedback}`
+${priorContext.prompt_text}${feedbackContext.promptText ? `\n\n${feedbackContext.promptText}` : ""}${feedbackSection}${dedupFeedback}`
 
         try {
           console.log(`[orchestrator:sync] Week ${weekNum} attempt ${attempt + 1}/${MAX_RETRIES + 1}...`)
