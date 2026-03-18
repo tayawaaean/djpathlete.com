@@ -82,13 +82,18 @@ async function getRecentProgress(userId: string, exerciseIds: string[], limit = 
   return data ?? []
 }
 
-async function addExerciseToProgram(params: Record<string, unknown>, retries = 3) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    const supabase = getSupabase()
-    const { error } = await supabase.from("program_exercises").insert(params)
-    if (!error) return
-    if (attempt === retries) throw new Error(`Failed to add exercise: ${error.message}`)
-    await new Promise((r) => setTimeout(r, 1000 * attempt))
+async function bulkAddExercisesToProgram(rows: Record<string, unknown>[], retries = 3) {
+  const BATCH_SIZE = 25
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE)
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const supabase = getSupabase()
+      const { error } = await supabase.from("program_exercises").insert(batch)
+      if (!error) break
+      if (attempt === retries) throw new Error(`Failed to add exercises (batch ${Math.floor(i / BATCH_SIZE) + 1}): ${error.message}`)
+      console.warn(`[week-orchestrator] bulkAddExercises batch ${Math.floor(i / BATCH_SIZE) + 1} attempt ${attempt} failed: ${error.message}, retrying...`)
+      await new Promise((r) => setTimeout(r, 1000 * attempt))
+    }
   }
 }
 
@@ -574,19 +579,23 @@ IMPORTANT: Review the full program progression summary above. If the coach's ins
     }
   }
 
-  await Promise.all(assignment.assignments.map((assigned) => {
-    const location = slotLookup.get(assigned.slot_id)
-    const details = slotDetailsLookup.get(assigned.slot_id)
-    if (!location || !details) return Promise.resolve(null)
-    return addExerciseToProgram({
-      program_id: request.program_id, exercise_id: assigned.exercise_id,
-      day_of_week: location.day_of_week, week_number: location.week_number,
-      order_index: location.order_index, sets: details.sets, reps: details.reps,
-      duration_seconds: null, rest_seconds: details.rest_seconds, notes: assigned.notes,
-      rpe_target: details.rpe_target, intensity_pct: null, tempo: details.tempo,
-      group_tag: details.group_tag, technique: details.technique ?? "straight_set",
+  const exerciseRows = assignment.assignments
+    .map((assigned) => {
+      const location = slotLookup.get(assigned.slot_id)
+      const details = slotDetailsLookup.get(assigned.slot_id)
+      if (!location || !details) return null
+      return {
+        program_id: request.program_id, exercise_id: assigned.exercise_id,
+        day_of_week: location.day_of_week, week_number: location.week_number,
+        order_index: location.order_index, sets: details.sets, reps: details.reps,
+        duration_seconds: null, rest_seconds: details.rest_seconds, notes: assigned.notes,
+        rpe_target: details.rpe_target, intensity_pct: null, tempo: details.tempo,
+        group_tag: details.group_tag, technique: details.technique ?? "straight_set",
+      }
     })
-  }))
+    .filter((r) => r !== null) as Record<string, unknown>[]
+
+  await bulkAddExercisesToProgram(exerciseRows)
 
   // Update program duration and assignment total_weeks
   await updateProgramDuration(request.program_id, newWeekNumber)

@@ -224,6 +224,8 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
   const [progressDetail, setProgressDetail] = useState<string | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const staleCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastRtdbUpdateRef = useRef<number>(Date.now())
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showAssign, setShowAssign] = useState(false)
@@ -440,6 +442,10 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
       unsubRef.current()
       unsubRef.current = null
     }
+    if (staleCheckRef.current) {
+      clearInterval(staleCheckRef.current)
+      staleCheckRef.current = null
+    }
   }
 
   function mapProgressToStep(progress?: { status: string; current_step: number; total_steps: number; detail?: string }): { step: number; detail: string | null } {
@@ -504,16 +510,59 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
         // Listen to RTDB job node for real-time progress
         const jobRef = ref(rtdb, `ai_jobs/${data.jobId}`)
         jobRefRef.current = jobRef
+        lastRtdbUpdateRef.current = Date.now()
 
         const stopTimer = () => {
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
         }
+
+        // Stale check: if no RTDB update for 2 minutes, poll Firestore API
+        staleCheckRef.current = setInterval(async () => {
+          const staleSec = (Date.now() - lastRtdbUpdateRef.current) / 1000
+          if (staleSec < 120) return
+          try {
+            const res = await fetch(`/api/ai-jobs/${data.jobId}`)
+            if (!res.ok) return
+            const jobStatus = await res.json()
+            if (jobStatus.status === "completed" && jobStatus.result) {
+              stopListening()
+              stopTimer()
+              setResult({
+                program_id: jobStatus.result.program_id,
+                validation: jobStatus.result.validation ?? { pass: true, issues: [], summary: "Program generated successfully." },
+                token_usage: jobStatus.result.token_usage ?? { agent1: 0, agent2: 0, agent3: 0, agent4: 0, total: 0 },
+                duration_ms: jobStatus.result.duration_ms ?? 0,
+                retries: jobStatus.result.retries ?? 0,
+              })
+              setIsGenerating(false)
+              toast.success("Program generated successfully!")
+              router.refresh()
+            } else if (jobStatus.status === "failed") {
+              stopListening()
+              stopTimer()
+              setError(jobStatus.error || "Program generation failed — the server may have timed out. Please try again.")
+              setIsGenerating(false)
+              toast.error("Program generation failed")
+            } else if (staleSec >= 600) {
+              // 10 minute hard timeout — function definitely timed out
+              stopListening()
+              stopTimer()
+              setError("Program generation timed out. The server stopped responding. Please try again.")
+              setIsGenerating(false)
+              toast.error("Generation timed out")
+            }
+          } catch {
+            // Polling failed, will retry next interval
+          }
+        }, 15000)
 
         onValue(
           jobRef,
           (snapshot) => {
             const jobData = snapshot.val()
             if (!jobData) return
+
+            lastRtdbUpdateRef.current = Date.now()
 
             // Update step progress from orchestrator
             if (jobData.progress) {
