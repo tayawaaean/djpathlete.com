@@ -471,7 +471,7 @@ export async function runStep3(logId: string): Promise<void> {
             .filter((i) => i.severity === "error")
             .map((i) => `- ${i.message}`)
             .join("\n")
-          dedupFeedback = `\n\nEXERCISE REPETITION DETECTED — you MUST choose DIFFERENT exercises:\n${repetitionIssues}\n\nSelect alternative exercises from the library that serve the same purpose but are NOT the same as those listed above.`
+          dedupFeedback = `\n\nEXERCISE REPETITION DETECTED — you MUST choose DIFFERENT exercises:\n${repetitionIssues}\n\nSelect alternative exercises from the library that STILL MATCH the slot's movement_pattern, target_muscles, and role — but use a different exercise_id. Do NOT pick random exercises just to avoid repetition. Vary by equipment (dumbbell→cable→machine), angle, or stance while keeping the same training purpose.`
         }
       }
 
@@ -1122,7 +1122,7 @@ ${request.additional_instructions ? `- Additional instructions: ${request.additi
               .filter((i) => i.severity === "error")
               .map((i) => `- ${i.message}`)
               .join("\n")
-            dedupFeedback = `\n\nEXERCISE REPETITION DETECTED — you MUST choose DIFFERENT exercises:\n${repetitionIssues}\n\nSelect alternative exercises from the library that serve the same purpose but are NOT the same as those listed above.`
+            dedupFeedback = `\n\nEXERCISE REPETITION DETECTED — you MUST choose DIFFERENT exercises:\n${repetitionIssues}\n\nSelect alternative exercises from the library that STILL MATCH the slot's movement_pattern, target_muscles, and role — but use a different exercise_id. Do NOT pick random exercises just to avoid repetition. Vary by equipment (dumbbell→cable→machine), angle, or stance while keeping the same training purpose.`
           }
         }
 

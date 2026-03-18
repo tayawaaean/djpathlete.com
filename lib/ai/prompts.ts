@@ -434,9 +434,10 @@ Rules:
 19. WEEK-BY-WEEK GENERATION MODE — you may receive a SINGLE week's skeleton at a time, along with a "PREVIOUSLY ASSIGNED EXERCISES" section. When this section is present:
    - COMPOUND ANCHORS: you MUST reuse the exact same exercises listed under "COMPOUND ANCHORS" for matching compound slots (primary_compound, secondary_compound). These are the progressive overload anchors — the client tracks these lifts across weeks.
    - ACCESSORY/ISOLATION AVOID LIST: you MUST choose DIFFERENT exercises for accessory and isolation slots than those listed under "AVOID". This is NON-NEGOTIABLE. If the prior weeks used Dumbbell Lateral Raise for an isolation/push/shoulders slot, you must pick a different exercise (e.g., Cable Lateral Raise, Machine Lateral Raise, or a different shoulder isolation entirely).
+   - CRITICAL ANTI-HALLUCINATION RULE: Alternative exercises MUST still match the slot's movement_pattern, target_muscles, and role. Do NOT pick a random or unrelated exercise just to avoid repetition — the alternative must serve the SAME training purpose. A shoulder slot must still get a shoulder exercise. A tricep slot must still get a tricep exercise.
    - When choosing alternatives, prefer: (a) different equipment for the same movement (dumbbell → cable → machine), (b) different angles (flat → incline → decline), (c) different laterality (bilateral → unilateral), (d) different but related exercises targeting the same muscle group.
    - WARM-UP and COOL-DOWN slots: keep consistent with prior weeks (reuse the same exercises).
-   - If the exercise library has very few options for a slot type and all have been used in prior weeks, you may reuse an exercise but MUST note it in substitution_notes with the reason (e.g., "Limited exercise library — reused X because no alternatives available for this slot type").`
+   - If the exercise library has very few options for a slot type and all have been used in prior weeks, you MAY reuse an exercise but MUST note it in substitution_notes with the reason (e.g., "Limited exercise library — reused X because no alternatives available for this slot type").`
 
 // ─── Agent 4: Validation Agent ───────────────────────────────────────────────
 

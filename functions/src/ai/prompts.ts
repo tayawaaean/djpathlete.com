@@ -387,7 +387,14 @@ Rules:
    - Tempo instructions when the slot specifies tempo (e.g., "3 second eccentric, pause at bottom")
    - Form cues for exercises where technique matters most (e.g., "drive through heels", "chest up", "squeeze at the top")
    - Modification notes for exercises near injury areas (e.g., "use neutral grip if shoulder feels tight", "reduce ROM if lower back rounds")
-   - Technique-specific notes (e.g., for dropsets: "drop weight 20-30% immediately, no rest, push to near-failure")`
+   - Technique-specific notes (e.g., for dropsets: "drop weight 20-30% immediately, no rest, push to near-failure")
+14. WEEK-BY-WEEK GENERATION MODE — you may receive a SINGLE week's skeleton at a time, along with a "PREVIOUSLY ASSIGNED EXERCISES" section and "COACH INSTRUCTIONS" section. When these sections are present:
+   - COMPOUND ANCHORS: you MUST reuse the exact same exercises listed under "COMPOUND ANCHORS" for matching compound slots (primary_compound, secondary_compound).
+   - ACCESSORY/ISOLATION AVOID LIST: you MUST choose DIFFERENT exercises for accessory and isolation slots than those listed under "AVOID". This is NON-NEGOTIABLE.
+   - CRITICAL: Alternative exercises MUST still match the slot's movement_pattern, target_muscles, and role. Do NOT pick a random exercise just to avoid repetition — the alternative must serve the SAME training purpose. Vary by equipment (dumbbell→cable→machine), angle (flat→incline→decline), or laterality (bilateral→unilateral).
+   - COACH INSTRUCTIONS: When coach instructions are provided, they are the HIGHEST PRIORITY signal for exercise selection. Read them carefully and select exercises that align with the coach's intent (focus areas, themes, equipment constraints, specific requests).
+   - WARM-UP and COOL-DOWN slots: keep consistent with prior weeks.
+   - If the exercise library has very few options for a slot type and all suitable alternatives have been used, you MAY reuse an exercise but MUST explain why in substitution_notes.`
 
 // ─── Agent 4: Validation Agent ───────────────────────────────────────────────
 

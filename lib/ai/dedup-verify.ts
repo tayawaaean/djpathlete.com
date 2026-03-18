@@ -158,8 +158,14 @@ export function buildPriorWeekContext(
     }
 
     lines.push(`Total unique exercises used so far: ${exercise_week_map.size}`)
-    lines.push("For accessory and isolation slots, you MUST select exercises NOT in the AVOID list above.")
-    lines.push("For compound anchor slots, you MUST reuse the same exercises listed above.")
+    lines.push("")
+    lines.push("RULES FOR USING THIS CONTEXT:")
+    lines.push("- For compound anchor slots: MUST reuse the same exercises listed above.")
+    lines.push("- For accessory and isolation slots: MUST select exercises NOT in the AVOID list above.")
+    lines.push("- CRITICAL: Alternative exercises MUST still match the slot's movement_pattern, target_muscles, and role.")
+    lines.push("  Do NOT pick a random exercise just to avoid repetition — the alternative must serve the same training purpose.")
+    lines.push("  Example: if avoiding Dumbbell Lateral Raise for an isolation/push/[shoulders] slot, pick Cable Lateral Raise or Machine Lateral Raise — NOT a bicep curl.")
+    lines.push("- If the exercise library has NO suitable alternatives for a slot type, you MAY reuse an exercise but MUST explain why in substitution_notes.")
     lines.push("")
   }
 

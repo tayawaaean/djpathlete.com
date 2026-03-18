@@ -494,11 +494,16 @@ IMPORTANT: Review the full program progression summary above. If the coach's ins
           .filter((i) => i.severity === "error")
           .map((i) => `- ${i.message}`)
           .join("\n")
-        feedbackSection = `\n\nEXERCISE REPETITION DETECTED — you MUST choose DIFFERENT exercises:\n${repetitionIssues}\n\nSelect alternative exercises from the library that serve the same purpose but are NOT the same as those listed above.`
+        feedbackSection = `\n\nEXERCISE REPETITION DETECTED — you MUST choose DIFFERENT exercises:\n${repetitionIssues}\n\nSelect alternative exercises from the library that STILL MATCH the slot's movement_pattern, target_muscles, and role — but use a different exercise_id. Do NOT pick random exercises just to avoid repetition. Vary by equipment (dumbbell→cable→machine), angle, or stance while keeping the same training purpose.`
       }
     }
 
-    const selectorMessage = `Program Skeleton (Week ${newWeekNumber}):\n${JSON.stringify(skeleton)}\n\nConstraints:\n${constraintsContext}\n\nExercise Library (${filtered.length} exercises):\n${exerciseLibrary}\n\n${priorContext.prompt_text}\n\nIMPORTANT: For PRIMARY_COMPOUND and SECONDARY_COMPOUND slots, REUSE the compound anchor exercises listed above for progressive overload continuity. For ACCESSORY and ISOLATION slots, select DIFFERENT exercises than those in the AVOID list above.${feedbackSection}`
+    // Build coach instructions section for the exercise selector
+    const coachInstructionsSection = request.admin_instructions
+      ? `\n\nCOACH INSTRUCTIONS FOR THIS WEEK (READ CAREFULLY — these override default selection logic):\n${request.admin_instructions}\n\nWhen selecting exercises, prioritize choices that align with the coach's instructions above. For example:\n- If the coach says "glute focus" → pick glute-dominant exercises for accessory/isolation slots (hip thrusts, glute bridges, cable kickbacks)\n- If the coach says "bodyweight only" → only select exercises where is_bodyweight=true or equipment_required is empty\n- If the coach says "deload" → pick lighter/simpler variations of the usual exercises\n- If the coach references a specific exercise or muscle group → prioritize it in your selections`
+      : ""
+
+    const selectorMessage = `Program Skeleton (Week ${newWeekNumber}):\n${JSON.stringify(skeleton)}\n\nConstraints:\n${constraintsContext}\n\nExercise Library (${filtered.length} exercises):\n${exerciseLibrary}\n\n${priorContext.prompt_text}${coachInstructionsSection}\n\nIMPORTANT: For PRIMARY_COMPOUND and SECONDARY_COMPOUND slots, REUSE the compound anchor exercises listed above for progressive overload continuity. For ACCESSORY and ISOLATION slots, select DIFFERENT exercises than those in the AVOID list above — but alternatives MUST still match the slot's movement_pattern and target_muscles.${feedbackSection}`
 
     try {
       console.log(`[week-orchestrator] Exercise selector attempt ${attempt + 1}/${MAX_RETRIES + 1}...`)
