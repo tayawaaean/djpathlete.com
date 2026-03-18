@@ -50,7 +50,7 @@ export default async function ClientDashboardPage() {
     ])
 
     const typedAssignments = assignments as AssignmentWithProgram[]
-    activeAssignments = typedAssignments.filter((a) => a.status === "active")
+    activeAssignments = typedAssignments.filter((a) => a.status === "active" && a.payment_status !== "pending")
     totalWorkouts = progress.length
     currentStreak = streak
     hasCompletedQuestionnaire = !!(profile?.goals && profile.goals.trim().length > 0)

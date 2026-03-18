@@ -71,13 +71,13 @@ export default async function ClientProgramDetailPage({ params }: Props) {
     }
   }
 
-  // Block access if program is private, not targeted at this user, and not public
-  if (!program.is_public && program.target_user_id && program.target_user_id !== session.user.id) {
-    notFound()
-  }
-
   const assignment = await getAssignmentByUserAndProgram(session.user.id, program.id)
   const owned = !!assignment && assignment.payment_status !== "pending"
+
+  // Block access if program is private, not targeted at this user, and user has no assignment
+  if (!program.is_public && program.target_user_id && program.target_user_id !== session.user.id && !assignment) {
+    notFound()
+  }
   const isTargeted = program.target_user_id === session.user.id
 
   return (
@@ -151,7 +151,7 @@ export default async function ClientProgramDetailPage({ params }: Props) {
         </div>
         <div className="rounded-xl border border-border bg-white p-4 text-center">
           <BarChart3 className="size-5 text-accent mx-auto mb-1.5" strokeWidth={1.5} />
-          <p className="text-xl font-semibold text-primary capitalize">
+          <p className="text-sm sm:text-xl font-semibold text-primary capitalize truncate">
             {program.difficulty}
           </p>
           <p className="text-xs text-muted-foreground">Level</p>

@@ -70,10 +70,14 @@ export default async function ClientProgramsPage() {
         .map((a) => a.program_id)
     )
 
-    // Merge public + targeted, deduplicate, exclude assigned
+    // Merge public + targeted + pending-payment programs, deduplicate, exclude owned
     const mergedMap = new Map<string, Program>()
     for (const p of publicPrograms) mergedMap.set(p.id, p)
     for (const p of targetedPrograms) mergedMap.set(p.id, p)
+    // Include programs from pending-payment assignments so they appear in "Available for Purchase"
+    for (const a of typedAssignments) {
+      if (a.payment_status === "pending" && a.programs) mergedMap.set(a.program_id, a.programs)
+    }
     availablePrograms = Array.from(mergedMap.values()).filter((p) => !assignedIds.has(p.id))
   } catch {
     // Render gracefully with empty data
