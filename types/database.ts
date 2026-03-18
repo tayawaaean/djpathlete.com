@@ -72,7 +72,7 @@ export interface User {
 }
 
 export type TimeEfficiencyPreference = "supersets_circuits" | "shorter_rest" | "fewer_heavier" | "extend_session"
-export type TrainingTechnique = "straight_set" | "superset" | "dropset" | "giant_set" | "circuit" | "rest_pause" | "amrap"
+export type TrainingTechnique = "straight_set" | "superset" | "dropset" | "giant_set" | "circuit" | "rest_pause" | "amrap" | "cluster_set"
 
 export interface ClientProfile {
   id: string
@@ -178,6 +178,7 @@ export interface ProgramExercise {
   tempo: string | null
   group_tag: string | null
   technique: TrainingTechnique
+  suggested_weight_kg: number | null
   created_at: string
 }
 

@@ -275,7 +275,7 @@ function ExerciseCard({
 
   // Parse prescribed reps for default (use lower end of range like "8" from "8-12")
   const prescribedReps = pe.reps?.match(/(\d+)/)?.[1] ?? ""
-  const displayedRec = displayWeight(rec.recommended_kg)
+  const displayedRec = displayWeight(rec.recommended_kg) ?? displayWeight(pe.suggested_weight_kg)
   const defaultWeight = ""
   const weightPlaceholder = displayedRec != null ? String(displayedRec) : "0"
   const numSets = pe.sets ?? 3
@@ -528,13 +528,19 @@ function ExerciseCard({
                   {pe.duration_seconds && (
                     <span>{formatRestTime(pe.duration_seconds)}</span>
                   )}
-                  {fields.showWeight && rec.recommended_kg != null && (
+                  {fields.showWeight && (rec.recommended_kg ?? pe.suggested_weight_kg) != null && (
                     <Badge
                       variant="outline"
                       className="gap-1 text-[10px] border-primary/20 text-primary"
                     >
-                      <TrendIcon trend={rec.trend} />
-                      {formatWeightCompact(rec.recommended_kg)}
+                      {rec.recommended_kg != null ? (
+                        <>
+                          <TrendIcon trend={rec.trend} />
+                          {formatWeightCompact(rec.recommended_kg)}
+                        </>
+                      ) : (
+                        formatWeightCompact(pe.suggested_weight_kg!)
+                      )}
                     </Badge>
                   )}
                 </div>
@@ -642,9 +648,9 @@ function ExerciseCard({
 
               <form onSubmit={handleSubmit} className="pt-2 space-y-4">
                 {/* Recommendation card — only for weight-based exercises */}
-                {fields.showWeight && (rec.reasoning || aiSuggestedWeight != null) && (() => {
+                {fields.showWeight && (rec.reasoning || aiSuggestedWeight != null || pe.suggested_weight_kg != null) && (() => {
                   // Compute adjusted recommendation based on in-session RPE
-                  const baseWeight = aiSuggestedWeight ?? rec.recommended_kg
+                  const baseWeight = aiSuggestedWeight ?? rec.recommended_kg ?? pe.suggested_weight_kg
                   const filledSets = setRows.filter((r) => parseInt(r.reps, 10) > 0)
                   const lastFilledRpe = filledSets.length > 0 ? filledSets[filledSets.length - 1].rpe : null
                   const lastFilledWeight = filledSets.length > 0 ? filledSets[filledSets.length - 1].weight : null
@@ -653,6 +659,10 @@ function ExerciseCard({
                   let adjustedReasoning = aiSuggestedWeight != null
                     ? `Recommended: ${formatWeightCompact(aiSuggestedWeight)} for this exercise.`
                     : rec.reasoning
+                      ? rec.reasoning
+                      : pe.suggested_weight_kg != null
+                        ? `Prescribed: ${formatWeightCompact(pe.suggested_weight_kg)} for this exercise.`
+                        : null
 
                   if (lastFilledRpe != null && lastFilledRpe >= 10 && lastFilledWeight) {
                     const currentKg = toKg(parseFloat(lastFilledWeight))

@@ -8,6 +8,7 @@ export const TRAINING_TECHNIQUE_OPTIONS = [
   "circuit",
   "rest_pause",
   "amrap",
+  "cluster_set",
 ] as const
 
 export type TrainingTechniqueOption = (typeof TRAINING_TECHNIQUE_OPTIONS)[number]
@@ -33,6 +34,7 @@ export const programExerciseSchema = z.object({
   intensity_pct: z.coerce.number().min(0).max(100).nullable().optional().transform((v) => v ?? null),
   tempo: z.string().max(20).nullable().optional().transform((v) => v || null),
   group_tag: z.string().max(10).nullable().optional().transform((v) => v || null),
+  suggested_weight_kg: z.coerce.number().min(0).nullable().optional().transform((v) => v ?? null),
 })
 
 export const programExerciseUpdateSchema = programExerciseSchema.partial().omit({ exercise_id: true })

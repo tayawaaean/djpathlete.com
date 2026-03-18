@@ -62,6 +62,7 @@ const TECHNIQUE_CONFIG: Record<TrainingTechniqueOption, { label: string; descrip
   circuit: { label: "Circuit", description: "4+ exercises with minimal rest" },
   rest_pause: { label: "Rest-Pause", description: "Set to failure, rest 10-15s, continue" },
   amrap: { label: "AMRAP", description: "As many reps as possible" },
+  cluster_set: { label: "Cluster Set", description: "Short intra-set rest between rep clusters" },
 }
 
 interface EditExerciseDialogProps {
@@ -143,6 +144,7 @@ export function EditExerciseDialog({
       notes: formData.get("notes") || null,
       rpe_target: formData.get("rpe_target") || null,
       intensity_pct: formData.get("intensity_pct") || null,
+      suggested_weight_kg: formData.get("suggested_weight_kg") || null,
       tempo: formData.get("tempo") || null,
       group_tag: groupTag,
     }
@@ -291,7 +293,7 @@ export function EditExerciseDialog({
                 {catFields.showDuration && (
                   <div className="space-y-2">
                     <Label htmlFor="edit-duration">
-                      Duration (seconds){catFields.showDuration === "prominent" ? " *" : ""}
+                      Duration per set (sec){catFields.showDuration === "prominent" ? " *" : ""}
                     </Label>
                     <Input
                       id="edit-duration"
@@ -305,21 +307,20 @@ export function EditExerciseDialog({
                 )}
               </div>
 
-              {/* Intensity fields — only for categories that use them */}
-              {(catFields.showRpe || catFields.showIntensity) && (
+              {/* Weight & Intensity fields */}
+              {(catFields.showWeight || catFields.showRpe || catFields.showIntensity) && (
                 <div className="grid grid-cols-2 gap-4">
-                  {catFields.showRpe && (
+                  {catFields.showWeight && (
                     <div className="space-y-2">
-                      <Label htmlFor="edit-rpe">RPE Target</Label>
+                      <Label htmlFor="edit-weight">Suggested Weight (kg)</Label>
                       <Input
-                        id="edit-rpe"
-                        name="rpe_target"
+                        id="edit-weight"
+                        name="suggested_weight_kg"
                         type="number"
-                        min={1}
-                        max={10}
+                        min={0}
                         step={0.5}
-                        defaultValue={programExercise.rpe_target ?? ""}
-                        placeholder="e.g. 7"
+                        defaultValue={programExercise.suggested_weight_kg ?? ""}
+                        placeholder="e.g. 60"
                       />
                     </div>
                   )}
@@ -337,6 +338,24 @@ export function EditExerciseDialog({
                       />
                     </div>
                   )}
+                </div>
+              )}
+
+              {catFields.showRpe && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-rpe">RPE Target (1-10)</Label>
+                    <Input
+                      id="edit-rpe"
+                      name="rpe_target"
+                      type="number"
+                      min={1}
+                      max={10}
+                      step={0.5}
+                      defaultValue={programExercise.rpe_target ?? ""}
+                      placeholder="e.g. 7"
+                    />
+                  </div>
                 </div>
               )}
 

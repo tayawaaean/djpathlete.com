@@ -601,6 +601,7 @@ ${graphContext}${feedbackSection}`
       tempo: details.tempo,
       group_tag: details.group_tag,
       technique: details.technique ?? "straight_set",
+      suggested_weight_kg: null,
     })
   })
 
@@ -1076,7 +1077,7 @@ ${graphContext}${feedbackSection}`
       const location = slotLookup.get(assigned.slot_id)
       const details = slotDetailsLookup.get(assigned.slot_id)
       if (!location || !details) return Promise.resolve(null)
-      return addExerciseToProgram({ program_id: program.id, exercise_id: assigned.exercise_id, day_of_week: location.day_of_week, week_number: location.week_number, order_index: location.order_index, sets: details.sets, reps: details.reps, duration_seconds: null, rest_seconds: details.rest_seconds, notes: assigned.notes, rpe_target: details.rpe_target, intensity_pct: null, tempo: details.tempo, group_tag: details.group_tag, technique: details.technique ?? "straight_set" })
+      return addExerciseToProgram({ program_id: program.id, exercise_id: assigned.exercise_id, day_of_week: location.day_of_week, week_number: location.week_number, order_index: location.order_index, sets: details.sets, reps: details.reps, duration_seconds: null, rest_seconds: details.rest_seconds, notes: assigned.notes, rpe_target: details.rpe_target, intensity_pct: null, tempo: details.tempo, group_tag: details.group_tag, technique: details.technique ?? "straight_set", suggested_weight_kg: null })
     })
 
     await Promise.all(insertPromises)
