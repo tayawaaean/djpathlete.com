@@ -448,6 +448,18 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
     }
   }
 
+  /** Firebase RTDB drops empty arrays, so issues/summary may be undefined after round-trip */
+  function safeValidation(v: unknown): { pass: boolean; issues: { type: string; category: string; message: string }[]; summary: string } {
+    const fallback = { pass: true, issues: [] as { type: string; category: string; message: string }[], summary: "Program generated successfully." }
+    if (!v || typeof v !== "object") return fallback
+    const obj = v as Record<string, unknown>
+    return {
+      pass: typeof obj.pass === "boolean" ? obj.pass : true,
+      issues: Array.isArray(obj.issues) ? obj.issues.map((i: Record<string, unknown>) => ({ type: String(i.type ?? "warning"), category: String(i.category ?? "unknown"), message: String(i.message ?? "") })) : [],
+      summary: typeof obj.summary === "string" ? obj.summary : fallback.summary,
+    }
+  }
+
   function mapProgressToStep(progress?: { status: string; current_step: number; total_steps: number; detail?: string }): { step: number; detail: string | null } {
     if (!progress) return { step: 0, detail: null }
     const idx = GENERATION_STEPS.findIndex((s) => s.key === progress.status)
@@ -529,7 +541,7 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               stopTimer()
               setResult({
                 program_id: jobStatus.result.program_id,
-                validation: jobStatus.result.validation ?? { pass: true, issues: [], summary: "Program generated successfully." },
+                validation: safeValidation(jobStatus.result.validation),
                 token_usage: jobStatus.result.token_usage ?? { agent1: 0, agent2: 0, agent3: 0, agent4: 0, total: 0 },
                 duration_ms: jobStatus.result.duration_ms ?? 0,
                 retries: jobStatus.result.retries ?? 0,
@@ -576,7 +588,7 @@ export function AiGenerateDialog({ open, onOpenChange }: AiGenerateDialogProps) 
               stopTimer()
               setResult({
                 program_id: jobData.result.program_id,
-                validation: jobData.result.validation ?? { pass: true, issues: [], summary: "Program generated successfully." },
+                validation: safeValidation(jobData.result.validation),
                 token_usage: jobData.result.token_usage ?? { agent1: 0, agent2: 0, agent3: 0, agent4: 0, total: 0 },
                 duration_ms: jobData.result.duration_ms ?? 0,
                 retries: jobData.result.retries ?? 0,
