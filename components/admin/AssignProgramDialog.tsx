@@ -135,9 +135,7 @@ export function AssignProgramDialog({
     setUnassigningId(userId)
     try {
       const res = await fetch(`/api/admin/assignments/${assignmentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancelled" }),
+        method: "DELETE",
       })
       if (!res.ok) throw new Error("Failed to unassign")
       toast.success("Client unassigned from program")

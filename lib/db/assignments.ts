@@ -174,6 +174,16 @@ export async function advanceWeek(assignmentId: string) {
   return { ...(data as ProgramAssignment), program_completed: false }
 }
 
+/** Hard-delete an assignment row (cascades to tracked_exercises, nulls exercise_progress). */
+export async function deleteAssignment(assignmentId: string) {
+  const supabase = getClient()
+  const { error } = await supabase
+    .from("program_assignments")
+    .delete()
+    .eq("id", assignmentId)
+  if (error) throw error
+}
+
 /** Get the assignment by ID, verifying ownership */
 export async function getAssignmentById(assignmentId: string) {
   const supabase = getClient()

@@ -29,9 +29,7 @@ export function UnassignButton({ assignmentId, programName }: UnassignButtonProp
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/assignments/${assignmentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancelled" }),
+        method: "DELETE",
       })
       if (!res.ok) throw new Error("Failed to unassign")
       router.refresh()
@@ -58,8 +56,8 @@ export function UnassignButton({ assignmentId, programName }: UnassignButtonProp
         <AlertDialogHeader>
           <AlertDialogTitle>Unassign from program?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will cancel the client&apos;s assignment to <strong>{programName}</strong>.
-            Their workout progress will be preserved, but they will no longer have access to this program.
+            This will remove the client&apos;s assignment to <strong>{programName}</strong> and
+            delete all associated tracking data. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

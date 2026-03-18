@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getAssignmentById, updateAssignment } from "@/lib/db/assignments"
+import { getAssignmentById, updateAssignment, deleteAssignment } from "@/lib/db/assignments"
 
 export async function PATCH(
   request: Request,
@@ -32,6 +32,28 @@ export async function PATCH(
   } catch {
     return NextResponse.json(
       { error: "Failed to update assignment. Please try again." },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    const existing = await getAssignmentById(id)
+    if (!existing) {
+      return NextResponse.json({ error: "Assignment not found" }, { status: 404 })
+    }
+
+    await deleteAssignment(id)
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to delete assignment. Please try again." },
       { status: 500 }
     )
   }
