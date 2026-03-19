@@ -20,6 +20,8 @@ import {
   Plus,
   X,
   ArrowLeftRight,
+  ListChecks,
+  ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -632,6 +634,21 @@ function ExerciseCard({
                     </div>
                   )
                 })()}
+                {/* Instructions / coaching cues */}
+                {displayExercise.instructions && (
+                  <details className="group rounded-md border border-border/50 bg-muted/30">
+                    <summary className="flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-foreground/70 select-none list-none [&::-webkit-details-marker]:hidden">
+                      <ChevronRight className="size-3 shrink-0 transition-transform group-open:rotate-90" />
+                      <ListChecks className="size-3.5 shrink-0 text-primary/60" strokeWidth={2} />
+                      Instructions
+                    </summary>
+                    <div className="px-2.5 pb-2 pt-0.5">
+                      <p className="text-xs leading-relaxed text-foreground/70 whitespace-pre-line">
+                        {displayExercise.instructions}
+                      </p>
+                    </div>
+                  </details>
+                )}
                 {/* Coach notes */}
                 {!hideNotes && pe.notes && (
                   <div className="flex items-start gap-2 rounded-md bg-amber-50 px-2.5 py-1.5">
